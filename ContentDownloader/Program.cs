@@ -19,13 +19,18 @@ namespace ContentDownloader
             {
                 // TODO: Add exception handling.
                 string episodeListPage = await loader.FetchEpisodeListAsync();
+                Console.WriteLine("Got episodes list.");
+
                 List<Episode> episodes = Parser.ParseEpisodeList(episodeListPage);
                 string episodePage = await loader.FetchEpisodePageAsync(episodes[1]);
+                Console.WriteLine("Got episode page for {0} episode.", episodes[1].Name);
+
                 List<string> downloadLinks = Parser.ExtractDownloadLinks(episodePage);
-                foreach (string link in downloadLinks)
-                {
-                    Console.WriteLine(link);
-                }
+                Console.WriteLine("Found {0} download links.", downloadLinks.Count);
+
+                await loader.DownloadEpisodeAsync(downloadLinks, "episode");
+                Console.WriteLine("Completed. Press any key to exit...");
+
                 Console.ReadKey();
             }
         }
