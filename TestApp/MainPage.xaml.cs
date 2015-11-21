@@ -18,7 +18,7 @@ using Windows.UI.Xaml.Navigation;
 
 // The WebView Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
 
-namespace TestApp
+namespace AsotListener
 {
     public sealed partial class MainPage : Page
     {
@@ -39,7 +39,6 @@ namespace TestApp
         /// This parameter is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            WebViewControl.Navigate(HomeUri);
 
             HardwareButtons.BackPressed += this.MainPage_BackPressed;
         }

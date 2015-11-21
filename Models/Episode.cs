@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace ContentDownloader
+﻿namespace AsotListener.Models
 {
-    class Episode
+    public class Episode
     {
         public int Id { get; set; }
         public string Name { get; set; }

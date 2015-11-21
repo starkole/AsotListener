@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{F758423C-96AD-42BC-B63D-4E2636A0BF60}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsotListener", "TestApp\AsotListener.csproj", "{F758423C-96AD-42BC-B63D-4E2636A0BF60}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsotListener.Models", "Models\AsotListener.Models.csproj", "{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,18 @@ Global
 		{F758423C-96AD-42BC-B63D-4E2636A0BF60}.Release|x86.ActiveCfg = Release|x86
 		{F758423C-96AD-42BC-B63D-4E2636A0BF60}.Release|x86.Build.0 = Release|x86
 		{F758423C-96AD-42BC-B63D-4E2636A0BF60}.Release|x86.Deploy.0 = Release|x86
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Debug|ARM.ActiveCfg = Debug|ARM
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Debug|ARM.Build.0 = Debug|ARM
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Debug|x86.ActiveCfg = Debug|x86
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Debug|x86.Build.0 = Debug|x86
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Release|ARM.ActiveCfg = Release|ARM
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Release|ARM.Build.0 = Release|ARM
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Release|x86.ActiveCfg = Release|x86
+		{1ED50DBD-2EF3-47A1-9E22-C2B2D0E1D692}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
