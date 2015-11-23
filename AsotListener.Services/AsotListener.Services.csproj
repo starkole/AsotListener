@@ -86,6 +86,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileManager.cs" />
+    <Compile Include="IFileManager.cs" />
     <Compile Include="ILoader.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Parser.cs" />

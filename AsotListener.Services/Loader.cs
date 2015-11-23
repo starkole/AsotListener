@@ -17,12 +17,14 @@
 
         private HttpClient httpClient;
         private LoggingChannel logChannel;
+        private FileManager fileManager;
 
         public Loader(LoggingChannel logChannel)
         {
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS);
             logChannel = new LoggingChannel("LoaderLogChannel");
+            fileManager = new FileManager();
         }
 
         public async Task<string> FetchEpisodeListAsync()
@@ -37,33 +39,20 @@
             return await httpClient.GetStringAsync(MAIN_URL + episode.Url);
         }
 
-        public async Task DownloadEpisodeAsync(ICollection<string> urls, string filename)
+        public async Task DownloadEpisodeAsync(ICollection<string> urls)
         {
             string message;
-
-            if (urls == null || urls.Count < 1)
+            int partNumber = 0;
+            foreach (string url in urls)
             {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(filename))
-            {
-                filename = FALLBACK_FILENAME;
-            }
-
-            for (int i = 0; i < urls.Count; i++)
-            {
-                int fileId = i + 1;
-                string episodeFilename = Path.GetFullPath(filename + fileId.ToString() + FILE_EXTENSION);
+                partNumber++;
                 message = string.Format(
-                    "Starting download part {0} of {1} into {2} file",
-                    fileId,
-                    urls.Count,
-                    episodeFilename);
+                    "Starting download part {0} of {1} into file",
+                    partNumber,
+                    urls.Count);
                 logChannel.LogMessage(message, LoggingLevel.Verbose);
 
-                using (HttpResponseMessage response = await httpClient.GetAsync(
-                    urls[i],
+                using (HttpResponseMessage response = await httpClient.GetAsync(url,
                     HttpCompletionOption.ResponseHeadersRead))
                 {
                     if (!response.IsSuccessStatusCode)
@@ -79,17 +68,12 @@
                         response.Content.Headers.ContentLength);
                     logChannel.LogMessage(message, LoggingLevel.Verbose);
                     using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
+                    using (Stream streamToWriteTo = await fileManager.GetStreamForWrite(partNumber))
                     {
-                        string fileToWriteTo = Path.GetTempFileName();
-                        using (Stream streamToWriteTo = File.Open(
-                            fileToWriteTo, 
-                            FileMode.Create))
-                        {
-                            logChannel.LogMessage("Download started.", LoggingLevel.Verbose);
-                            await streamToReadFrom.CopyToAsync(streamToWriteTo);
-                            logChannel.LogMessage("Download complete.", LoggingLevel.Verbose);
-                        }
-                    }
+                        logChannel.LogMessage("Download started.", LoggingLevel.Verbose);
+                        await streamToReadFrom.CopyToAsync(streamToWriteTo);
+                        logChannel.LogMessage("Download complete.", LoggingLevel.Verbose);
+                    }                    
                 }
             }
         }

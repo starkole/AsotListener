@@ -9,6 +9,6 @@
     {
         Task<string> FetchEpisodeListAsync();
         Task<string> FetchEpisodePageAsync(Episode episode);
-        Task DownloadEpisodeAsync(ICollection<string> urls, string filename);
+        Task DownloadEpisodeAsync(ICollection<string> urls);
     }
 }
