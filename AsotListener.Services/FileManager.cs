@@ -14,7 +14,7 @@
 
         public FileManager()
         {
-            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+            localFolder = ApplicationData.Current.LocalFolder;
         }
 
         public async Task<Stream> GetStreamForWrite(int partNumber)

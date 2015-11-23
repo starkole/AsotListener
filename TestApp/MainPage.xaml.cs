@@ -1,94 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Graphics.Display;
-using Windows.Phone.UI.Input;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The WebView Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
-
-namespace AsotListener
+﻿namespace AsotListener
 {
+    using Windows.ApplicationModel.Resources;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Navigation;
+    using Services;
+    using ViewModels;
+
     public sealed partial class MainPage : Page
     {
-        // TODO: Replace with your URL here.
-        private static readonly Uri HomeUri = new Uri("ms-appx-web:///Html/index.html", UriKind.Absolute);
+        private readonly NavigationHelper navigationHelper;
+        private readonly MainPageViewModel mainPageViewModel = new MainPageViewModel();
+       
+        private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
 
         public MainPage()
         {
             this.InitializeComponent();
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
+
+            this.navigationHelper = new NavigationHelper(this);
+            this.navigationHelper.LoadState += mainPageViewModel.NavigationHelper_LoadState;
+            this.navigationHelper.SaveState += mainPageViewModel.NavigationHelper_SaveState;
         }
 
         /// <summary>
-        /// Invoked when this page is about to be displayed in a Frame.
+        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>
-        /// <param name="e">Event data that describes how this page was reached.
-        /// This parameter is typically used to configure the page.</param>
+        public NavigationHelper NavigationHelper
+        {
+            get { return this.navigationHelper; }
+        }
+
+        /// <summary>
+        /// Gets the view model for this <see cref="Page"/>.
+        /// </summary>
+        public MainPageViewModel MainPageViewModel
+        {
+            get { return this.mainPageViewModel; }
+        }
+
+        #region NavigationHelper registration
+
+        /// <summary>
+        /// The methods provided in this section are simply used to allow
+        /// NavigationHelper to respond to the page's navigation methods.
+        /// <para>
+        /// Page specific logic should be placed in event handlers for the  
+        /// <see cref="NavigationHelper.LoadState"/>
+        /// and <see cref="NavigationHelper.SaveState"/>.
+        /// The navigation parameter is available in the LoadState method 
+        /// in addition to page state preserved during an earlier session.
+        /// </para>
+        /// </summary>
+        /// <param name="e">Provides data for navigation methods and event
+        /// handlers that cannot cancel the navigation request.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-
-            HardwareButtons.BackPressed += this.MainPage_BackPressed;
+            this.navigationHelper.OnNavigatedTo(e);
         }
 
-        /// <summary>
-        /// Invoked when this page is being navigated away.
-        /// </summary>
-        /// <param name="e">Event data that describes how this page is navigating.</param>
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            HardwareButtons.BackPressed -= this.MainPage_BackPressed;
+            this.navigationHelper.OnNavigatedFrom(e);
         }
 
-        /// <summary>
-        /// Overrides the back button press to navigate in the WebView's back stack instead of the application's.
-        /// </summary>
-        private void MainPage_BackPressed(object sender, BackPressedEventArgs e)
-        {
-            if (WebViewControl.CanGoBack)
-            {
-                WebViewControl.GoBack();
-                e.Handled = true;
-            }
-        }
-
-        private void Browser_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
-        {
-            if (!args.IsSuccess)
-            {
-                Debug.WriteLine("Navigation to this page failed, check your internet connection.");
-            }
-        }
-
-        /// <summary>
-        /// Navigates forward in the WebView's history.
-        /// </summary>
-        private void ForwardAppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (WebViewControl.CanGoForward)
-            {
-                WebViewControl.GoForward();
-            }
-        }
-
-        /// <summary>
-        /// Navigates to the initial home page.
-        /// </summary>
-        private void HomeAppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            WebViewControl.Navigate(HomeUri);
-        }
+        #endregion
     }
 }

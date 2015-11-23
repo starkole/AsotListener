@@ -30,7 +30,6 @@
                 {
                     result.Add(new Episode
                     {
-                        Id = i,
                         Name = matches[i].Groups[2].Value,
                         Url = matches[i].Groups[1].Value
                     });

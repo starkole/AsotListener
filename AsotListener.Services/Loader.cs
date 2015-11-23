@@ -17,14 +17,19 @@
 
         private HttpClient httpClient;
         private LoggingChannel logChannel;
+        private ILoggingSession loggingSession;
         private FileManager fileManager;
 
-        public Loader(LoggingChannel logChannel)
+        public Loader(ILoggingSession loggingSession)
         {
+            this.loggingSession = loggingSession;
+
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS);
             logChannel = new LoggingChannel("LoaderLogChannel");
             fileManager = new FileManager();
+
+            loggingSession.AddLoggingChannel(logChannel);
         }
 
         public async Task<string> FetchEpisodeListAsync()
@@ -80,6 +85,7 @@
 
         public void Dispose()
         {
+            loggingSession.RemoveLoggingChannel(logChannel);
             logChannel.Dispose();
             httpClient.Dispose();
         }

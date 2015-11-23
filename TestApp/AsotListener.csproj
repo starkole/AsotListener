@@ -80,6 +80,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <ProjectReference Include="..\AsotListener.Services\AsotListener.Services.csproj">
+      <Project>{20f01c57-8b5b-4682-8dc2-acb16bb4c4b4}</Project>
+      <Name>AsotListener.Services</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Models\AsotListener.Models.csproj">
       <Project>{1ed50dbd-2ef3-47a1-9e22-c2b2d0e1d692}</Project>
       <Name>AsotListener.Models</Name>
@@ -93,6 +97,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
