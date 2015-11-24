@@ -3,11 +3,12 @@
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
     using Models;
+    using System.Collections.ObjectModel;
 
     /// <summary>
     /// Provides methods for parsing html pages
     /// </summary>
-    static class Parser
+    public static class Parser
     {
         private const string EPISODE_REGEX = @"(/episode/\?p=\d+)"">(.*)<";
         private const string DOWNLOAD_LINK_REGEX = @"http://\S*\.mp3";
@@ -17,11 +18,11 @@
         /// </summary>
         /// <param name="EpisodeListHtmlPage">Html page</param>
         /// <returns>List of Episode objects or empty list</returns>
-        public static List<Episode> ParseEpisodeList(string EpisodeListHtmlPage)
+        public static ObservableCollection<Episode> ParseEpisodeList(string EpisodeListHtmlPage)
         {
             Regex regex = new Regex(EPISODE_REGEX);
             MatchCollection matches = regex.Matches(EpisodeListHtmlPage);
-            List<Episode> result = new List<Episode>();
+            ObservableCollection<Episode> result = new ObservableCollection<Episode>();
             for (var i = 0; i < matches.Count; i++) {
 
                 // Regex puts episode relative url into the first group

@@ -5,23 +5,28 @@
     using Windows.UI.Xaml.Navigation;
     using Services;
     using ViewModels;
+    using Windows.Foundation.Diagnostics;
 
     public sealed partial class MainPage : Page
     {
         private readonly NavigationHelper navigationHelper;
-        private readonly MainPageViewModel mainPageViewModel = new MainPageViewModel();
+        private readonly MainPageViewModel mainPageViewModel; 
        
         private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+        private readonly ILoggingSession loggingSession;
 
         public MainPage()
         {
             this.InitializeComponent();
-
+           
             this.NavigationCacheMode = NavigationCacheMode.Required;
 
             this.navigationHelper = new NavigationHelper(this);
-            this.navigationHelper.LoadState += mainPageViewModel.NavigationHelper_LoadState;
-            this.navigationHelper.SaveState += mainPageViewModel.NavigationHelper_SaveState;
+            this.navigationHelper.LoadState += mainPageViewModel.OnNavigationHelperLoadState;
+            this.navigationHelper.SaveState += mainPageViewModel.OnNavigationHelperSaveState;
+
+            this.loggingSession = (LoggingSession)Resources[Constants.LOGGING_SESSION_NAME];
+            this.mainPageViewModel = new MainPageViewModel(this.loggingSession);
         }
 
         /// <summary>

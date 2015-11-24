@@ -8,6 +8,7 @@
     using Windows.UI.Xaml.Media.Animation;
     using Windows.UI.Xaml.Navigation;
     using Services;
+    using Windows.Foundation.Diagnostics;
 
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
@@ -40,7 +41,7 @@
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif
-
+            Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
