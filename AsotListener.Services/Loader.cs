@@ -18,7 +18,6 @@
         private HttpClient httpClient;
         private LoggingChannel logChannel;
         private ILoggingSession loggingSession;
-        private FileManager fileManager;
 
         public Loader(ILoggingSession loggingSession)
         {
@@ -27,8 +26,6 @@
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS);
             logChannel = new LoggingChannel("LoaderLogChannel");
-            fileManager = new FileManager();
-
             loggingSession.AddLoggingChannel(logChannel);
         }
 
@@ -44,7 +41,7 @@
             return await httpClient.GetStringAsync(MAIN_URL + episode.Url);
         }
 
-        public async Task DownloadEpisodeAsync(ICollection<string> urls)
+        public async Task DownloadEpisodeAsync(Episode episode, ICollection<string> urls)
         {
             string message;
             int partNumber = 0;
@@ -73,7 +70,7 @@
                         response.Content.Headers.ContentLength);
                     logChannel.LogMessage(message, LoggingLevel.Verbose);
                     using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
-                    using (Stream streamToWriteTo = await fileManager.GetStreamForWrite(partNumber))
+                    using (Stream streamToWriteTo = await FileManager.GetStreamForWrite(episode.Name, partNumber))
                     {
                         logChannel.LogMessage("Download started.", LoggingLevel.Verbose);
                         await streamToReadFrom.CopyToAsync(streamToWriteTo);

@@ -31,7 +31,7 @@
                 {
                     result.Add(new Episode
                     {
-                        Name = matches[i].Groups[2].Value,
+                        Name = normalizeEpisodeName(matches[i].Groups[2].Value),
                         Url = matches[i].Groups[1].Value
                     });
                 }
@@ -39,7 +39,13 @@
 
             return result;
         }
-        
+
+        private static string normalizeEpisodeName(string rawName)
+        {
+            Regex containsABadCharacter = new Regex("[" + Regex.Escape(new string(System.IO.Path.GetInvalidPathChars())) + "]");
+            return containsABadCharacter.Replace(rawName, string.Empty);
+        }
+
         /// <summary>
         /// Extracts download links to mp3 files from given html page
         /// </summary>

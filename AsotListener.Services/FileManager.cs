@@ -1,32 +1,53 @@
 ﻿namespace AsotListener.Services
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Threading.Tasks;
     using Windows.Storage;
+    using Windows.Storage.Search;
+    using System.Linq;
+    using System.Text.RegularExpressions;
 
-    public class FileManager : IFileManager
+    public static class FileManager
     {
-        private const string DEFAULT_FILENAME = "episode";
         private const string FILE_EXTENSION = ".mp3";
 
-        private StorageFolder localFolder;
+        private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 
-        public FileManager()
-        {
-            localFolder = ApplicationData.Current.LocalFolder;
-        }
-
-        public async Task<Stream> GetStreamForWrite(int partNumber)
-        {
-            string filename = createFilename(partNumber);
+        public static async Task<Stream> GetStreamForWrite(string name, int? partNumber = null)
+        {            
+            string filename = createFilename(name, partNumber);
             StorageFile file = await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
             return await file.OpenStreamForWriteAsync();
         }
 
-        private string createFilename(int partNumber)
+        private static string createFilename(string name, int? partNumber)
         {
-            return DEFAULT_FILENAME + partNumber.ToString() + FILE_EXTENSION;
+            if (partNumber == null)
+            {
+                return name + FILE_EXTENSION;
+            }
+
+            return name + partNumber.ToString() + FILE_EXTENSION;
+        }
+
+        /// <summary>
+        /// Returns list of files that have alredy been downloaded and exist on the phone
+        /// </summary>
+        /// <returns>List of files or null, when no files has been found</returns>
+        public static async Task<IList<string>> GetDownloadedFileNamesList()
+        {
+            QueryOptions options = new QueryOptions(CommonFileQuery.DefaultQuery, new string[] { FILE_EXTENSION });
+            StorageFileQueryResult result  = localFolder.CreateFileQueryWithOptions(options);
+            IReadOnlyList<StorageFile> files = await result.GetFilesAsync();
+            return files?.Select(f => stripEndNumberFromFilename(f.DisplayName)).Distinct().ToList();
+        }
+        
+        private static string stripEndNumberFromFilename(string filename)
+        {
+            Regex numberAtTheEnd = new Regex("[0-9]+$");
+            return numberAtTheEnd.Replace(filename, string.Empty);
         }
     }
 }

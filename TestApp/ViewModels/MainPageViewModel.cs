@@ -9,6 +9,8 @@
     using System.Runtime.Serialization;
     using System.ComponentModel;
     using Windows.Foundation.Diagnostics;
+    using System.Threading.Tasks;
+    using System.Collections.Generic;
 
     [DataContract]
     public class MainPageViewModel: INotifyPropertyChanged
@@ -75,8 +77,28 @@
                 string episodeListPage = await loader.FetchEpisodeListAsync();
                 this.Episodes = Parser.ParseEpisodeList(episodeListPage);
             }
+
+            await updateEpisodesStates();
         }
-        
+
+        private async Task updateEpisodesStates()
+        {
+            if (this.Episodes == null || this.Episodes.Count < 1)
+            {
+                return;
+            }
+
+            var existingFileNames = await FileManager.GetDownloadedFileNamesList();
+            foreach (Episode episode in this.Episodes)
+            {
+                if (existingFileNames.Contains(episode.Name))
+                {
+                    episode.Status = EpisodeStatus.Loaded;
+                }
+            }
+
+        }
+
         /// <summary>
         /// Preserves state associated with this page in case the application is suspended or the
         /// page is discarded from the navigation cache. Values must conform to the serialization
