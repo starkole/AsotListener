@@ -32,12 +32,22 @@
                         <DataTemplate>
                             <StackPanel Margin="0,0,0,9.5">
                                 <TextBlock
-                                    Text="{Binding Title, FallbackValue='No title found'}"
+                                    Text="{Binding Name, FallbackValue='No name found'}"
                                     TextWrapping="Wrap"
                                     Pivot.SlideInAnimationGroup="1"
                                     CommonNavigationTransitionInfo.IsStaggerElement="True"
                                     Style="{ThemeResource ListViewItemTextBlockStyle}"
-                                    Margin="0,0,19,0"/>
+                                    Margin="0,0,19,0" 
+                                    FontSize="24"/>
+                                <TextBlock
+                                    Text="{Binding Status, FallbackValue='Cannot obtain status'}"
+                                    TextWrapping="Wrap"
+                                    Pivot.SlideInAnimationGroup="1"
+                                    CommonNavigationTransitionInfo.IsStaggerElement="True"
+                                    Style="{ThemeResource ListViewItemTextBlockStyle}"
+                                    Margin="10,0,19,0" 
+                                    FontSize="18" 
+                                    FontStyle="Italic"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>

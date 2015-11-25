@@ -10,7 +10,6 @@
     using System.ComponentModel;
     using Windows.Foundation.Diagnostics;
     using System.Threading.Tasks;
-    using System.Collections.Generic;
 
     [DataContract]
     public class MainPageViewModel: INotifyPropertyChanged
@@ -66,11 +65,11 @@
         {
             // TODO: Add logging here
 
-            if (e.PageState.ContainsKey(EPISODES_PROPERTY))
-            {
-                this.Episodes = (ObservableCollection<Episode>)e.PageState[EPISODES_PROPERTY];
-                return;
-            }
+            //if (e.PageState.ContainsKey(EPISODES_PROPERTY))
+            //{
+            //    this.Episodes = (ObservableCollection<Episode>)e.PageState[EPISODES_PROPERTY];
+            //    return;
+            //}
 
             using (Loader loader = new Loader(this.loggingSession))
             {
@@ -78,7 +77,7 @@
                 this.Episodes = Parser.ParseEpisodeList(episodeListPage);
             }
 
-            await updateEpisodesStates();
+            //await updateEpisodesStates();
         }
 
         private async Task updateEpisodesStates()
