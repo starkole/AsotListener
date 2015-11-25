@@ -10,23 +10,27 @@
     public sealed partial class MainPage : Page
     {
         private readonly NavigationHelper navigationHelper;
-        private readonly MainPageViewModel mainPageViewModel; 
-       
+        private readonly MainPageViewModel mainPageViewModel;
+
         private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
         private readonly ILoggingSession loggingSession;
 
         public MainPage()
         {
+            //if (!Resources.ContainsKey(Constants.LOGGING_SESSION_NAME)) {
+            //    Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+            //}
+            //this.loggingSession = (LoggingSession)Resources[Constants.LOGGING_SESSION_NAME];
+            this.loggingSession = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+            this.mainPageViewModel = new MainPageViewModel(this.loggingSession);
+
             this.InitializeComponent();
-           
+
             this.NavigationCacheMode = NavigationCacheMode.Required;
 
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += mainPageViewModel.OnNavigationHelperLoadState;
-            this.navigationHelper.SaveState += mainPageViewModel.OnNavigationHelperSaveState;
-
-            this.loggingSession = (LoggingSession)Resources[Constants.LOGGING_SESSION_NAME];
-            this.mainPageViewModel = new MainPageViewModel(this.loggingSession);
+            this.navigationHelper.SaveState += mainPageViewModel.OnNavigationHelperSaveState;            
         }
 
         /// <summary>

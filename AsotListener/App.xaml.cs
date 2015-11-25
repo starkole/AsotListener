@@ -22,7 +22,7 @@
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
         public App()
-        {
+        {            
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
         }
@@ -40,8 +40,8 @@
             {
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
-#endif
-            Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+#endif            
+            //Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
