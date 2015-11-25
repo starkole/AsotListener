@@ -1,41 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-
-  <Identity Name="5399a967-dd3b-431c-84c3-79b4fb5b06bc"
-            Publisher="CN=olesh"
-            Version="1.0.0.0" />
-
-  <mp:PhoneIdentity PhoneProductId="5399a967-dd3b-431c-84c3-79b4fb5b06bc" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
-
+  <Identity Name="5399a967-dd3b-431c-84c3-79b4fb5b06bc" Publisher="CN=olesh" Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="5399a967-dd3b-431c-84c3-79b4fb5b06bc" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>AsotListener</DisplayName>
-    <PublisherDisplayName>olesh</PublisherDisplayName>
+    <PublisherDisplayName>Pavlo Oleshkevych</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
-
   <Prerequisites>
     <OSMinVersion>6.3.1</OSMinVersion>
     <OSMaxVersionTested>6.3.1</OSMaxVersionTested>
   </Prerequisites>
-  
   <Resources>
-    <Resource Language="x-generate"/>
+    <Resource Language="x-generate" />
   </Resources>
-
   <Applications>
-    <Application Id="App"
-        Executable="$targetnametoken$.exe"
-        EntryPoint="AsotListener.App">
-        <m3:VisualElements
-            DisplayName="AsotListener"
-            Square150x150Logo="Assets\Logo.png"
-            Square44x44Logo="Assets\SmallLogo.png"
-            Description="AsotListener"
-            ForegroundText="light"
-            BackgroundColor="transparent">
-            <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png"/>
-            <m3:SplashScreen Image="Assets\SplashScreen.png"/>
-        </m3:VisualElements>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="AsotListener.App">
+      <m3:VisualElements DisplayName="ASOT Listener" Square150x150Logo="Assets\ASOT_Logo_150x150.png" Square44x44Logo="Assets\ASOT_Logo_44x44.png" Description="A program for offline listening to A State Of Trance radio show" ForegroundText="light" BackgroundColor="black" ToastCapable="true">
+        <m3:LockScreen Notification="badge" BadgeLogo="Assets\ASOT_Logo_24x24.png" />
+        <m3:DefaultTile Wide310x150Logo="Assets\ASOT_Logo_310x150.png" Square71x71Logo="Assets\ASOT_Logo_71x71.png">
+        </m3:DefaultTile>
+        <m3:SplashScreen Image="Assets\ASOT_Logo_480x800.png" BackgroundColor="black" />
+        <m3:InitialRotationPreference>
+          <m3:Rotation Preference="portrait" />
+        </m3:InitialRotationPreference>
+      </m3:VisualElements>
     </Application>
   </Applications>
   <Capabilities>
