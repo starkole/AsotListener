@@ -8,7 +8,7 @@
     using Models;
     using Windows.Foundation.Diagnostics;
 
-    public class Loader : ILoader
+    public sealed class Loader : ILoader
     {
         private const string MAIN_URL = "http://asotarchive.org";
         private const string FALLBACK_FILENAME = "file";
