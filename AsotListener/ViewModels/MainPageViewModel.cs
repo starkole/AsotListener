@@ -12,7 +12,7 @@
     using System.Threading.Tasks;
 
     [DataContract]
-    public class MainPageViewModel: INotifyPropertyChanged
+    public class MainPageViewModel: BaseModel
     {
         private const string EPISODES_PROPERTY = "Episodes";
 
@@ -25,30 +25,13 @@
         public ObservableCollection<Episode> Episodes
         {
             get { return episodes; }
-            private set {
-                this.episodes = value;
-                notifyPropertyChanged(EPISODES_PROPERTY);
-            } 
+            private set { SetField(ref episodes, value, EPISODES_PROPERTY); } 
         }
 
         public MainPageViewModel(ILoggingSession loggingSession)
         {
             this.loggingSession = loggingSession;
         }
-
-        #region INotifyPropertyChanged implementation
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void notifyPropertyChanged(string propertyName)
-        {
-            if (null != PropertyChanged)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        #endregion
 
         /// <summary>
         /// Populates the page with content passed during navigation. Any saved state is also
