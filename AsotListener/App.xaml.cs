@@ -41,7 +41,11 @@
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif            
-            //Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+            // TODO: Check if this works.
+            //if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME)) {
+            //    Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+            //}
+            //this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
