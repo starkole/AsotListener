@@ -38,10 +38,12 @@
         /// <returns>List of files or null, when no files has been found</returns>
         public static async Task<IList<string>> GetDownloadedFileNamesList()
         {
-            QueryOptions options = new QueryOptions(CommonFileQuery.DefaultQuery, new string[] { FILE_EXTENSION });
-            StorageFileQueryResult result  = localFolder.CreateFileQueryWithOptions(options);
-            IReadOnlyList<StorageFile> files = await result.GetFilesAsync();
-            return files?.Select(f => stripEndNumberFromFilename(f.DisplayName)).Distinct().ToList();
+            IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+            return files?
+                .Where(f => f.FileType == FILE_EXTENSION)
+                .Select(f => stripEndNumberFromFilename(f.DisplayName))
+                .Distinct()
+                .ToList();
         }
         
         private static string stripEndNumberFromFilename(string filename)

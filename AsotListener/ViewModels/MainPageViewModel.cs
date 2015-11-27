@@ -57,7 +57,7 @@
                 this.Episodes = Parser.ParseEpisodeList(episodeListPage);
             }
 
-            //await updateEpisodesStates();
+            await updateEpisodesStates();
         }
 
         private async Task updateEpisodesStates()
