@@ -46,11 +46,11 @@
         {
             // TODO: Add logging here
 
-            //if (e.PageState.ContainsKey(nameof(Episodes)))
-            //{
-            //    this.Episodes = (ObservableCollection<Episode>)e.PageState[nameof(Episodes)];
-            //    return;
-            //}
+            if (e.PageState != null && e.PageState.ContainsKey(nameof(Episodes)))
+            {
+                this.Episodes = (ObservableCollection<Episode>)e.PageState[nameof(Episodes)];
+                return;
+            }
 
             using (Loader loader = new Loader(this.loggingSession))
             {
