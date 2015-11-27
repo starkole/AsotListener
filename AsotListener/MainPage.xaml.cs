@@ -3,7 +3,7 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
-    using Services;
+    using Services.Navigation;
     using ViewModels;
     using Windows.Foundation.Diagnostics;
     using System;

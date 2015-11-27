@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.ViewModels
 {
     using Services;
+    using Services.Navigation;
     using Models;
     using System.Collections.ObjectModel;
     using System;
