@@ -16,6 +16,7 @@
     public sealed partial class App : Application
     {
         private TransitionCollection transitions;
+        private LoggingSession loggingSession;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -41,11 +42,11 @@
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif            
-            // TODO: Check if this works.
-            //if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME)) {
-            //    Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
-            //}
-            //this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
+            if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME))
+            {
+                Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+            }
+            this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -58,7 +59,7 @@
                 // Associate the frame with a SuspensionManager key.
                 SuspensionManager.RegisterFrame(rootFrame, "AppFrame");
 
-                rootFrame.CacheSize = 3;
+                rootFrame.CacheSize = 2;
 
                 // Set the default language
                 rootFrame.Language = Windows.Globalization.ApplicationLanguages.Languages[0];

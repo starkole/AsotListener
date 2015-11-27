@@ -7,15 +7,12 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using System.Runtime.Serialization;
-    using System.ComponentModel;
     using Windows.Foundation.Diagnostics;
     using System.Threading.Tasks;
 
     [DataContract]
     public class MainPageViewModel: BaseModel
     {
-        private const string EPISODES_PROPERTY = "Episodes";
-
         private ObservableCollection<Episode> episodes = new ObservableCollection<Episode>();
         private readonly ILoggingSession loggingSession;
 
@@ -25,7 +22,7 @@
         public ObservableCollection<Episode> Episodes
         {
             get { return episodes; }
-            private set { SetField(ref episodes, value, EPISODES_PROPERTY); } 
+            private set { SetField(ref episodes, value, nameof(Episodes)); } 
         }
 
         public MainPageViewModel(ILoggingSession loggingSession)
@@ -48,9 +45,9 @@
         {
             // TODO: Add logging here
 
-            //if (e.PageState.ContainsKey(EPISODES_PROPERTY))
+            //if (e.PageState.ContainsKey(nameof(Episodes)))
             //{
-            //    this.Episodes = (ObservableCollection<Episode>)e.PageState[EPISODES_PROPERTY];
+            //    this.Episodes = (ObservableCollection<Episode>)e.PageState[nameof(Episodes)];
             //    return;
             //}
 
@@ -93,7 +90,7 @@
         {
             if (null != this.Episodes)
             {
-                e.PageState[EPISODES_PROPERTY] = this.Episodes;
+                e.PageState[nameof(Episodes)] = this.Episodes;
             }
         }
 

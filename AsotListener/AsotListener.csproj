@@ -92,6 +92,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\BaseModel.cs" />
     <Compile Include="Models\Episode.cs" />
     <Compile Include="Models\EpisodeStatus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -9,28 +9,19 @@
         public string Name 
         { 
             get { return name; }
-            private set { SetField(ref name, value, "Name"); }
-            
-            // TODO: Check if this is valid
-            // private set { SetField(ref status, value, nameof(Name); }
+            set { SetField(ref name, value, nameof(Name)); }
         }
         
         public string Url
         { 
             get { return url; }
-            private set { SetField(ref url, value, "Url"); }
-            
-            // TODO: Check if this is valid
-            // private set { SetField(ref status, value, nameof(Url); }
+            set { SetField(ref url, value, nameof(Url)); }
         }
         
         public EpisodeStatus Status
         { 
             get { return status; }
-            private set { SetField(ref status, value, "Status"); }
-            
-            // TODO: Check if this is valid
-            // private set { SetField(ref status, value, nameof(Status); }
+            set { SetField(ref status, value, nameof(Status)); }
         }
 
         public override string ToString()

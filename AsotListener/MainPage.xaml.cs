@@ -1,6 +1,6 @@
 ﻿namespace AsotListener
 {
-    using Windows.ApplicationModel.Resources;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
     using Services;
@@ -18,13 +18,12 @@
 
         public MainPage()
         {
-            // TODO: Check if this works.
-            //if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME)) {
-            //    Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
-            //}
-            //this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
-            this.loggingSession = new LoggingSession(Constants.LOGGING_SESSION_NAME);
-            
+            if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME))
+            {
+                Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
+            }
+            this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
+
             this.mainPageViewModel = new MainPageViewModel(this.loggingSession);
 
             this.InitializeComponent();
@@ -92,8 +91,7 @@
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
                 // TODO: set large fields to null.
                 
-                // TODO: Check if this works.
-                // Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
+                Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
                 this.loggingSession.Dispose();
 
                 disposedValue = true;
