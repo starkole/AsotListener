@@ -3,6 +3,7 @@
     public enum EpisodeStatus
     {
         CanBeLoaded,
+        Downloading,
         Loaded,
         Playing
     }

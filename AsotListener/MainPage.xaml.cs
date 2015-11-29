@@ -7,6 +7,7 @@
     using ViewModels;
     using Windows.Foundation.Diagnostics;
     using System;
+    using Models;
 
     public sealed partial class MainPage : Page, IDisposable
     {
@@ -106,5 +107,13 @@
         #endregion
 
         #endregion
+
+        private void ListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem != null)
+            {
+                this.MainPageViewModel.SelectedEpisode = (Episode)e.ClickedItem;
+            }
+        }
     }
 }

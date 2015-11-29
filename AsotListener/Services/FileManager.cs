@@ -48,7 +48,8 @@
         
         private static string stripEndNumberFromFilename(string filename)
         {
-            Regex numberAtTheEnd = new Regex("[0-9]+$");
+            // TODO: Think about the case, then there is more than 9 download links 
+            Regex numberAtTheEnd = new Regex("[0-9]$");
             return numberAtTheEnd.Replace(filename, string.Empty);
         }
     }
