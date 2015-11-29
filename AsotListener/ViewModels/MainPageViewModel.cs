@@ -10,6 +10,7 @@
     using System.Runtime.Serialization;
     using Windows.Foundation.Diagnostics;
     using System.Threading.Tasks;
+    using System.Windows.Input;
 
     [DataContract]
     public class MainPageViewModel: BaseModel
@@ -29,7 +30,10 @@
         public MainPageViewModel(ILoggingSession loggingSession)
         {
             this.loggingSession = loggingSession;
+            this.RefreshCommand = new RelayCommand(() => { loadEpisodeListFromServer(); });
         }
+
+        public ICommand RefreshCommand { get; private set; }
 
         /// <summary>
         /// Populates the page with content passed during navigation. Any saved state is also
@@ -52,6 +56,11 @@
                 return;
             }
 
+            await loadEpisodeListFromServer();
+        }
+
+        private async Task loadEpisodeListFromServer()
+        {
             using (Loader loader = new Loader(this.loggingSession))
             {
                 string episodeListPage = await loader.FetchEpisodeListAsync();

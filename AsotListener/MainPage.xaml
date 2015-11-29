@@ -76,7 +76,8 @@
                     x:Name="RefreshAppBarButton"
                     x:Uid="RefreshAppBarButton"
                     Icon="Refresh"
-                    Label="refresh"/>
+                    Label="refresh"
+                    Command="{Binding RefreshCommand}"/>
                 <AppBarButton
                     x:Name="DownloadAppBarButton"
                     x:Uid="DownloadAppBarButton"
