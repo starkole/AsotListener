@@ -12,6 +12,7 @@
     {
         private const string EPISODE_REGEX = @"(/episode/\?p=\d+)"">(.*)<";
         private const string DOWNLOAD_LINK_REGEX = @"http://\S*\.mp3";
+        private const string EPISODE_NAME_START = @"A State Of Trance: ";
 
         /// <summary>
         /// Extracts episodes information from given html page
@@ -42,8 +43,10 @@
 
         private static string normalizeEpisodeName(string rawName)
         {
+            Regex episodeNameStart = new Regex(EPISODE_NAME_START);
+            string nameWithStrippedStart = episodeNameStart.Replace(rawName, string.Empty);
             Regex containsABadCharacter = new Regex("[" + Regex.Escape(new string(System.IO.Path.GetInvalidPathChars())) + "]");
-            return containsABadCharacter.Replace(rawName, string.Empty);
+            return containsABadCharacter.Replace(nameWithStrippedStart, string.Empty);
         }
 
         /// <summary>
