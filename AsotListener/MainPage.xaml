@@ -30,6 +30,7 @@
                     ItemClick="ListView_ItemClick"
                     SelectedItem="{Binding SelectedEpisode}">
                     
+                    <!-- TODO: Investigate how the former piece of code works -->
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="Template">
