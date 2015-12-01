@@ -1,4 +1,4 @@
-﻿namespace AsotListener
+﻿namespace AsotListener.App
 {
     using System;
     using Windows.ApplicationModel;
@@ -8,6 +8,7 @@
     using Windows.UI.Xaml.Media.Animation;
     using Windows.UI.Xaml.Navigation;
     using Services;
+    using Models;
     using Windows.Foundation.Diagnostics;
 
     /// <summary>

@@ -88,26 +88,12 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Constants.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\BaseModel.cs" />
-    <Compile Include="Models\Episode.cs" />
-    <Compile Include="Models\EpisodeStatus.cs" />
-    <Compile Include="Services\Navigation\LoadStateEventArgs.cs" />
-    <Compile Include="Services\Navigation\SaveStateEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\FileManager.cs" />
-    <Compile Include="Services\ILoader.cs" />
-    <Compile Include="Services\Loader.cs" />
-    <Compile Include="Services\Navigation\NavigationHelper.cs" />
-    <Compile Include="Services\ObservableDictionary.cs" />
-    <Compile Include="Services\Parser.cs" />
-    <Compile Include="Services\RelayCommand.cs" />
-    <Compile Include="Services\SuspensionManager.cs" />
-    <Compile Include="Services\Navigation\StateEventHandlers.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
+    <Compile Include="ViewModels\PlayerViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -162,6 +148,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AsotListener.AudioPlayer\AsotListener.AudioPlayer.csproj">
+      <Project>{b2691f43-d755-48cc-84a1-d70c25291c1d}</Project>
+      <Name>AsotListener.AudioPlayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AsotListener.Models\AsotListener.Models.csproj">
+      <Project>{ddfb9b19-6b9f-45df-9f4c-9be123dc96cf}</Project>
+      <Name>AsotListener.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AsotListener.Services\AsotListener.Services.csproj">
+      <Project>{94c4ee75-6366-4e09-95f4-5c4414b09754}</Project>
+      <Name>AsotListener.Services</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>

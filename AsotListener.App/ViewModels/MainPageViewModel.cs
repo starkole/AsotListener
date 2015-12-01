@@ -1,4 +1,4 @@
-﻿namespace AsotListener.ViewModels
+﻿namespace AsotListener.App.ViewModels
 {
     using Services;
     using Services.Navigation;
