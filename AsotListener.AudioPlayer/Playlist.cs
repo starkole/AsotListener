@@ -31,6 +31,19 @@
             set { SetField(ref currentTrack, value, nameof(CurrentTrack)); }
         }
 
+        public int CurrentTrackIndex
+        {
+            get
+            {
+                if (CurrentTrack == null)
+                {
+                    return -1;
+                }
+
+                return TrackList.IndexOf(CurrentTrack);
+            }
+        }
+
         private Playlist() { }
         
         public void SavePlaylistToLocalStorage()
