@@ -6,7 +6,7 @@
     {
         private string name;
         private string uri;
-        private TimeSpan startPosition;
+        private TimeSpan startPosition = TimeSpan.FromSeconds(0);
 
         public string Name
         {
