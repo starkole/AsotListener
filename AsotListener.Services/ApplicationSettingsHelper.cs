@@ -25,6 +25,23 @@
             else
             {
                 var value = ApplicationData.Current.LocalSettings.Values[key];
+                return value;
+            }
+        }
+
+        /// <summary>
+        /// Function to read a setting value and clear it after reading it
+        /// </summary>
+        public object ReadAndRemoveSettingsValue(string key)
+        {
+            // TODO: Add logging here
+            if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+            {
+                return null;
+            }
+            else
+            {
+                var value = ApplicationData.Current.LocalSettings.Values[key];
                 ApplicationData.Current.LocalSettings.Values.Remove(key);
                 return value;
             }
