@@ -6,8 +6,9 @@
     public static class Constants
     {
         public const string LOGGING_SESSION_NAME = "AsotListenerLoggingSession";
-
+        public const string Playlist = "Playlist";
         public const string CurrentTrack = "CurrentTrack";
+
         public const string BackgroundTaskStarted = "BackgroundTaskStarted";
         public const string BackgroundTaskRunning = "BackgroundTaskRunning";
         public const string BackgroundTaskCancelled = "BackgroundTaskCancelled";
@@ -22,5 +23,7 @@
         public const string Trackchanged = "TrackChanged"; // TODO: Rename this properly
         public const string ForegroundAppActive = "ForegroundAppActive";
         public const string ForegroundAppSuspended = "ForegroundAppSuspended";
+
+        
     }
 }

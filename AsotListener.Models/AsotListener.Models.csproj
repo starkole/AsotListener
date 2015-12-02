@@ -82,6 +82,7 @@
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioTrack.cs" />
     <Compile Include="BaseModel.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Episode.cs" />
