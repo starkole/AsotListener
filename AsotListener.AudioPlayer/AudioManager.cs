@@ -18,6 +18,8 @@
         private Action backgroundTaskWaitAction;
 
         #endregion
+        public delegate void TrackChangedEventHandler(object sender, TrackChangedEventArgs args);
+        public event TrackChangedEventHandler CurrentTrackChanged;
 
         #region Ctor
 
@@ -29,6 +31,7 @@
         {
             this.backgroundTaskWaitAction = backgroundTaskWaitAction;
             this.playlist = playlist;
+            this.playlist.CurrentTrack.PropertyChanged += OnCurrentTrackChanged;
 
             this.mediaPlayer = mediaPlayer;
             mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
@@ -47,6 +50,12 @@
         }
 
         #endregion
+
+        private void OnCurrentTrackChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            SaveCurrentState();
+            CurrentTrackChanged?.Invoke(this, new TrackChangedEventArgs(playlist.CurrentTrack));
+        }
 
         #region MediaPlayer Handlers
 
@@ -77,7 +86,10 @@
         private void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
         {
             sender.Play();
-            updateUVCOnNewTrack();
+            smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+            smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
+            smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack.Name;
+            smtc.DisplayUpdater.Update();
         }
 
         private void MediaPlayer_MediaEnded(MediaPlayer sender, object args)
@@ -104,7 +116,7 @@
                 case SystemMediaTransportControlsButton.Play:
                     Debug.WriteLine("UVC play button pressed");
                     backgroundTaskWaitAction();
-                    playCurrentTrack();
+                    StartPlayback();
                     break;
                 case SystemMediaTransportControlsButton.Pause:
                     Debug.WriteLine("UVC pause button pressed");
@@ -137,7 +149,7 @@
                 (tracksCount - rawIndex) % tracksCount :
                 rawIndex % tracksCount;
             playlist.CurrentTrack = playlist.TrackList[index];
-            playCurrentTrack();
+            StartPlayback();
         }
 
         public void StartTrackAt(AudioTrack audioTrack)
@@ -148,7 +160,7 @@
             }
 
             playlist.CurrentTrack = audioTrack;
-            playCurrentTrack();
+            StartPlayback();
         }
 
         public void SkipToNext()
@@ -168,19 +180,7 @@
             StartTrackAt(0);
         }
 
-        #endregion
-
-        #region Private Methods
-
-        private void updateUVCOnNewTrack()
-        {
-            smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
-            smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
-            smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack.Name;
-            smtc.DisplayUpdater.Update();
-        }
-
-        private void playCurrentTrack()
+        public void StartPlayback()
         {
             if (playlist.CurrentTrack == null)
             {
@@ -204,6 +204,17 @@
             mediaPlayer.SetUriSource(new Uri(playlist.CurrentTrack.Uri));
         }
 
+        public void SaveCurrentState()
+        {
+            playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
+            playlist.SavePlaylistToLocalStorage();
+        }
+
+        public void LoadState()
+        {
+            playlist.LoadPlaylistFromLocalStorage();
+        }
+
         #endregion
 
         #region IDisposable Support
@@ -215,6 +226,9 @@
             {
                 if (disposing)
                 {
+                    mediaPlayer.Pause();
+                    SaveCurrentState();
+
                     mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
                     mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
                     mediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
