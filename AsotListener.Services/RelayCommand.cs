@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.Services
 {
     using System;
+    using System.Threading.Tasks;
     using System.Windows.Input;
 
     /// <summary>
@@ -26,6 +27,15 @@
         /// <param name="execute">The execution logic.</param>
         public RelayCommand(Action execute)
             : this(execute, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new command that can always execute from given task.
+        /// </summary>
+        /// <param name="execute">The task to execute.</param>
+        public RelayCommand(Func<Task> task)
+            : this(() => task(), null)
         {
         }
 

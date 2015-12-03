@@ -21,7 +21,7 @@
         private readonly NavigationHelper navigationHelper;
         private readonly MainPageViewModel mainPageViewModel;
 
-        private AutoResetEvent SererInitialized;
+        private AutoResetEvent ServerInitialized;
         private bool isMyBackgroundTaskRunning = false;
         private IApplicationSettingsHelper applicationSettingsHelper = ApplicationSettingsHelper.Instance;
 
@@ -61,10 +61,12 @@
                 object value = applicationSettingsHelper.ReadSettingsValue(Constants.CurrentTrack);
                 if (value != null)
                 {
-                    return (String)value;
+                    return (string)value;
                 }
                 else
-                    return String.Empty;
+                {
+                    return string.Empty;
+                }
             }
         }
 
@@ -86,7 +88,7 @@
             this.navigationHelper.LoadState += mainPageViewModel.OnNavigationHelperLoadState;
             this.navigationHelper.SaveState += mainPageViewModel.OnNavigationHelperSaveState;
 
-            SererInitialized = new AutoResetEvent(false);
+            ServerInitialized = new AutoResetEvent(false);
         }
 
         /// <summary>
@@ -202,7 +204,7 @@
                 
                 Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
                 this.loggingSession.Dispose();
-                this.SererInitialized.Dispose();
+                this.ServerInitialized.Dispose();
 
                 disposedValue = true;
             }
@@ -259,7 +261,7 @@
         }
 
         /// <summary>
-        /// This event fired when a message is recieved from Background Process
+        /// This event fired when a message is received from Background Process
         /// </summary>
         async void BackgroundMediaPlayer_MessageReceivedFromBackground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
@@ -278,7 +280,7 @@
                     case Constants.BackgroundTaskStarted:
                         //Wait for Background Task to be initialized before starting playback
                         Debug.WriteLine("Background Task started");
-                        SererInitialized.Set();
+                        ServerInitialized.Set();
                         break;
                 }
             }
@@ -297,8 +299,8 @@
             BackgroundMediaPlayer.SendMessageToBackground(value);
 
             // Prevent the user from repeatedly pressing the button and causing 
-            // a backlong of button presses to be handled. This button is re-eneabled 
-            // in the TrackReady Playstate handler.
+            // a back-long of button presses to be handled. This button is re-enabled 
+            // in the TrackReady Play state handler.
             prevButton.IsEnabled = false;
         }
 
@@ -343,8 +345,8 @@
             BackgroundMediaPlayer.SendMessageToBackground(value);
 
             // Prevent the user from repeatedly pressing the button and causing 
-            // a backlong of button presses to be handled. This button is re-eneabled 
-            // in the TrackReady Playstate handler.
+            // a back-long of button presses to be handled. This button is re-enabled 
+            // in the TrackReady Play-state handler.
             nextButton.IsEnabled = false;
         }
 
@@ -377,7 +379,7 @@
             AddMediaPlayerEventHandlers();
             var backgroundtaskinitializationresult = this.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                bool result = SererInitialized.WaitOne(2000);
+                bool result = ServerInitialized.WaitOne(2000);
                 //Send message to initiate playback
                 if (result == true)
                 {
