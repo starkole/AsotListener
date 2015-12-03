@@ -6,8 +6,9 @@
     using Models;
     using Windows.Media;
     using Windows.Media.Playback;
+    using Services;
 
-    public class AudioManager : IDisposable
+    internal class AudioManager : IDisposable
     {
         #region Private Fields
 

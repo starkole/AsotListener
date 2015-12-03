@@ -1,4 +1,4 @@
-﻿namespace AsotListener.AudioPlayer
+﻿namespace AsotListener.Services
 {
     using System;
     using System.Collections.ObjectModel;

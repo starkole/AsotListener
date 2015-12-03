@@ -31,10 +31,12 @@
     /// Impletements IBackgroundTask to provide an entry point for app code to be run in background. 
     /// Also takes care of handling UVC and communication channel with foreground
     /// </summary>
-    public sealed class BackgroundAudioPlayer : IBackgroundTask
+    public sealed class BackgroundAudioPlayer : IBackgroundTask, IDisposable
     {
 
         #region Private fields, properties
+        private AudioManager audioManager;
+
         private SystemMediaTransportControls systemmediatransportcontrol;
         private MyPlaylistManager playlistManager;
         private BackgroundTaskDeferral deferral; // Used to keep task alive
@@ -67,6 +69,13 @@
         public void Run(IBackgroundTaskInstance taskInstance)
         {
             Debug.WriteLine("Background Audio Task " + taskInstance.Task.Name + " starting...");
+
+            audioManager = new AudioManager(
+                Services.Playlist.Instance,
+                BackgroundMediaPlayer.Current,
+                SystemMediaTransportControls.GetForCurrentView(),
+                () => { });
+
             // Initialize SMTC object to talk with UVC. 
             //Note that, this is intended to run after app is paused and 
             //hence all the logic must be written to run in background process
@@ -363,6 +372,34 @@
                         break;
                 }
             }
+        }
+
+        #endregion
+
+        #region IDisposable Support
+
+        private bool disposedValue = false; // To detect redundant calls
+
+        void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: Save state here.
+                    BackgroundTaskStarted.Dispose();
+                    audioManager.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
         }
         #endregion
 
