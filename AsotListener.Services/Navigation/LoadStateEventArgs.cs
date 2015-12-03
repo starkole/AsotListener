@@ -12,13 +12,13 @@
         /// The parameter value passed to <see cref="Frame.Navigate(Type, object)"/> 
         /// when this page was initially requested.
         /// </summary>
-        public object NavigationParameter { get; private set; }
+        public object NavigationParameter { get; }
 
         /// <summary>
         /// A dictionary of state preserved by this page during an earlier
         /// session. This will be null the first time a page is visited.
         /// </summary>
-        public Dictionary<string, object> PageState { get; private set; }
+        public Dictionary<string, object> PageState { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LoadStateEventArgs"/> class.

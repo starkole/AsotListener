@@ -11,7 +11,7 @@
         /// <summary>
         /// An empty dictionary to be populated with serializable state.
         /// </summary>
-        public Dictionary<string, object> PageState { get; private set; }
+        public Dictionary<string, object> PageState { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SaveStateEventArgs"/> class.

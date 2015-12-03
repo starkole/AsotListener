@@ -1,6 +1,5 @@
 ﻿namespace AsotListener.Services
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Windows.Foundation.Collections;
@@ -19,8 +18,8 @@
                 this.Key = key;
             }
 
-            public CollectionChange CollectionChange { get; private set; }
-            public string Key { get; private set; }
+            public CollectionChange CollectionChange { get; }
+            public string Key { get; }
         }
 
         private Dictionary<string, object> _dictionary = new Dictionary<string, object>();
@@ -60,7 +59,7 @@
         {
             object currentValue;
             if (this._dictionary.TryGetValue(item.Key, out currentValue) &&
-                Object.Equals(item.Value, currentValue) && this._dictionary.Remove(item.Key))
+                object.Equals(item.Value, currentValue) && this._dictionary.Remove(item.Key))
             {
                 this.InvokeMapChanged(CollectionChange.ItemRemoved, item.Key);
                 return true;
@@ -91,50 +90,23 @@
             }
         }
 
-        public ICollection<string> Keys
-        {
-            get { return this._dictionary.Keys; }
-        }
+        public ICollection<string> Keys => this._dictionary.Keys;
 
-        public bool ContainsKey(string key)
-        {
-            return this._dictionary.ContainsKey(key);
-        }
+        public bool ContainsKey(string key) => this._dictionary.ContainsKey(key);
 
-        public bool TryGetValue(string key, out object value)
-        {
-            return this._dictionary.TryGetValue(key, out value);
-        }
+        public bool TryGetValue(string key, out object value) => this._dictionary.TryGetValue(key, out value);
 
-        public ICollection<object> Values
-        {
-            get { return this._dictionary.Values; }
-        }
+        public ICollection<object> Values => this._dictionary.Values;
 
-        public bool Contains(KeyValuePair<string, object> item)
-        {
-            return this._dictionary.Contains(item);
-        }
+        public bool Contains(KeyValuePair<string, object> item) => this._dictionary.Contains(item);
 
-        public int Count
-        {
-            get { return this._dictionary.Count; }
-        }
+        public int Count => this._dictionary.Count;
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
-        {
-            return this._dictionary.GetEnumerator();
-        }
+        public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => this._dictionary.GetEnumerator();
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return this._dictionary.GetEnumerator();
-        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this._dictionary.GetEnumerator();
 
         public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
         {

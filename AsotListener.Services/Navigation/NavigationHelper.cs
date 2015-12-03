@@ -54,8 +54,8 @@
     [Windows.Foundation.Metadata.WebHostHidden]
     public class NavigationHelper : DependencyObject
     {
-        private Page Page { get; set; }
-        private Frame Frame { get { return this.Page.Frame; } }
+        private Page Page { get; }
+        private Frame Frame => this.Page.Frame;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NavigationHelper"/> class.
@@ -163,10 +163,7 @@
         /// true if the <see cref="Frame"/> has at least one entry 
         /// in the back navigation history.
         /// </returns>
-        public virtual bool CanGoBack()
-        {
-            return this.Frame != null && this.Frame.CanGoBack;
-        }
+        public virtual bool CanGoBack() => this.Frame != null && this.Frame.CanGoBack;
         /// <summary>
         /// Virtual method used by the <see cref="GoForwardCommand"/> property
         /// to determine if the <see cref="Frame"/> can go forward.
@@ -175,10 +172,7 @@
         /// true if the <see cref="Frame"/> has at least one entry 
         /// in the forward navigation history.
         /// </returns>
-        public virtual bool CanGoForward()
-        {
-            return this.Frame != null && this.Frame.CanGoForward;
-        }
+        public virtual bool CanGoForward() => this.Frame != null && this.Frame.CanGoForward;
 
         /// <summary>
         /// Virtual method used by the <see cref="GoBackCommand"/> property

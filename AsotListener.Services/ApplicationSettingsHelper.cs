@@ -8,7 +8,7 @@
         private static Lazy<IApplicationSettingsHelper> lazy =
             new Lazy<IApplicationSettingsHelper>(() => new ApplicationSettingsHelper());
 
-        public static IApplicationSettingsHelper Instance { get { return lazy.Value; } }
+        public static IApplicationSettingsHelper Instance => lazy.Value;
 
         private ApplicationSettingsHelper() { }
 

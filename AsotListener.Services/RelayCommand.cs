@@ -37,7 +37,7 @@
         public RelayCommand(Action execute, Func<bool> canExecute)
         {
             if (execute == null)
-                throw new ArgumentNullException("execute");
+                throw new ArgumentNullException(nameof(execute));
             _execute = execute;
             _canExecute = canExecute;
         }
@@ -49,10 +49,7 @@
         /// Data used by the command. If the command does not require data to be passed, this object can be set to null.
         /// </param>
         /// <returns>true if this command can be executed; otherwise, false.</returns>
-        public bool CanExecute(object parameter)
-        {
-            return _canExecute == null ? true : _canExecute();
-        }
+        public bool CanExecute(object parameter) => _canExecute == null ? true : _canExecute();
 
         /// <summary>
         /// Executes the <see cref="RelayCommand"/> on the current command target.

@@ -92,18 +92,12 @@
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>
-        public NavigationHelper NavigationHelper
-        {
-            get { return this.navigationHelper; }
-        }
+        public NavigationHelper NavigationHelper => this.navigationHelper;
 
         /// <summary>
         /// Gets the view model for this <see cref="Page"/>.
         /// </summary>
-        public MainPageViewModel MainPageViewModel
-        {
-            get { return this.mainPageViewModel; }
-        }
+        public MainPageViewModel MainPageViewModel => this.mainPageViewModel;
 
         #region NavigationHelper registration
 

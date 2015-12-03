@@ -5,7 +5,7 @@
 
     internal class TrackChangedEventArgs: EventArgs
     {
-        public AudioTrack Track { get; private set; }
+        public AudioTrack Track { get; }
 
         public TrackChangedEventArgs(AudioTrack track)
         {

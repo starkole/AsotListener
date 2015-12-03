@@ -14,10 +14,7 @@
         // TODO: Use DI here
         private static IApplicationSettingsHelper settingsHelper = ApplicationSettingsHelper.Instance;
 
-        public static Playlist Instance
-        {
-            get { return lazy.Value; }
-        }
+        public static Playlist Instance => lazy.Value;
 
         public ObservableCollection<AudioTrack> TrackList
         {

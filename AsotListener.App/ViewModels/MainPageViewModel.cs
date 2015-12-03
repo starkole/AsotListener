@@ -41,10 +41,8 @@
             set { SetField(ref selectedEpisode, value, nameof(SelectedEpisode)); }
         }
 
-        public ICommand RefreshCommand
-        { get; private set; }
-        public ICommand DownloadCommand
-        { get; private set; }
+        public ICommand RefreshCommand { get; }
+        public ICommand DownloadCommand { get; }
 
         #endregion
 
@@ -53,8 +51,11 @@
         public MainPageViewModel(ILoggingSession loggingSession)
         {
             this.loggingSession = loggingSession;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            // TODO: Introduce async ICommand implementation
             this.RefreshCommand = new RelayCommand(() => { loadEpisodeListFromServer(); });
             this.DownloadCommand = new RelayCommand(() => { downloadSelectedEpisode(); });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         #endregion

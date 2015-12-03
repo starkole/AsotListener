@@ -26,9 +26,6 @@
             set { SetField(ref startPosition, value, nameof(StartPosition)); }
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
     }
 }
