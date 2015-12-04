@@ -35,7 +35,7 @@
         /// </summary>
         /// <param name="execute">The task to execute.</param>
         public RelayCommand(Func<Task> task)
-            : this(() => task(), null)
+            : this(() => { task(); })
         {
         }
 
