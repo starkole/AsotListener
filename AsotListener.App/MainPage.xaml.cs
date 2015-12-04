@@ -17,7 +17,9 @@
         private readonly PlayerViewModel playerModel;        
         private IApplicationSettingsHelper applicationSettingsHelper = ApplicationSettingsHelper.Instance;
 
+        // TODO: Move text labels to resources
         //private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+        // TODO: Implement logger to use LoggingSession and Debug simultaneously.
         private readonly ILoggingSession loggingSession;        
 
         public MainPage()
@@ -28,16 +30,13 @@
             }
             this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
 
-            this.mainPageViewModel = new MainPageViewModel(this.loggingSession);
+            this.mainPageViewModel = new MainPageViewModel(this.loggingSession, this.applicationSettingsHelper);
             this.playerModel = new PlayerViewModel();
 
             this.InitializeComponent();
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
-
             this.navigationHelper = new NavigationHelper(this);
-            this.navigationHelper.LoadState += mainPageViewModel.OnNavigationHelperLoadState;
-            this.navigationHelper.SaveState += mainPageViewModel.OnNavigationHelperSaveState;            
         }
 
         /// <summary>
@@ -86,6 +85,7 @@
                     Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
                     this.loggingSession.Dispose();
                     this.playerModel.Dispose();
+                    this.mainPageViewModel.Dispose();
                 }
 
                 disposedValue = true;

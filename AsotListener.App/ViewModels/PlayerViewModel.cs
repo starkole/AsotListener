@@ -127,7 +127,6 @@
 
         /// <summary>
         /// Send message to Background process that app is to be suspended
-        /// Stop clock and slider when suspending
         /// Unsubscribe handlers for MediaPlayer events
         /// </summary>
         void ForegroundApp_Suspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)

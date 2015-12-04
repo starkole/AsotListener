@@ -8,6 +8,7 @@
         public const string LOGGING_SESSION_NAME = "AsotListenerLoggingSession";
         public const string Playlist = "Playlist";
         public const string CurrentTrack = "CurrentTrack";
+        public const string EpisodesList = "EpisodesList";
 
         public const string BackgroundTaskStarted = "BackgroundTaskStarted";
         public const string BackgroundTaskRunning = "BackgroundTaskRunning";

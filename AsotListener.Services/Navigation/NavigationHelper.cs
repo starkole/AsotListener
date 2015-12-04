@@ -266,7 +266,7 @@
             if (properties.IsLeftButtonPressed || properties.IsRightButtonPressed ||
                 properties.IsMiddleButtonPressed) return;
 
-            // If back or foward are pressed (but not both) navigate appropriately
+            // If back or forward are pressed (but not both) navigate appropriately
             bool backPressed = properties.IsXButton1Pressed;
             bool forwardPressed = properties.IsXButton2Pressed;
             if (backPressed ^ forwardPressed)
@@ -282,7 +282,7 @@
 
         #region Process lifetime management
 
-        private String _pageKey;
+        private string _pageKey;
 
         /// <summary>
         /// Register this event on the current page to populate the page
@@ -290,11 +290,12 @@
         /// state provided when recreating a page from a prior session.
         /// </summary>
         public event LoadStateEventHandler LoadState;
+
         /// <summary>
         /// Register this event on the current page to preserve
         /// state associated with the current page in case the
         /// application is suspended or the page is discarded from
-        /// the navigaqtion cache.
+        /// the navigation cache.
         /// </summary>
         public event SaveStateEventHandler SaveState;
 

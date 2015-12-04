@@ -14,14 +14,14 @@
     using System.Collections.Generic;
 
     [DataContract]
-    public class MainPageViewModel: BaseModel
+    public class MainPageViewModel : BaseModel, IDisposable
     {
         #region Fields
 
         private ObservableCollection<Episode> episodes = new ObservableCollection<Episode>();
         private Episode selectedEpisode;
         private readonly ILoggingSession loggingSession;
-        //private readonly PlayerViewModel playerViewModel = new PlayerViewModel(); 
+        private readonly IApplicationSettingsHelper applicationSettingsHelper;
 
         #endregion
 
@@ -48,11 +48,17 @@
 
         #region Ctor
 
-        public MainPageViewModel(ILoggingSession loggingSession)
+        public MainPageViewModel(
+            ILoggingSession loggingSession,
+            IApplicationSettingsHelper applicationSettingsHelper)
         {
             this.loggingSession = loggingSession;
+            this.applicationSettingsHelper = applicationSettingsHelper;
             this.RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
             this.DownloadCommand = new RelayCommand(downloadSelectedEpisode);
+
+            App.Current.Suspending += onAppSuspending;
+            App.Current.Resuming += onAppResuming;
         }
 
         #endregion
@@ -60,45 +66,22 @@
 
         #region State Management
 
-        /// <summary>
-        /// Populates the page with content passed during navigation. Any saved state is also
-        /// provided when recreating a page from a prior session.
-        /// </summary>
-        /// <param name="sender">
-        /// The source of the event; typically <see cref="NavigationHelper"/>.
-        /// </param>
-        /// <param name="e">Event data that provides both the navigation parameter passed to
-        /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
-        /// a dictionary of state preserved by this page during an earlier
-        /// session. The state will be null the first time a page is visited.</param>
-        public async void OnNavigationHelperLoadState(object sender, LoadStateEventArgs e)
+        private async void onAppResuming(object sender, object eventArgs)
         {
-            // TODO: Add logging here
+            Episodes = applicationSettingsHelper.ReadSettingsValue(Constants.EpisodesList) as ObservableCollection<Episode>;
 
-            if (e.PageState != null && e.PageState.ContainsKey(nameof(Episodes)))
+            if (Episodes == null)
             {
-                this.Episodes = (ObservableCollection<Episode>)e.PageState[nameof(Episodes)];
-                return;
+                await loadEpisodeListFromServer();
             }
-
-            await loadEpisodeListFromServer();
         }
 
-        /// <summary>
-        /// Preserves state associated with this page in case the application is suspended or the
-        /// page is discarded from the navigation cache. Values must conform to the serialization
-        /// requirements of <see cref="SuspensionManager.SessionState"/>.
-        /// </summary>
-        /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/>.</param>
-        /// <param name="e">Event data that provides an empty dictionary to be populated with
-        /// serializable state.</param>
-        public void OnNavigationHelperSaveState(object sender, SaveStateEventArgs e)
+        private void onAppSuspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
         {
-            if (null != this.Episodes)
-            {
-                e.PageState[nameof(Episodes)] = this.Episodes;
-            }
-        } 
+            var deferral = e.SuspendingOperation.GetDeferral();
+            applicationSettingsHelper.SaveSettingsValue(Constants.EpisodesList, Episodes);
+            deferral.Complete();
+        }
 
         #endregion
 
@@ -152,7 +135,33 @@
                 await loader.DownloadEpisodeAsync(episode, urls);
                 episode.Status = EpisodeStatus.Loaded;
             }
-        } 
+        }
+
+        #endregion
+
+        #region IDisposable Support
+
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    applicationSettingsHelper.SaveSettingsValue(Constants.EpisodesList, Episodes);
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
 
         #endregion
     }
