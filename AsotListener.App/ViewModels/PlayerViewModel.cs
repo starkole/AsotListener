@@ -19,8 +19,8 @@
         private bool isPreviousButtonEnabled;
         private bool isNextButtonEnabled;
         private bool isPlayButtonEnabled;
-        private IconElement pauseIcon = new SymbolIcon(Symbol.Pause);
-        private IconElement playIcon = new SymbolIcon(Symbol.Play);
+        private IconElement pauseIcon;
+        private IconElement playIcon;
         private IconElement playButtonIcon;
         private bool isMyBackgroundTaskRunning = false;
         private IApplicationSettingsHelper applicationSettingsHelper;
@@ -66,10 +66,14 @@
 
         public PlayerViewModel()
         {
-            mediaPlayer = BackgroundMediaPlayer.Current;
+            ServerInitialized = new AutoResetEvent(false);
+
             Playlist = Services.Playlist.Instance;
             applicationSettingsHelper = ApplicationSettingsHelper.Instance;
+            mediaPlayer = BackgroundMediaPlayer.Current;
 
+            pauseIcon = new SymbolIcon(Symbol.Pause);
+            playIcon = new SymbolIcon(Symbol.Play);
             PlayButtonIcon = playIcon;
 
             // Using explicit casts here because of http://stackoverflow.com/questions/2057146/compiler-ambiguous-invocation-error-anonymous-method-and-method-group-with-fun
@@ -78,7 +82,6 @@
             PlayPauseCommand = new RelayCommand((Action)onPlayPauseAction);
 
             updateBackgroundTaskRunningStatus();
-            ServerInitialized = new AutoResetEvent(false);
 
             //Adding App suspension handlers here so that we can unsubscribe handlers 
             //that access to BackgroundMediaPlayer events
@@ -89,7 +92,7 @@
         #endregion
 
         #region Foreground App Lifecycle Handlers
-        
+
         /// <summary>
         /// Sends message to background informing app has resumed
         /// Subscribe to MediaPlayer events
@@ -138,7 +141,7 @@
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, Constants.ForegroundAppSuspended);
             deferral.Complete();
         }
-        
+
         #endregion
 
         #region Button Commands
@@ -256,6 +259,7 @@
             if (value == null)
             {
                 isMyBackgroundTaskRunning = false;
+                return;
             }
 
             isMyBackgroundTaskRunning = ((string)value).Equals(Constants.BackgroundTaskRunning);
@@ -310,7 +314,7 @@
                 if (disposing)
                 {
                     this.ServerInitialized.Dispose();
-                }                
+                }
 
                 disposedValue = true;
             }

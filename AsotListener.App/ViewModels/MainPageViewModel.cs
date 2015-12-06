@@ -12,6 +12,7 @@
     using System.Threading.Tasks;
     using System.Windows.Input;
     using System.Collections.Generic;
+    using System.Linq;
 
     [DataContract]
     public class MainPageViewModel : BaseModel, IDisposable
@@ -22,6 +23,7 @@
         private Episode selectedEpisode;
         private readonly ILoggingSession loggingSession;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
+                private readonly PlayerViewModel playerModel;
 
         #endregion
 
@@ -44,6 +46,8 @@
         public ICommand RefreshCommand { get; }
         public ICommand DownloadCommand { get; }
 
+        public PlayerViewModel PlayerModel => this.playerModel;
+
         #endregion
 
         #region Ctor
@@ -52,6 +56,8 @@
             ILoggingSession loggingSession,
             IApplicationSettingsHelper applicationSettingsHelper)
         {
+            this.playerModel = new PlayerViewModel();
+
             this.loggingSession = loggingSession;
             this.applicationSettingsHelper = applicationSettingsHelper;
             this.RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
@@ -59,6 +65,9 @@
 
             App.Current.Suspending += onAppSuspending;
             App.Current.Resuming += onAppResuming;
+
+            // TODO: Save and read to file.
+            loadEpisodeListFromServer();
         }
 
         #endregion
@@ -96,6 +105,7 @@
             }
 
             await updateEpisodesStates();
+            applicationSettingsHelper.SaveSettingsValue(Constants.EpisodesList, Episodes.ToArray());
         }
 
         private async Task updateEpisodesStates()
@@ -150,6 +160,7 @@
                 if (disposing)
                 {
                     applicationSettingsHelper.SaveSettingsValue(Constants.EpisodesList, Episodes);
+                    this.playerModel.Dispose();
                 }
 
                 disposedValue = true;

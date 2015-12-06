@@ -9,12 +9,15 @@
     using System;
     using Models;
     using Services;
+    using Windows.UI.Xaml.Input;
+    using Windows.UI.Input;
+    using Windows.UI.Xaml.Controls.Primitives;
+    using System.Diagnostics;
 
     public sealed partial class MainPage : Page, IDisposable
     {
         private readonly NavigationHelper navigationHelper;
         private readonly MainPageViewModel mainPageViewModel;
-        private readonly PlayerViewModel playerModel;        
         private IApplicationSettingsHelper applicationSettingsHelper = ApplicationSettingsHelper.Instance;
 
         // TODO: Move text labels to resources
@@ -31,12 +34,11 @@
             this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
 
             this.mainPageViewModel = new MainPageViewModel(this.loggingSession, this.applicationSettingsHelper);
-            this.playerModel = new PlayerViewModel();
-
-            this.InitializeComponent();
-
+                        
             this.NavigationCacheMode = NavigationCacheMode.Required;
             this.navigationHelper = new NavigationHelper(this);
+
+            this.InitializeComponent();
         }
 
         /// <summary>
@@ -45,7 +47,6 @@
         public NavigationHelper NavigationHelper => this.navigationHelper;
 
         public MainPageViewModel MainPageViewModel => this.mainPageViewModel;
-        public PlayerViewModel PlayerModel => this.playerModel;
 
         #region NavigationHelper registration
 
@@ -84,7 +85,6 @@
                 {
                     Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
                     this.loggingSession.Dispose();
-                    this.playerModel.Dispose();
                     this.mainPageViewModel.Dispose();
                 }
 
@@ -108,6 +108,21 @@
             {
                 this.MainPageViewModel.SelectedEpisode = (Episode)e.ClickedItem;
             }
+        }
+
+        private void OnElementHolding(object sender, HoldingRoutedEventArgs args)
+        {
+            // TODO: Find out how to move this handler to view model
+            Debug.WriteLine("Holding event with HoldingState=" + args.HoldingState.ToString());
+
+            // this event is fired multiple times. We do not want to show the menu twice
+            if (args.HoldingState != HoldingState.Started) return;
+
+            FrameworkElement element = sender as FrameworkElement;
+            if (element == null) return;
+
+            // If the menu was attached properly, we just need to call this handy method
+            FlyoutBase.ShowAttachedFlyout(element);
         }
     }
 }
