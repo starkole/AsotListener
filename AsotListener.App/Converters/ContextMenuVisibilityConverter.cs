@@ -13,7 +13,7 @@
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Episode episode = parameter as Episode;
+            Episode episode = value as Episode;
             if(episode == null)
             {
                 return Visibility.Collapsed;
