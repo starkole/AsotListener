@@ -101,15 +101,6 @@
 
         #endregion
 
-        private void ListView_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            // TODO: Find out how to move this handler to view model
-            if (e.ClickedItem != null)
-            {
-                this.MainPageViewModel.SelectedEpisode = (Episode)e.ClickedItem;
-            }
-        }
-
         private void OnElementHolding(object sender, HoldingRoutedEventArgs args)
         {
             // TODO: Find out how to move this handler to view model

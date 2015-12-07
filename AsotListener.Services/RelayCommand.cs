@@ -26,13 +26,22 @@
         #endregion
 
         #region Ctor
-        
+
+        /// <summary>
+        /// Creates a new command that can always execute.
+        /// </summary>
+        /// <param name="execute">The execution logic.</param>
+        public RelayCommand(Action<object> execute)
+            : this(param => { execute(param); }, null)
+        {
+        }
+
         /// <summary>
         /// Creates a new command that can always execute.
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         public RelayCommand(Action execute)
-            : this(_ => { execute(); })
+            : this(_ => { execute(); }, null)
         {
         }
 
@@ -41,9 +50,19 @@
         /// </summary>
         /// <param name="execute">The task to execute.</param>
         public RelayCommand(Func<Task> task)
-            : this(_ => { task(); })
+            : this(_ => { task(); }, null)
         {
         }
+
+        /// <summary>
+        /// Creates a new command that can always execute from given task.
+        /// </summary>
+        /// <param name="execute">The task to execute.</param>
+        public RelayCommand(Func<object, Task> task)
+            : this(param => { task(param); })
+        {
+        }
+
 
         /// <summary>
         /// Creates a new command.
@@ -55,7 +74,7 @@
         {            
         }
         
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+        public RelayCommand(Action<object> execute, Func<object, bool> canExecute)
         {
             if (execute == null)
             {

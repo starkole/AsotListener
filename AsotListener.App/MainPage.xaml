@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:AsotListener.App"
-    x:Name="MainPageName"
+    xmlns:c="using:AsotListener.App.Converters"
     DataContext="{Binding MainPageViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Transitions>
@@ -15,7 +15,7 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
-
+    
     <Grid>
         <Pivot 
             x:Uid="Pivot" 
@@ -25,12 +25,14 @@
             <!--Pivot item one-->
             <PivotItem
                 x:Uid="episodes"
+                x:Name="EpisodesPivotItem"
                 Margin="19,14.5,0,0"
                 Header="episodes"             
+                DataContext="{Binding EpisodesModel}"
                 CommonNavigationTransitionInfo.IsStaggerElement="True">
                 <ListView
                     x:Name="EpisodesListView"
-                    ItemsSource="{Binding Episodes}"
+                    ItemsSource="{Binding EpisodeList}"
                     ContinuumNavigationTransitionInfo.ExitElementContainer="True">
 
                     <ListView.ItemTemplate>
@@ -38,27 +40,55 @@
                             <StackPanel 
                                 Margin="0,0,0,9.5" 
                                 Holding="OnElementHolding">
+                                <StackPanel.Resources>
+                                    <c:ContextMenuVisibilityConverter x:Key="ContextMenuVisibilityConverter"/>
+                                </StackPanel.Resources>
                                 <FlyoutBase.AttachedFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem 
+                                            x:Name="DownloadContextMenuItem"
                                             Text="download"
-                                            Command="{Binding DataContext.RefreshCommand, ElementName=MainPageName}"
+                                            Visibility="{Binding 
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ElementName=EpisodesPivotItem,                                              
+                                            ConverterParameter=Binding}"
+                                            Command="{Binding DataContext.DownloadCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
+                                            x:Name="CancelDownloadContextMenuItem"
                                             Text="cancel downloading"
-                                            Command="{Binding DataContext.RefreshCommand, ElementName=MainPageName}"
+                                            Visibility="{Binding 
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ElementName=EpisodesPivotItem,                                              
+                                            ConverterParameter=Binding}"
+                                            Command="{Binding DataContext.CancelDownloadCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
+                                            x:Name="DeleteContextMenuItem"
                                             Text="delete"
-                                            Command="{Binding DataContext.RefreshCommand, ElementName=MainPageName}"
+                                            Visibility="{Binding 
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ElementName=EpisodesPivotItem,                                              
+                                            ConverterParameter=Binding}"
+                                            Command="{Binding DataContext.DeleteCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
+                                            x:Name="PlayContextMenuItem"
                                             Text="play"
-                                            Command="{Binding DataContext.RefreshCommand, ElementName=MainPageName}"
+                                            Visibility="{Binding 
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ElementName=EpisodesPivotItem,                                              
+                                            ConverterParameter=Binding}"
+                                            Command="{Binding DataContext.PlayCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
+                                            x:Name="AddToPlaylistContextMenuItem"
                                             Text="add to now playing"
-                                            Command="{Binding DataContext.RefreshCommand, ElementName=MainPageName}"
+                                            Visibility="{Binding 
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ElementName=EpisodesPivotItem,                                              
+                                            ConverterParameter=Binding}"
+                                            Command="{Binding DataContext.AddToPlaylistCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                     </MenuFlyout>
                                 </FlyoutBase.AttachedFlyout>
@@ -86,7 +116,6 @@
                 </ListView>
             </PivotItem>
 
-            <!--Pivot item two-->
             <PivotItem
                 x:Uid="player"
                 Margin="19,14.5,0,0"
@@ -141,12 +170,7 @@
                     x:Uid="RefreshAppBarButton"
                     Icon="Refresh"
                     Label="refresh"
-                    Command="{Binding RefreshCommand}"/>
-                <AppBarButton
-                    x:Name="DownloadAppBarButton"
-                    x:Uid="DownloadAppBarButton"
-                    Icon="Download"
-                    Label="download"/>
+                    Command="{Binding EpisodesModel.RefreshCommand}"/>
             </CommandBar.PrimaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
