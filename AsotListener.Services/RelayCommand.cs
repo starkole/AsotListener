@@ -13,20 +13,26 @@
     /// </summary>
     public class RelayCommand : ICommand
     {
-        private readonly Action _execute;
-        private readonly Func<bool> _canExecute;
+        #region Fields
+
+        private readonly Action<object> execute;
+        private readonly Func<object, bool> canExecute;
 
         /// <summary>
         /// Raised when RaiseCanExecuteChanged is called.
         /// </summary>
         public event EventHandler CanExecuteChanged;
 
+        #endregion
+
+        #region Ctor
+        
         /// <summary>
         /// Creates a new command that can always execute.
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         public RelayCommand(Action execute)
-            : this(execute, null)
+            : this(_ => { execute(); })
         {
         }
 
@@ -35,7 +41,7 @@
         /// </summary>
         /// <param name="execute">The task to execute.</param>
         public RelayCommand(Func<Task> task)
-            : this(() => { task(); })
+            : this(_ => { task(); })
         {
         }
 
@@ -45,12 +51,24 @@
         /// <param name="execute">The execution logic.</param>
         /// <param name="canExecute">The execution status logic.</param>
         public RelayCommand(Action execute, Func<bool> canExecute)
+            : this(_ => { execute(); }, _ => canExecute())
+        {            
+        }
+        
+        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
             if (execute == null)
+            {
                 throw new ArgumentNullException(nameof(execute));
-            _execute = execute;
-            _canExecute = canExecute;
+            }
+
+            this.execute = execute;
+            this.canExecute = canExecute;
         }
+
+        #endregion
+
+        #region Public Methods
 
         /// <summary>
         /// Determines whether this <see cref="RelayCommand"/> can execute in its current state.
@@ -59,7 +77,7 @@
         /// Data used by the command. If the command does not require data to be passed, this object can be set to null.
         /// </param>
         /// <returns>true if this command can be executed; otherwise, false.</returns>
-        public bool CanExecute(object parameter) => _canExecute == null ? true : _canExecute();
+        public bool CanExecute(object parameter) => canExecute == null ? true : canExecute(parameter);
 
         /// <summary>
         /// Executes the <see cref="RelayCommand"/> on the current command target.
@@ -69,7 +87,10 @@
         /// </param>
         public void Execute(object parameter)
         {
-            _execute();
+            if (CanExecute(parameter))
+            {
+                execute(parameter);
+            }
         }
 
         /// <summary>
@@ -77,13 +98,8 @@
         /// to indicate that the return value of the <see cref="CanExecute"/>
         /// method has changed.
         /// </summary>
-        public void RaiseCanExecuteChanged()
-        {
-            var handler = CanExecuteChanged;
-            if (handler != null)
-            {
-                handler(this, EventArgs.Empty);
-            }
-        }
+        public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty); 
+
+        #endregion
     }
 }
