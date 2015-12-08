@@ -117,13 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppName.Label" xml:space="preserve">
-    <value>ASOT Listener</value>
+  <data name="EpisodesPivotItem.Header" xml:space="preserve">
+    <value>episodes</value>
   </data>
-  <data name="ForwardAppBarButton.Label" xml:space="preserve">
-    <value>forward</value>
+  <data name="NowPlayingText.Text" xml:space="preserve">
+    <value>now playing</value>
   </data>
-  <data name="HomeAppBarButton.Label" xml:space="preserve">
-    <value>home</value>
+  <data name="Pivot.Title" xml:space="preserve">
+    <value>ASOT PLAYER</value>
+  </data>
+  <data name="PlayerPivotItem.Header" xml:space="preserve">
+    <value>player</value>
+  </data>
+  <data name="RefreshAppBarButton.Label" xml:space="preserve">
+    <value>refresh</value>
   </data>
 </root>

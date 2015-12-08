@@ -24,7 +24,7 @@
             CommonNavigationTransitionInfo.IsStaggerElement="True">
             <!--Pivot item one-->
             <PivotItem
-                x:Uid="episodes"
+                x:Uid="EpisodesPivotItem"
                 x:Name="EpisodesPivotItem"
                 Margin="19,14.5,0,0"
                 Header="episodes"             
@@ -112,7 +112,7 @@
             </PivotItem>
 
             <PivotItem
-                x:Uid="player"
+                x:Uid="PlayerPivotItem"
                 Margin="19,14.5,0,0"
                 DataContext="{Binding PlayerModel}"
                 Header="player">
@@ -120,7 +120,10 @@
                     <!--TitlePanel contains the name of the application and page title-->
                     <StackPanel Margin="0,20,0,0">
                         <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,28">
-                            <TextBlock x:Name="PageTitle" Text="now playing" Style="{StaticResource SubheaderTextBlockStyle}"/>
+                            <TextBlock 
+                                x:Uid="NowPlayingText" 
+                                Text="now playing" 
+                                Style="{StaticResource SubheaderTextBlockStyle}"/>
                         </StackPanel>
 
                         <!--ContentPanel - place additional content here-->
@@ -142,7 +145,7 @@
                                 Command="{Binding NextTrackCommand}"/>
                         </StackPanel>
                         <TextBlock 
-                            x:Name="txtCurrentTrack" 
+                            x:Name="CurrentTrackName" 
                             Height="Auto" 
                             HorizontalAlignment="Left" 
                             Margin="10,10,0,0" 

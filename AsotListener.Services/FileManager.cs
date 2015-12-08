@@ -5,7 +5,6 @@
     using System.IO;
     using System.Threading.Tasks;
     using Windows.Storage;
-    using Windows.Storage.Search;
     using System.Linq;
     using System.Text.RegularExpressions;
 
