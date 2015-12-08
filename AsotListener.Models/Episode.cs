@@ -1,8 +1,5 @@
 ﻿namespace AsotListener.Models
 {
-    using System.Runtime.Serialization;
-
-    [DataContract]
     public class Episode : BaseModel
     {
         private string name;
@@ -26,6 +23,10 @@
             get { return status; }
             set { SetField(ref status, value, nameof(Status)); }
         }
+
+        public string[] DownloadLinks { get; set; }
+
+        public string[] AudioFileNames { get; set; }
 
         public override string ToString() => Name;
     }

@@ -33,7 +33,7 @@
         }
 
         /// <summary>
-        /// Returns list of files that have alredy been downloaded and exist on the phone
+        /// Returns list of files that have already been downloaded and exist on the phone
         /// </summary>
         /// <returns>List of files or null, when no files has been found</returns>
         public static async Task<IList<string>> GetDownloadedFileNamesList()
