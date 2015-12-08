@@ -49,35 +49,40 @@
                                             x:Name="DownloadContextMenuItem"
                                             Text="download"
                                             Visibility="{Binding 
-                                            Converter={StaticResource ContextMenuVisibilityConverter}}"
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ConverterParameter=Download}"
                                             Command="{Binding DataContext.DownloadCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="CancelDownloadContextMenuItem"
                                             Text="cancel downloading"
                                             Visibility="{Binding 
-                                            Converter={StaticResource ContextMenuVisibilityConverter}}"
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ConverterParameter=CancelDownload}"
                                             Command="{Binding DataContext.CancelDownloadCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="DeleteContextMenuItem"
                                             Text="delete"
                                             Visibility="{Binding 
-                                            Converter={StaticResource ContextMenuVisibilityConverter}}"
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ConverterParameter=Delete}"
                                             Command="{Binding DataContext.DeleteCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="PlayContextMenuItem"
                                             Text="play"
                                             Visibility="{Binding 
-                                            Converter={StaticResource ContextMenuVisibilityConverter}}"
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ConverterParameter=Play}"
                                             Command="{Binding DataContext.PlayCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="AddToPlaylistContextMenuItem"
                                             Text="add to now playing"
                                             Visibility="{Binding 
-                                            Converter={StaticResource ContextMenuVisibilityConverter}}"
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ConverterParameter=AddToPlaylist}"
                                             Command="{Binding DataContext.AddToPlaylistCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                     </MenuFlyout>
