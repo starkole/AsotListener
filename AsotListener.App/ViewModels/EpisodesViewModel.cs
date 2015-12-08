@@ -8,11 +8,17 @@
     using Services;
     using Models;
     using System.Windows.Input;
+    using System.Runtime.Serialization;
+    using System.IO;
+    using Windows.Storage;
+    using Windows.Foundation.Diagnostics;
+    using Windows.Storage.Streams;
 
     public class EpisodesViewModel: BaseModel, IDisposable
     {
         #region Fields
 
+        private const string episodeListFileName = "episodeList.xml";
         private ObservableCollection<Episode> episodes;
         private ILogger logger;
 
@@ -48,7 +54,9 @@
             this.PlayCommand = new RelayCommand((Action<object>)playEpisode);
             this.AddToPlaylistCommand = new RelayCommand((Action<object>)addEpisodeToPlaylist);
 
-            RestoreEpisodesList(); // TODO: Figure out something here
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            RestoreEpisodesList();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         #endregion
@@ -57,18 +65,50 @@
 
         public async Task RestoreEpisodesList()
         {
-            // TODO: Read list from file here
-            // await updateEpisodesStates();
+            try
+            {
+                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(episodeListFileName);
+                using (IInputStream inStream = await file.OpenSequentialReadAsync())
+                {
+                    // Deserialize the Session State
+                    DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<Episode>));
+                    EpisodeList = serializer.ReadObject(inStream.AsStreamForRead()) as ObservableCollection<Episode>;
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogMessage($"Error reading episodes list. {e.Message}", LoggingLevel.Error);
+            }
 
             if (EpisodeList == null || !EpisodeList.Any())
             {
                 await loadEpisodeListFromServer();
             }
+            else
+            {
+                await updateEpisodesStates();
+            }
         }
 
         public async Task StoreEpisodesList()
         {
-            // TODO: Store episode list to file here
+            try
+            {
+                MemoryStream listData = new MemoryStream();
+                DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<Episode>));
+                serializer.WriteObject(listData, EpisodeList);
+
+                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(episodeListFileName, CreationCollisionOption.ReplaceExisting);
+                using (Stream fileStream = await file.OpenStreamForWriteAsync())
+                {
+                    listData.Seek(0, SeekOrigin.Begin);
+                    await listData.CopyToAsync(fileStream);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogMessage($"Cannot save episodes list. {e.Message}", LoggingLevel.Error);
+            }
         }
 
         #endregion
