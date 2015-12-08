@@ -16,65 +16,50 @@
         private const int CONNECTION_TIMEOUT_SECONDS = 30;
 
         private HttpClient httpClient;
-        private LoggingChannel logChannel;
-        private ILoggingSession loggingSession;
+        private ILogger logger;
 
-        public Loader(ILoggingSession loggingSession)
+        public Loader(ILogger logger)
         {
-            this.loggingSession = loggingSession;
+            this.logger = logger;
 
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS);
-            logChannel = new LoggingChannel("LoaderLogChannel");
-            loggingSession.AddLoggingChannel(logChannel);
         }
 
         public async Task<string> FetchEpisodeListAsync()
         {
-            logChannel.LogMessage("Fetching episode list.", LoggingLevel.Verbose);
+            logger.LogMessage("Loader: fetching episode list.");
             return await httpClient.GetStringAsync(MAIN_URL);
         }
 
         public async Task<string> FetchEpisodePageAsync(Episode episode)
         {
-            logChannel.LogMessage("Fetching episode page.", LoggingLevel.Verbose);
+            logger.LogMessage("Loader: fetching episode page.");
             return await httpClient.GetStringAsync(MAIN_URL + episode.Url);
         }
 
         public async Task DownloadEpisodeAsync(Episode episode, ICollection<string> urls)
         {
-            string message;
             int partNumber = 0;
             foreach (string url in urls)
             {
                 partNumber++;
-                message = string.Format(
-                    "Starting download part {0} of {1} into file",
-                    partNumber,
-                    urls.Count);
-                logChannel.LogMessage(message, LoggingLevel.Verbose);
+                logger.LogMessage($"Loader: starting download part {partNumber} of {urls.Count} into file");
 
-                using (HttpResponseMessage response = await httpClient.GetAsync(url,
-                    HttpCompletionOption.ResponseHeadersRead))
+                using (HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
                 {
                     if (!response.IsSuccessStatusCode)
                     {
-                        message = string.Format(
-                            "Server connection error. Status {0} {1}",
-                            response.StatusCode,
-                            response.ReasonPhrase);
-                        logChannel.LogMessage(message, LoggingLevel.Error);
+                        logger.LogMessage($"Loader: server connection error. Status {response.StatusCode} {response.ReasonPhrase}", LoggingLevel.Error);
                     }
 
-                    message = string.Format("Have to download {0} bytes", 
-                        response.Content.Headers.ContentLength);
-                    logChannel.LogMessage(message, LoggingLevel.Verbose);
+                    logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
                     using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
                     using (Stream streamToWriteTo = await FileManager.GetStreamForWrite(episode.Name, partNumber))
                     {
-                        logChannel.LogMessage("Download started.", LoggingLevel.Verbose);
+                        logger.LogMessage("Loader: Download started.");
                         await streamToReadFrom.CopyToAsync(streamToWriteTo);
-                        logChannel.LogMessage("Download complete.", LoggingLevel.Verbose);
+                        logger.LogMessage("Loader: Download complete.");
                     }                    
                 }
             }
@@ -82,8 +67,6 @@
 
         public void Dispose()
         {
-            loggingSession.RemoveLoggingChannel(logChannel);
-            logChannel.Dispose();
             httpClient.Dispose();
         }
     }

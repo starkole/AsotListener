@@ -4,11 +4,9 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
     using Services;
     using Models;
-    using Windows.Foundation.Diagnostics;
     using System.Windows.Input;
 
     public class EpisodesViewModel: BaseModel, IDisposable
@@ -16,7 +14,7 @@
         #region Fields
 
         private ObservableCollection<Episode> episodes;
-        private ILoggingSession loggingSession;
+        private ILogger logger;
 
         #endregion
 
@@ -39,9 +37,9 @@
 
         #region Ctor
 
-        public EpisodesViewModel(ILoggingSession loggingSession)
+        public EpisodesViewModel(ILogger logger)
         {
-            this.loggingSession = loggingSession;
+            this.logger = logger;
 
             this.RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
             this.DownloadCommand = new RelayCommand(downloadEpisode);
@@ -79,7 +77,7 @@
 
         private async Task loadEpisodeListFromServer()
         {
-            using (Loader loader = new Loader(this.loggingSession))
+            using (Loader loader = new Loader(this.logger))
             {
                 string episodeListPage = await loader.FetchEpisodeListAsync();
                 this.EpisodeList = Parser.ParseEpisodeList(episodeListPage);
@@ -98,7 +96,7 @@
 
             // TODO: Implement loading queue
 
-            using (Loader loader = new Loader(this.loggingSession))
+            using (Loader loader = new Loader(this.logger))
             {
                 string episodePage = await loader.FetchEpisodePageAsync(episode);
 

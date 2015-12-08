@@ -90,8 +90,10 @@
     <Compile Include="FileManager.cs" />
     <Compile Include="IApplicationSettingsHelper.cs" />
     <Compile Include="ILoader.cs" />
+    <Compile Include="ILogger.cs" />
     <Compile Include="IPlayList.cs" />
     <Compile Include="Loader.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="MyPlaylist.cs" />
     <Compile Include="MyPlaylistManager.cs" />
     <Compile Include="Navigation\LoadStateEventArgs.cs" />

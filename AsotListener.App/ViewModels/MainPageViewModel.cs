@@ -26,11 +26,11 @@
         #region Ctor
 
         public MainPageViewModel(
-            ILoggingSession loggingSession,
+            ILogger logger,
             IApplicationSettingsHelper applicationSettingsHelper)
         {
-            this.playerModel = new PlayerViewModel();
-            this.episodesViewModel = new EpisodesViewModel(loggingSession);
+            this.playerModel = new PlayerViewModel(logger);
+            this.episodesViewModel = new EpisodesViewModel(logger);
 
             this.applicationSettingsHelper = applicationSettingsHelper;
             

@@ -1,12 +1,10 @@
 ﻿namespace AsotListener.App.ViewModels
 {
     using System;
-    using System.Diagnostics;
     using System.Threading;
     using System.Windows.Input;
     using Models;
     using Services;
-    using Windows.Foundation;
     using Windows.Foundation.Collections;
     using Windows.Media.Playback;
     using Windows.UI.Xaml.Controls;
@@ -25,6 +23,7 @@
         private bool isMyBackgroundTaskRunning = false;
         private IApplicationSettingsHelper applicationSettingsHelper;
         private AutoResetEvent ServerInitialized;
+        private ILogger logger;
 
         #endregion
 
@@ -64,9 +63,10 @@
 
         #region Ctor
 
-        public PlayerViewModel()
+        public PlayerViewModel(ILogger logger)
         {
             ServerInitialized = new AutoResetEvent(false);
+            this.logger = logger;
 
             Playlist = Services.Playlist.Instance;
             applicationSettingsHelper = ApplicationSettingsHelper.Instance;
@@ -87,6 +87,8 @@
             //that access to BackgroundMediaPlayer events
             App.Current.Suspending += ForegroundApp_Suspending;
             App.Current.Resuming += ForegroundApp_Resuming;
+
+            logger.LogMessage("Foreground audio player initialized.");
         }
 
         #endregion
@@ -99,6 +101,7 @@
         /// </summary>
         void ForegroundApp_Resuming(object sender, object e)
         {
+            logger.LogMessage("Foreground audio player resuming...");
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, Constants.ForegroundAppActive);
 
             // Verify if the task was running before
@@ -126,6 +129,7 @@
                 PlayButtonIcon = playIcon;
             }
 
+            logger.LogMessage("Foreground audio player resumed.");
         }
 
         /// <summary>
@@ -135,10 +139,12 @@
         void ForegroundApp_Suspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+            logger.LogMessage("Foreground audio player suspending...");
             ValueSet message = new ValueSet() { { Constants.AppSuspended, DateTime.Now.ToString() } };
             BackgroundMediaPlayer.SendMessageToBackground(message);
             RemoveMediaPlayerEventHandlers();
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, Constants.ForegroundAppSuspended);
+            logger.LogMessage("Foreground audio player suspended.");
             deferral.Complete();
         }
 
@@ -151,6 +157,7 @@
         /// </summary>
         private void onPreviousTrackAction()
         {
+            logger.LogMessage("Foreground audio player 'Previous Track' command fired.");
             var value = new ValueSet() { { Constants.SkipPrevious, string.Empty } };
             BackgroundMediaPlayer.SendMessageToBackground(value);
 
@@ -167,7 +174,7 @@
         /// </summary>
         private void onPlayPauseAction()
         {
-            Debug.WriteLine("Play button pressed from App");
+            logger.LogMessage("Foreground audio player 'Play/Pause' command fired.");
 
             // Play button will be enabled when media player will be ready
             IsPlayButtonEnabled = false;
@@ -198,6 +205,8 @@
         /// </summary>
         private void onNextButtonAction()
         {
+            logger.LogMessage("Foreground audio player 'Next Track' command fired.");
+
             var value = new ValueSet() { { Constants.SkipNext, string.Empty } };
             BackgroundMediaPlayer.SendMessageToBackground(value);
 
@@ -219,6 +228,8 @@
         /// <param name="args"></param>
         void MediaPlayer_CurrentStateChanged(MediaPlayer sender, object args)
         {
+            logger.LogMessage("Foreground audio player 'MediaPlayer_CurrentStateChanged' event fired.");
+
             IsPlayButtonEnabled = true;
             switch (sender.CurrentState)
             {
@@ -242,8 +253,7 @@
             {
                 if (key == Constants.BackgroundTaskStarted)
                 {
-                    //Wait for Background Task to be initialized before starting playback
-                    Debug.WriteLine("Background Task started");
+                    logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
                     ServerInitialized.Set();
                     return;
                 }
@@ -288,6 +298,8 @@
         /// </summary>
         private void StartBackgroundAudioTask()
         {
+            logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
+
             AddMediaPlayerEventHandlers();
             bool result = ServerInitialized.WaitOne(2000);
             if (result == true)
@@ -297,7 +309,9 @@
             }
             else
             {
-                throw new Exception("Background Audio Task didn't start in expected time");
+                var message = "Background Audio Task didn't start in expected time";
+                logger.LogMessage(message, Windows.Foundation.Diagnostics.LoggingLevel.Error);
+                throw new Exception(message);
             }
         }
 

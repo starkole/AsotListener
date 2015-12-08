@@ -23,17 +23,13 @@
         // TODO: Move text labels to resources
         //private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
         // TODO: Implement logger to use LoggingSession and Debug simultaneously.
-        private readonly ILoggingSession loggingSession;        
+        private readonly ILogger logger;        
 
         public MainPage()
         {
-            if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME))
-            {
-                Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
-            }
-            this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
+            this.logger = Logger.Instance;
 
-            this.mainPageViewModel = new MainPageViewModel(this.loggingSession, this.applicationSettingsHelper);
+            this.mainPageViewModel = new MainPageViewModel(this.logger, this.applicationSettingsHelper);
                         
             this.NavigationCacheMode = NavigationCacheMode.Required;
             this.navigationHelper = new NavigationHelper(this);
@@ -84,7 +80,7 @@
                 if (disposing)
                 {
                     Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
-                    this.loggingSession.Dispose();
+                    this.logger.Dispose();
                     this.mainPageViewModel.Dispose();
                 }
 
