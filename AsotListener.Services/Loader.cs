@@ -16,10 +16,12 @@
 
         private HttpClient httpClient;
         private ILogger logger;
+        private IFileUtils fileUtils;
 
-        public Loader(ILogger logger)
+        public Loader(ILogger logger, IFileUtils fileUtils)
         {
             this.logger = logger;
+            this.fileUtils = fileUtils;
 
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS);
@@ -57,15 +59,15 @@
                     }
                     
                     logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
-                    string filename = FileManager.createFilename(episode.Name, i);
+                    string filename = fileUtils.CreateFilename(episode.Name, i);
                     using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
-                    using (Stream streamToWriteTo = await FileManager.GetStreamForWrite(filename))
+                    using (Stream streamToWriteTo = await fileUtils.GetStreamForWrite(filename))
                     {
                         logger.LogMessage("Loader: Download started.");
                         await streamToReadFrom.CopyToAsync(streamToWriteTo);
                         logger.LogMessage("Loader: Download complete.");
                     }
-                    episode.AudioFileNames[i] = FileManager.filePathPrefix + filename;
+                    episode.AudioFileNames[i] = fileUtils.FilePathPrefix + filename;
                 }
             }
         }

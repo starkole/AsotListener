@@ -5,7 +5,6 @@
     using Windows.UI.Xaml.Navigation;
     using Services.Navigation;
     using ViewModels;
-    using Windows.Foundation.Diagnostics;
     using System;
     using Models;
     using Services;
@@ -22,19 +21,20 @@
 
         // TODO: Move text labels to resources
         //private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-        // TODO: Implement logger to use LoggingSession and Debug simultaneously.
-        private readonly ILogger logger;        
+        private readonly ILogger logger;
+        private readonly IFileUtils fileUtils;
 
         public MainPage()
         {
-            this.logger = Logger.Instance;
+            logger = Logger.Instance;
+            fileUtils = FileUtils.Instance;
 
-            this.mainPageViewModel = new MainPageViewModel(this.logger, this.applicationSettingsHelper);
-                        
-            this.NavigationCacheMode = NavigationCacheMode.Required;
-            this.navigationHelper = new NavigationHelper(this);
+            mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils);
+                   
+            NavigationCacheMode = NavigationCacheMode.Required;
+            navigationHelper = new NavigationHelper(this);
 
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         /// <summary>

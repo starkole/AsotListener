@@ -87,8 +87,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationSettingsHelper.cs" />
-    <Compile Include="FileManager.cs" />
+    <Compile Include="FileUtils.cs" />
     <Compile Include="IApplicationSettingsHelper.cs" />
+    <Compile Include="IFileUtils.cs" />
     <Compile Include="ILoader.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="IPlayList.cs" />

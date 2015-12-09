@@ -8,23 +8,29 @@
     using System.Linq;
     using System.Text.RegularExpressions;
 
-    public static class FileManager
+    public class FileUtils : IFileUtils
     {
-        private const string fileExtension = ".mp3";
-        public const string partNumberDelimiter = "_";
-        public const string filePathPrefix = @"ms-appdata:///";
-
+        private static Lazy<FileUtils> lazy = new Lazy<FileUtils>(() => new FileUtils());
         private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 
-        public static async Task<Stream> GetStreamForWrite(string filename)
-        {            
+        private const string fileExtension = ".mp3";
+        private const string partNumberDelimiter = "_";
+
+        public static IFileUtils Instance => lazy.Value;
+        public string FilePathPrefix => @"ms-appdata:///";
+
+        private FileUtils() { }
+
+        public async Task<Stream> GetStreamForWrite(string filename)
+        {
             StorageFile file = await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
             return await file.OpenStreamForWriteAsync();
         }
 
-        public static string createFilename(string name, int partNumber) => name + partNumberDelimiter + partNumber.ToString() + fileExtension;
+        public string CreateFilename(string name, int partNumber) => 
+            name + partNumberDelimiter + partNumber.ToString() + fileExtension;
 
-        public static async Task<IList<string>> GetDownloadedFileNamesList()
+        public async Task<IList<string>> GetDownloadedFileNamesList()
         {
             IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
             return files?
@@ -34,7 +40,7 @@
                 .ToList();
         }
 
-        public static string stripEndNumberFromFilename(string filename)
+        private string stripEndNumberFromFilename(string filename)
         {
             Regex numberAtTheEnd = new Regex(partNumberDelimiter + "[0-9]+$");
             return numberAtTheEnd.Replace(filename, string.Empty);

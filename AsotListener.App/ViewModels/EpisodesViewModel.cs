@@ -21,7 +21,8 @@
         private const string episodeListFileName = "episodeList.xml";
         private ObservableCollection<Episode> episodes;
         private ILogger logger;
-
+        private readonly IFileUtils fileUtils;
+        
         #endregion
 
         #region Properties
@@ -43,9 +44,10 @@
 
         #region Ctor
 
-        public EpisodesViewModel(ILogger logger)
+        public EpisodesViewModel(ILogger logger, IFileUtils fileUtils)
         {
             this.logger = logger;
+            this.fileUtils = fileUtils;
 
             this.RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
             this.DownloadCommand = new RelayCommand(downloadEpisode);
@@ -67,6 +69,7 @@
         {
             try
             {
+                logger.LogMessage("Reading episode list from file...");
                 StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(episodeListFileName);
                 using (IInputStream inStream = await file.OpenSequentialReadAsync())
                 {
@@ -74,6 +77,7 @@
                     DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<Episode>));
                     EpisodeList = serializer.ReadObject(inStream.AsStreamForRead()) as ObservableCollection<Episode>;
                 }
+                logger.LogMessage("Episode list has been successfully read from file.");
             }
             catch (Exception e)
             {
@@ -94,6 +98,7 @@
         {
             try
             {
+                logger.LogMessage("Saving episode list to file...");
                 MemoryStream listData = new MemoryStream();
                 DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<Episode>));
                 serializer.WriteObject(listData, EpisodeList);
@@ -104,6 +109,8 @@
                     listData.Seek(0, SeekOrigin.Begin);
                     await listData.CopyToAsync(fileStream);
                 }
+
+                logger.LogMessage("Episode list has been saved.");
             }
             catch (Exception e)
             {
@@ -117,7 +124,7 @@
 
         private async Task loadEpisodeListFromServer()
         {
-            using (Loader loader = new Loader(this.logger))
+            using (Loader loader = new Loader(logger, fileUtils))
             {
                 string episodeListPage = await loader.FetchEpisodeListAsync();
                 this.EpisodeList = Parser.ParseEpisodeList(episodeListPage);
@@ -136,7 +143,7 @@
 
             // TODO: Implement loading queue
 
-            using (Loader loader = new Loader(this.logger))
+            using (Loader loader = new Loader(logger, fileUtils))
             {
                 string episodePage = await loader.FetchEpisodePageAsync(episode);
                 episode.DownloadLinks = Parser.ExtractDownloadLinks(episodePage);
@@ -201,7 +208,7 @@
                 return;
             }
 
-            var existingFileNames = await FileManager.GetDownloadedFileNamesList();
+            var existingFileNames = await fileUtils.GetDownloadedFileNamesList();
             foreach (Episode episode in this.EpisodeList)
             {
                 if (existingFileNames.Contains(episode.Name))
@@ -216,7 +223,7 @@
         #region IDisposable Support
 
         private bool disposedValue = false; // To detect redundant calls
-        
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
