@@ -20,7 +20,7 @@
         <Pivot 
             x:Uid="Pivot" 
             Title="ASOT PLAYER" 
-            x:Name="main" 
+            x:Name="MainPivot" 
             CommonNavigationTransitionInfo.IsStaggerElement="True">
             <!--Pivot item one-->
             <PivotItem
@@ -113,6 +113,7 @@
 
             <PivotItem
                 x:Uid="PlayerPivotItem"
+                x:Name="PlayerPivotItem"
                 Margin="19,14.5,0,0"
                 DataContext="{Binding PlayerModel}"
                 Header="player">

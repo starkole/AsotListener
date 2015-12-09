@@ -3,7 +3,6 @@
     using Services;
     using Models;
     using System;
-    using Windows.Foundation.Diagnostics;
 
     public class MainPageViewModel : BaseModel, IDisposable
     {

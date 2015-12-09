@@ -13,6 +13,8 @@
     using Windows.Storage;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage.Streams;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml;
 
     public class EpisodesViewModel : BaseModel, IDisposable
     {
@@ -188,8 +190,10 @@
                 existingTracks.First() :
                 await addEpisodeToPlaylist(episode);
 
-            // TODO: Navigate to player and start playback
-
+            // Navigate to player and start playback
+            // TODO: This is ugly and should be replaced with some NavigationService
+            Frame rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(MainPage), Constants.StartPlayback);
         }
 
         private async void addEpisodeToPlaylist(object boxedEpisode)

@@ -8,8 +8,6 @@
     using Windows.UI.Xaml.Media.Animation;
     using Windows.UI.Xaml.Navigation;
     using Services;
-    using Models;
-    using Windows.Foundation.Diagnostics;
 
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
@@ -17,7 +15,6 @@
     public sealed partial class App : Application
     {
         private TransitionCollection transitions;
-        private LoggingSession loggingSession;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -43,11 +40,6 @@
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif            
-            if (!Application.Current.Resources.ContainsKey(Constants.LOGGING_SESSION_NAME))
-            {
-                Application.Current.Resources[Constants.LOGGING_SESSION_NAME] = new LoggingSession(Constants.LOGGING_SESSION_NAME);
-            }
-            this.loggingSession = (LoggingSession)Application.Current.Resources[Constants.LOGGING_SESSION_NAME];
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -60,7 +52,7 @@
                 // Associate the frame with a SuspensionManager key.
                 SuspensionManager.RegisterFrame(rootFrame, "AppFrame");
 
-                rootFrame.CacheSize = 2;
+                rootFrame.CacheSize = 1;
 
                 // Set the default language
                 rootFrame.Language = Windows.Globalization.ApplicationLanguages.Languages[0];
@@ -112,8 +104,8 @@
         }
 
         /// <summary>
-        /// Restores the content transitions after the app has launched.
-        /// </summary>
+        /// Restores the content transitions after the app has launched.        /// </summary>
+
         private void RootFrame_FirstNavigated(object sender, NavigationEventArgs e)
         {
             var rootFrame = sender as Frame;

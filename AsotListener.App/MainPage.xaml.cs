@@ -12,6 +12,7 @@
     using Windows.UI.Input;
     using Windows.UI.Xaml.Controls.Primitives;
     using System.Diagnostics;
+    using Windows.Media.Playback;
 
     public sealed partial class MainPage : Page, IDisposable
     {
@@ -35,6 +36,8 @@
             navigationHelper = new NavigationHelper(this);
 
             InitializeComponent();
+
+            logger.LogMessage("MainPage has been created.");
         }
 
         /// <summary>
@@ -61,12 +64,22 @@
         /// handlers that cannot cancel the navigation request.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            logger.LogMessage("Navigated to MainPage.");
             this.navigationHelper.OnNavigatedTo(e);
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, Constants.ForegroundAppActive);
+            var param = e.Parameter as string;
+            if (param == Constants.StartPlayback)
+            {
+                logger.LogMessage("Starting playback from MainPage navigation handler.");
+                MainPivot.SelectedItem = PlayerPivotItem;
+                BackgroundMediaPlayer.Current.Pause();
+                MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
+            }
         }
         
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            logger.LogMessage("Navigated away from MainPage.");
             this.navigationHelper.OnNavigatedFrom(e);
         }
 
@@ -79,7 +92,6 @@
             {
                 if (disposing)
                 {
-                    Application.Current.Resources.Remove(Constants.LOGGING_SESSION_NAME);
                     this.logger.Dispose();
                     this.mainPageViewModel.Dispose();
                 }
