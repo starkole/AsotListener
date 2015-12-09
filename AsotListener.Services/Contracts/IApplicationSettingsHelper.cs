@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Contracts
 {
     public interface IApplicationSettingsHelper
     {

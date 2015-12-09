@@ -7,30 +7,34 @@
     using ViewModels;
     using System;
     using Models;
-    using Services;
     using Windows.UI.Xaml.Input;
     using Windows.UI.Input;
     using Windows.UI.Xaml.Controls.Primitives;
     using System.Diagnostics;
     using Windows.Media.Playback;
+    using Services.Contracts;
+    using Services.Implementations;
 
     public sealed partial class MainPage : Page, IDisposable
     {
         private readonly NavigationHelper navigationHelper;
         private readonly MainPageViewModel mainPageViewModel;
-        private IApplicationSettingsHelper applicationSettingsHelper = ApplicationSettingsHelper.Instance;
+        private IApplicationSettingsHelper applicationSettingsHelper;
+        private readonly ILogger logger;
 
         // TODO: Move text labels to resources
         //private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-        private readonly ILogger logger;
 
         public MainPage()
         {
             logger = Logger.Instance;
+            applicationSettingsHelper = ApplicationSettingsHelper.Instance;
             var fileUtils = FileUtils.Instance;
             var playlist = Playlist.Instance;
+            var loaderFactory = new LoaderFactory(logger, fileUtils);
+            var parser = Parser.Instance;
 
-            mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils, playlist);
+            mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils, playlist, parser, loaderFactory);
                    
             NavigationCacheMode = NavigationCacheMode.Required;
             navigationHelper = new NavigationHelper(this);
@@ -43,9 +47,9 @@
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>
-        public NavigationHelper NavigationHelper => this.navigationHelper;
+        public NavigationHelper NavigationHelper => navigationHelper;
 
-        public MainPageViewModel MainPageViewModel => this.mainPageViewModel;
+        public MainPageViewModel MainPageViewModel => mainPageViewModel;
 
         #region NavigationHelper registration
 
@@ -92,8 +96,7 @@
             {
                 if (disposing)
                 {
-                    this.logger.Dispose();
-                    this.mainPageViewModel.Dispose();
+                    mainPageViewModel.Dispose();
                 }
 
                 disposedValue = true;

@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Implementations
 {
     using System;
     using System.Collections.Generic;
@@ -7,11 +7,11 @@
     using Windows.Storage;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using Models;
+    using Contracts;
 
     public class FileUtils : IFileUtils
     {
-        private static Lazy<FileUtils> lazy = new Lazy<FileUtils>(() => new FileUtils());
+        private static Lazy<IFileUtils> lazy = new Lazy<IFileUtils>(() => new FileUtils());
         private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 
         private const string fileExtension = ".mp3";

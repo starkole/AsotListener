@@ -1,9 +1,10 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Implementations
 {
     using System;
     using System.IO;
     using System.Net.Http;
     using System.Threading.Tasks;
+    using Contracts;
     using Models;
     using Windows.Foundation.Diagnostics;
 

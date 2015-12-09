@@ -1,20 +1,20 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Implementations
 {
     using System;
     using System.Collections.ObjectModel;
+    using Contracts;
     using Models;
-    using Services;
 
     public sealed class Playlist: BaseModel, IPlayList
     {
-        private static Lazy<Playlist> lazy = new Lazy<Playlist>(() => new Playlist());
+        private static Lazy<IPlayList> lazy = new Lazy<IPlayList>(() => new Playlist());
         private static ObservableCollection<AudioTrack> trackList = new ObservableCollection<AudioTrack>();
         private static AudioTrack currentTrack;
 
         // TODO: Use DI here
         private static IApplicationSettingsHelper settingsHelper = ApplicationSettingsHelper.Instance;
 
-        public static Playlist Instance => lazy.Value;
+        public static IPlayList Instance => lazy.Value;
 
         public ObservableCollection<AudioTrack> TrackList
         {

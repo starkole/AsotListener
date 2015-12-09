@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Models
 {
     using System;
     using System.Threading.Tasks;

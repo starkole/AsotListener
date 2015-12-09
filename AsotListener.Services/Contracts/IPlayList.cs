@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Contracts
 {
     using System.Collections.ObjectModel;
     using Models;

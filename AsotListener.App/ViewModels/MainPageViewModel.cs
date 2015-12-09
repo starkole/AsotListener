@@ -1,6 +1,6 @@
 ﻿namespace AsotListener.App.ViewModels
 {
-    using Services;
+    using Services.Contracts;
     using Models;
     using System;
 
@@ -16,8 +16,8 @@
 
         #region Properties
 
-        public PlayerViewModel PlayerModel => this.playerModel;
-        public EpisodesViewModel EpisodesModel => this.episodesViewModel;
+        public PlayerViewModel PlayerModel => playerModel;
+        public EpisodesViewModel EpisodesModel => episodesViewModel;
         
 
         #endregion
@@ -28,16 +28,18 @@
             ILogger logger,
             IApplicationSettingsHelper applicationSettingsHelper,
             IFileUtils fileUtils,
-            IPlayList playlist)
+            IPlayList playlist,
+            IParser parser,
+            ILoaderFactory loaderFactory)
         {
-            this.playerModel = new PlayerViewModel(logger);
-            this.episodesViewModel = new EpisodesViewModel(logger, fileUtils, playlist);
+            playerModel = new PlayerViewModel(logger, playlist, applicationSettingsHelper);
+            episodesViewModel = new EpisodesViewModel(logger, fileUtils, playlist, loaderFactory, parser);
 
             this.applicationSettingsHelper = applicationSettingsHelper;
-            
 
-            App.Current.Suspending += onAppSuspending;
-            App.Current.Resuming += onAppResuming;
+
+            Windows.UI.Xaml.Application.Current.Suspending += onAppSuspending;
+            Windows.UI.Xaml.Application.Current.Resuming += onAppResuming;
         }
 
         #endregion
@@ -68,8 +70,8 @@
             {
                 if (disposing)
                 {                    
-                    this.episodesViewModel.Dispose();
-                    this.playerModel.Dispose();
+                    episodesViewModel.Dispose();
+                    playerModel.Dispose();
                 }
 
                 disposedValue = true;

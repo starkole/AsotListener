@@ -1,11 +1,11 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Contracts
 {
-    using System;
     using Windows.Foundation.Diagnostics;
 
-    public interface ILogger: IDisposable
+    public interface ILogger
     {
         void LogMessage(string message);
         void LogMessage(string message, LoggingLevel loggingLevel);
+        void SaveLogsToFile(string fileName);
     }
 }

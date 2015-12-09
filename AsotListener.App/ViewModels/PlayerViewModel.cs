@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Windows.Input;
     using Models;
-    using Services;
+    using Services.Contracts;
     using Windows.Foundation.Collections;
     using Windows.Media.Playback;
     using Windows.UI.Xaml.Controls;
@@ -63,13 +63,13 @@
 
         #region Ctor
 
-        public PlayerViewModel(ILogger logger)
+        public PlayerViewModel(ILogger logger, IPlayList playlist, IApplicationSettingsHelper applicationSettingsHelper)
         {
             ServerInitialized = new AutoResetEvent(false);
             this.logger = logger;
 
-            Playlist = Services.Playlist.Instance;
-            applicationSettingsHelper = ApplicationSettingsHelper.Instance;
+            Playlist = playlist;
+            this.applicationSettingsHelper = applicationSettingsHelper;
             mediaPlayer = BackgroundMediaPlayer.Current;
 
             pauseIcon = new SymbolIcon(Symbol.Pause);

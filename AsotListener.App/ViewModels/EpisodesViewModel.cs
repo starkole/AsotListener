@@ -1,11 +1,10 @@
 ﻿namespace AsotListener.App.ViewModels
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
-    using Services;
+    using Services.Contracts;
     using Models;
     using System.Windows.Input;
     using System.Runtime.Serialization;
@@ -25,6 +24,8 @@
         private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
         private readonly IPlayList playlist;
+        private readonly ILoaderFactory loaderFactory;
+        private readonly IParser parser;
 
         #endregion
 
@@ -47,18 +48,25 @@
 
         #region Ctor
 
-        public EpisodesViewModel(ILogger logger, IFileUtils fileUtils, IPlayList playlist)
+        public EpisodesViewModel(
+            ILogger logger, 
+            IFileUtils fileUtils, 
+            IPlayList playlist, 
+            ILoaderFactory loaderFactory,
+            IParser parser)
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
             this.playlist = playlist;
+            this.loaderFactory = loaderFactory;
+            this.parser = parser;
 
-            this.RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
-            this.DownloadCommand = new RelayCommand(downloadEpisode);
-            this.CancelDownloadCommand = new RelayCommand((Action<object>)cancelDownload);
-            this.DeleteCommand = new RelayCommand((Action<object>)deleteEpisodeFromStorage);
-            this.PlayCommand = new RelayCommand((Action<object>)playEpisode);
-            this.AddToPlaylistCommand = new RelayCommand((Action<object>)addEpisodeToPlaylist);
+            RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
+            DownloadCommand = new RelayCommand(downloadEpisode);
+            CancelDownloadCommand = new RelayCommand((Action<object>)cancelDownload);
+            DeleteCommand = new RelayCommand((Action<object>)deleteEpisodeFromStorage);
+            PlayCommand = new RelayCommand((Action<object>)playEpisode);
+            AddToPlaylistCommand = new RelayCommand((Action<object>)addEpisodeToPlaylist);
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             RestoreEpisodesList();
@@ -128,10 +136,10 @@
 
         private async Task loadEpisodeListFromServer()
         {
-            using (Loader loader = new Loader(logger, fileUtils))
+            using (ILoader loader = loaderFactory.GetLoader())
             {
                 string episodeListPage = await loader.FetchEpisodeListAsync();
-                this.EpisodeList = Parser.ParseEpisodeList(episodeListPage);
+                EpisodeList = parser.ParseEpisodeList(episodeListPage);
             }
             await updateEpisodesStates();
             await StoreEpisodesList();
@@ -147,10 +155,10 @@
 
             // TODO: Implement loading queue
 
-            using (Loader loader = new Loader(logger, fileUtils))
+            using (ILoader loader = loaderFactory.GetLoader())
             {
                 string episodePage = await loader.FetchEpisodePageAsync(episode);
-                episode.DownloadLinks = Parser.ExtractDownloadLinks(episodePage);
+                episode.DownloadLinks = parser.ExtractDownloadLinks(episodePage);
                 episode.Status = EpisodeStatus.Downloading;
                 await loader.DownloadEpisodeAsync(episode);
                 episode.Status = EpisodeStatus.Loaded;

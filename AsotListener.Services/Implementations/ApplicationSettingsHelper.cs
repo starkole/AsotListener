@@ -1,6 +1,7 @@
-﻿namespace AsotListener.Services
+﻿namespace AsotListener.Services.Implementations
 {
     using System;
+    using Contracts;
     using Windows.Storage;
 
     public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
