@@ -139,11 +139,9 @@
             using (Loader loader = new Loader(this.logger))
             {
                 string episodePage = await loader.FetchEpisodePageAsync(episode);
-
-                // TODO: Store links inside episode
-                List<string> urls = Parser.ExtractDownloadLinks(episodePage);
+                episode.DownloadLinks = Parser.ExtractDownloadLinks(episodePage);
                 episode.Status = EpisodeStatus.Downloading;
-                await loader.DownloadEpisodeAsync(episode, urls);
+                await loader.DownloadEpisodeAsync(episode);
                 episode.Status = EpisodeStatus.Loaded;
             }
         }
@@ -212,7 +210,7 @@
                 }
             }
         }
-        
+
         #endregion
 
         #region IDisposable Support

@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
+    using System.Linq;
     using Models;
     using System.Collections.ObjectModel;
 
@@ -24,7 +25,8 @@
             Regex regex = new Regex(EPISODE_REGEX);
             MatchCollection matches = regex.Matches(EpisodeListHtmlPage);
             ObservableCollection<Episode> result = new ObservableCollection<Episode>();
-            for (var i = 0; i < matches.Count; i++) {
+            for (var i = 0; i < matches.Count; i++)
+            {
 
                 // Regex puts episode relative url into the first group
                 // and episode name into the second one
@@ -54,14 +56,19 @@
         /// </summary>
         /// <param name="EpisodeHtmlPage">Html page</param>
         /// <returns>List of download links or empty list</returns>
-        public static List<string> ExtractDownloadLinks(string EpisodeHtmlPage)
+        public static string[] ExtractDownloadLinks(string EpisodeHtmlPage)
         {
             Regex regex = new Regex(DOWNLOAD_LINK_REGEX);
             MatchCollection matches = regex.Matches(EpisodeHtmlPage);
-            List<string> result = new List<string>();
-            foreach (Match match in matches)
+            if (matches.Count == 0)
             {
-                result.Add(match.Value);
+                return new string[0];
+            }
+
+            string[] result = new string[matches.Count];
+            for (var i = 0; i < matches.Count; i++)
+            {
+                result[i] = matches[i].Value;
             }
 
             return result;

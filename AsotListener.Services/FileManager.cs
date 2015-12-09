@@ -10,45 +10,33 @@
 
     public static class FileManager
     {
-        private const string FILE_EXTENSION = ".mp3";
+        private const string fileExtension = ".mp3";
+        public const string partNumberDelimiter = "_";
+        public const string filePathPrefix = @"ms-appdata:///";
 
         private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 
-        public static async Task<Stream> GetStreamForWrite(string name, int? partNumber = null)
+        public static async Task<Stream> GetStreamForWrite(string filename)
         {            
-            string filename = createFilename(name, partNumber);
             StorageFile file = await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
             return await file.OpenStreamForWriteAsync();
         }
 
-        private static string createFilename(string name, int? partNumber)
-        {
-            if (partNumber == null)
-            {
-                return name + FILE_EXTENSION;
-            }
+        public static string createFilename(string name, int partNumber) => name + partNumberDelimiter + partNumber.ToString() + fileExtension;
 
-            return name + partNumber.ToString() + FILE_EXTENSION;
-        }
-
-        /// <summary>
-        /// Returns list of files that have already been downloaded and exist on the phone
-        /// </summary>
-        /// <returns>List of files or null, when no files has been found</returns>
         public static async Task<IList<string>> GetDownloadedFileNamesList()
         {
             IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
             return files?
-                .Where(f => f.FileType == FILE_EXTENSION)
+                .Where(f => f.FileType == fileExtension)
                 .Select(f => stripEndNumberFromFilename(f.DisplayName))
                 .Distinct()
                 .ToList();
         }
-        
-        private static string stripEndNumberFromFilename(string filename)
+
+        public static string stripEndNumberFromFilename(string filename)
         {
-            // TODO: Think about the case, then there is more than 9 download links 
-            Regex numberAtTheEnd = new Regex("[0-9]$");
+            Regex numberAtTheEnd = new Regex(partNumberDelimiter + "[0-9]+$");
             return numberAtTheEnd.Replace(filename, string.Empty);
         }
     }

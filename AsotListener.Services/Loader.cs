@@ -1,7 +1,6 @@
 ﻿namespace AsotListener.Services
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Net.Http;
     using System.Threading.Tasks;
@@ -38,29 +37,35 @@
             return await httpClient.GetStringAsync(MAIN_URL + episode.Url);
         }
 
-        public async Task DownloadEpisodeAsync(Episode episode, ICollection<string> urls)
+        public async Task DownloadEpisodeAsync(Episode episode)
         {
-            int partNumber = 0;
-            foreach (string url in urls)
+            if (episode.DownloadLinks == null || episode.DownloadLinks.Length < 1)
             {
-                partNumber++;
-                logger.LogMessage($"Loader: starting download part {partNumber} of {urls.Count} into file");
+                return;
+            }
 
-                using (HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+            episode.AudioFileNames = new string[episode.DownloadLinks.Length];
+            for (var i=0; i< episode.DownloadLinks.Length; i++)
+            {
+                logger.LogMessage($"Loader: starting download part {i} of {episode.DownloadLinks.Length} into file");
+
+                using (HttpResponseMessage response = await httpClient.GetAsync(episode.DownloadLinks[i], HttpCompletionOption.ResponseHeadersRead))
                 {
                     if (!response.IsSuccessStatusCode)
                     {
                         logger.LogMessage($"Loader: server connection error. Status {response.StatusCode} {response.ReasonPhrase}", LoggingLevel.Error);
                     }
-
+                    
                     logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
+                    string filename = FileManager.createFilename(episode.Name, i);
                     using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
-                    using (Stream streamToWriteTo = await FileManager.GetStreamForWrite(episode.Name, partNumber))
+                    using (Stream streamToWriteTo = await FileManager.GetStreamForWrite(filename))
                     {
                         logger.LogMessage("Loader: Download started.");
                         await streamToReadFrom.CopyToAsync(streamToWriteTo);
                         logger.LogMessage("Loader: Download complete.");
-                    }                    
+                    }
+                    episode.AudioFileNames[i] = FileManager.filePathPrefix + filename;
                 }
             }
         }
