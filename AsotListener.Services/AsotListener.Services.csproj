@@ -95,8 +95,6 @@
     <Compile Include="IPlayList.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="MyPlaylist.cs" />
-    <Compile Include="MyPlaylistManager.cs" />
     <Compile Include="Navigation\LoadStateEventArgs.cs" />
     <Compile Include="Navigation\NavigationHelper.cs" />
     <Compile Include="Navigation\SaveStateEventArgs.cs" />
