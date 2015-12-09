@@ -26,8 +26,6 @@
 
         public string[] DownloadLinks { get; set; }
 
-        public string[] AudioFileNames { get; set; }
-
         public override string ToString() => Name;
     }
 }

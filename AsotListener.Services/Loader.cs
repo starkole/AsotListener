@@ -46,7 +46,6 @@
                 return;
             }
 
-            episode.AudioFileNames = new string[episode.DownloadLinks.Length];
             for (var i=0; i< episode.DownloadLinks.Length; i++)
             {
                 logger.LogMessage($"Loader: starting download part {i} of {episode.DownloadLinks.Length} into file");
@@ -67,7 +66,6 @@
                         await streamToReadFrom.CopyToAsync(streamToWriteTo);
                         logger.LogMessage("Loader: Download complete.");
                     }
-                    episode.AudioFileNames[i] = fileUtils.FilePathPrefix + filename;
                 }
             }
         }

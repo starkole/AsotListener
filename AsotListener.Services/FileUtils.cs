@@ -7,6 +7,7 @@
     using Windows.Storage;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Models;
 
     public class FileUtils : IFileUtils
     {
@@ -17,7 +18,6 @@
         private const string partNumberDelimiter = "_";
 
         public static IFileUtils Instance => lazy.Value;
-        public string FilePathPrefix => @"ms-appdata:///";
 
         private FileUtils() { }
 
@@ -38,6 +38,28 @@
                 .Select(f => stripEndNumberFromFilename(f.DisplayName))
                 .Distinct()
                 .ToList();
+        }
+
+        public async Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName)
+        {
+            IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+            return files?
+                .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName))
+                .ToList();
+        }
+
+        public async void DeleteEpisode(string episodeName)
+        {
+            var files = await GetFilesListForEpisode(episodeName);
+            if (files == null)
+            {
+                return;
+            }
+
+            foreach (var file in files)
+            {
+                await file.DeleteAsync();
+            }
         }
 
         private string stripEndNumberFromFilename(string filename)

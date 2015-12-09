@@ -14,7 +14,7 @@
     using Windows.Foundation.Diagnostics;
     using Windows.Storage.Streams;
 
-    public class EpisodesViewModel: BaseModel, IDisposable
+    public class EpisodesViewModel : BaseModel, IDisposable
     {
         #region Fields
 
@@ -22,7 +22,7 @@
         private ObservableCollection<Episode> episodes;
         private ILogger logger;
         private readonly IFileUtils fileUtils;
-        
+
         #endregion
 
         #region Properties
@@ -167,12 +167,10 @@
         private void deleteEpisodeFromStorage(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null)
+            if (canEpisodeBeDeleted(episode))
             {
-                return;
+                fileUtils.DeleteEpisode(episode.Name);
             }
-
-            // TODO: Implement command logic
         }
 
         private void playEpisode(object boxedEpisode)
@@ -217,6 +215,11 @@
                 }
             }
         }
+
+        private bool canEpisodeBeDeleted(Episode episode) =>
+            episode != null &&
+            episode.Status == EpisodeStatus.Loaded &&
+            episode.Status == EpisodeStatus.Playing;
 
         #endregion
 
