@@ -66,7 +66,7 @@
             CancelDownloadCommand = new RelayCommand((Action<object>)cancelDownload);
             DeleteCommand = new RelayCommand((Action<object>)deleteEpisodeFromStorage);
             PlayCommand = new RelayCommand((Action<object>)playEpisode);
-            AddToPlaylistCommand = new RelayCommand((Action<object>)addEpisodeToPlaylist);
+            AddToPlaylistCommand = new RelayCommand((Action<object>)addToPlaylistCommand);
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             RestoreEpisodesList();
@@ -197,6 +197,7 @@
             playlist.CurrentTrack = existingTracks.Any() ?
                 existingTracks.First() :
                 await addEpisodeToPlaylist(episode);
+            await playlist.SavePlaylistToLocalStorage();
 
             // Navigate to player and start playback
             // TODO: This is ugly and should be replaced with some NavigationService
@@ -204,7 +205,7 @@
             rootFrame.Navigate(typeof(MainPage), Constants.StartPlayback);
         }
 
-        private async void addEpisodeToPlaylist(object boxedEpisode)
+        private async void addToPlaylistCommand(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
             if (episode == null && episode.Status != EpisodeStatus.Loaded)
@@ -219,6 +220,7 @@
             }
 
             await addEpisodeToPlaylist(episode);
+            await playlist.SavePlaylistToLocalStorage();
         }
 
         #endregion

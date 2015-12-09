@@ -70,13 +70,13 @@
         {
             logger.LogMessage("Navigated to MainPage.");
             this.navigationHelper.OnNavigatedTo(e);
-            applicationSettingsHelper.SaveSettingsValue(Constants.AppState, Constants.ForegroundAppActive);
+            applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Active.ToString());
             var param = e.Parameter as string;
             if (param == Constants.StartPlayback)
             {
                 logger.LogMessage("Starting playback from MainPage navigation handler.");
                 MainPivot.SelectedItem = PlayerPivotItem;
-                BackgroundMediaPlayer.Current.Pause();
+                
                 MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
             }
         }

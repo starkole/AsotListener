@@ -7,6 +7,7 @@
     using Windows.Media.Playback;
     using Windows.Storage;
     using Services.Contracts;
+    using Windows.Foundation.Diagnostics;
 
     internal class AudioManager : IDisposable
     {
@@ -192,7 +193,7 @@
             if (playlist.CurrentTrack == null)
             {
                 //If the task was cancelled we would have saved the current track and its position. We will try playback from there
-                playlist.LoadPlaylistFromLocalStorage();
+                await playlist.LoadPlaylistFromLocalStorage();
                 if (playlist.CurrentTrack == null)
                 {
                     if (playlist.TrackList.Any())
@@ -201,6 +202,7 @@
                     }
                     else
                     {
+                        logger.LogMessage("BackgroundAudio: Tried to start playback, but no tracks has been found.", LoggingLevel.Warning);
                         return;
                     }
                 }

@@ -64,7 +64,8 @@
 
         private string stripEndNumberFromFilename(string filename)
         {
-            Regex numberAtTheEnd = new Regex(partNumberDelimiter + "[0-9]+$");
+            // Regex numberAtTheEnd = new Regex(partNumberDelimiter + "[0-9]+$"); // TODO: Use this for new files
+            Regex numberAtTheEnd = new Regex("[0-9]$");
             return numberAtTheEnd.Replace(filename, string.Empty);
         }
     }

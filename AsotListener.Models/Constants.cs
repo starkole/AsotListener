@@ -22,8 +22,6 @@
         public const string BackgroundTaskState = "BackgroundTaskState";
         public const string SkipPrevious = "SkipPrevious";
         public const string Trackchanged = "TrackChanged"; // TODO: Rename this properly
-        public const string ForegroundAppActive = "ForegroundAppActive";
-        public const string ForegroundAppSuspended = "ForegroundAppSuspended";
 
         
     }

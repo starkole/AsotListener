@@ -69,14 +69,11 @@
             taskInstance.Task.Completed += Taskcompleted;
 
             applicationSettingsHelper = ApplicationSettingsHelper.Instance;
-            var value = applicationSettingsHelper.ReadSettingsValue(Constants.AppState);
-            if (value == null)
+            var value = applicationSettingsHelper.ReadSettingsValue(Constants.AppState) as string;
+            foregroundAppState = ForegroundAppStatus.Unknown;
+            if (!string.IsNullOrEmpty(value))
             {
-                foregroundAppState = ForegroundAppStatus.Unknown;
-            }
-            else
-            {
-                foregroundAppState = (ForegroundAppStatus)Enum.Parse(typeof(ForegroundAppStatus), value.ToString());
+                Enum.TryParse(value, out foregroundAppState);
             }
 
             //Initialize message channel 
@@ -144,7 +141,7 @@
         {
             foreach (string key in e.Data.Keys)
             {
-                switch (key.ToLower())
+                switch (key)
                 {
                     case Constants.AppSuspended:
                         logger.LogMessage("App suspending"); // App is suspended, you can save your task state at this point
