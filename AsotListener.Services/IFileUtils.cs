@@ -11,6 +11,6 @@
         Task<IList<string>> GetDownloadedFileNamesList();
         Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName);
         Task<Stream> GetStreamForWrite(string filename);
-        void DeleteEpisode(string episodeName);
+        Task DeleteEpisode(string episodeName);
     }
 }

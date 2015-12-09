@@ -7,6 +7,7 @@
     using Windows.Media;
     using Windows.Media.Playback;
     using Services;
+    using Windows.Storage;
 
     internal class AudioManager : IDisposable
     {
@@ -180,7 +181,7 @@
             StartTrackAt(0);
         }
 
-        public void StartPlayback()
+        public async void StartPlayback()
         {
             if (playlist.CurrentTrack == null)
             {
@@ -201,7 +202,8 @@
 
             // Set AutoPlay to false because we set MediaPlayer_MediaOpened event handler to start playback
             mediaPlayer.AutoPlay = false;
-            mediaPlayer.SetUriSource(new Uri(playlist.CurrentTrack.Uri));
+            var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
+            mediaPlayer.SetFileSource(file);
         }
 
         public void SaveCurrentState()

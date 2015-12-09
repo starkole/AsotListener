@@ -20,8 +20,9 @@
 
         private const string episodeListFileName = "episodeList.xml";
         private ObservableCollection<Episode> episodes;
-        private ILogger logger;
+        private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
+        private readonly IPlayList playlist;
 
         #endregion
 
@@ -44,10 +45,11 @@
 
         #region Ctor
 
-        public EpisodesViewModel(ILogger logger, IFileUtils fileUtils)
+        public EpisodesViewModel(ILogger logger, IFileUtils fileUtils, IPlayList playlist)
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
+            this.playlist = playlist;
 
             this.RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
             this.DownloadCommand = new RelayCommand(downloadEpisode);
@@ -156,7 +158,7 @@
         private void cancelDownload(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null)
+            if (episode == null && episode.Status != EpisodeStatus.Downloading)
             {
                 return;
             }
@@ -164,40 +166,75 @@
             // TODO: Implement command logic
         }
 
-        private void deleteEpisodeFromStorage(object boxedEpisode)
+        private async void deleteEpisodeFromStorage(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
             if (canEpisodeBeDeleted(episode))
             {
-                fileUtils.DeleteEpisode(episode.Name);
+                await fileUtils.DeleteEpisode(episode.Name);
             }
         }
 
-        private void playEpisode(object boxedEpisode)
+        private async void playEpisode(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null)
+            if (episode == null && episode.Status != EpisodeStatus.Loaded)
             {
                 return;
             }
 
-            // TODO: Implement command logic
+            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name));
+            playlist.CurrentTrack = existingTracks.Any() ?
+                existingTracks.First() :
+                await addEpisodeToPlaylist(episode);
+
+            // TODO: Navigate to player and start playback
+
         }
 
-        private void addEpisodeToPlaylist(object boxedEpisode)
+        private async void addEpisodeToPlaylist(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null)
+            if (episode == null && episode.Status != EpisodeStatus.Loaded)
             {
                 return;
             }
 
-            // TODO: Implement command logic
+            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name));
+            if (existingTracks.Any())
+            {
+                return;
+            }
+
+            await addEpisodeToPlaylist(episode);
         }
 
         #endregion
 
         #region Private Methods
+
+        private async Task<AudioTrack> addEpisodeToPlaylist(Episode episode)
+        {
+            var fileNames = await fileUtils.GetFilesListForEpisode(episode.Name);
+            int counter = 0;
+            AudioTrack firstAddedTrack = null;
+            foreach (var file in fileNames)
+            {
+                counter++;
+                var track = new AudioTrack()
+                {
+                    Name = episode.Name + " Part " + counter.ToString(),
+                    Uri = file.Path
+                };
+
+                if (counter == 1)
+                {
+                    firstAddedTrack = track;
+                }
+            }
+
+            return firstAddedTrack;
+        }
 
         private async Task updateEpisodesStates()
         {

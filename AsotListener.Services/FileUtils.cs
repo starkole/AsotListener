@@ -48,7 +48,7 @@
                 .ToList();
         }
 
-        public async void DeleteEpisode(string episodeName)
+        public async Task DeleteEpisode(string episodeName)
         {
             var files = await GetFilesListForEpisode(episodeName);
             if (files == null)

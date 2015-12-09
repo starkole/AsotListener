@@ -28,10 +28,11 @@
         public MainPageViewModel(
             ILogger logger,
             IApplicationSettingsHelper applicationSettingsHelper,
-            IFileUtils fileUtils)
+            IFileUtils fileUtils,
+            IPlayList playlist)
         {
             this.playerModel = new PlayerViewModel(logger);
-            this.episodesViewModel = new EpisodesViewModel(logger, fileUtils);
+            this.episodesViewModel = new EpisodesViewModel(logger, fileUtils, playlist);
 
             this.applicationSettingsHelper = applicationSettingsHelper;
             

@@ -22,14 +22,14 @@
         // TODO: Move text labels to resources
         //private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
         private readonly ILogger logger;
-        private readonly IFileUtils fileUtils;
 
         public MainPage()
         {
             logger = Logger.Instance;
-            fileUtils = FileUtils.Instance;
+            var fileUtils = FileUtils.Instance;
+            var playlist = Playlist.Instance;
 
-            mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils);
+            mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils, playlist);
                    
             NavigationCacheMode = NavigationCacheMode.Required;
             navigationHelper = new NavigationHelper(this);
