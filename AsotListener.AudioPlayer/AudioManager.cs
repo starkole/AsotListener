@@ -8,6 +8,8 @@
     using Windows.Storage;
     using Services.Contracts;
     using Windows.Foundation.Diagnostics;
+    using Windows.UI.Core;
+    using Windows.UI.Popups;
 
     internal class AudioManager : IDisposable
     {
@@ -76,10 +78,15 @@
             }
         }
 
-        private void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+        private async void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
-            logger.LogMessage($"BackgroundAudio: Failed to open media file. Error {args.ExtendedErrorCode}. {args.ErrorMessage}");
-            // TODO: Show error message to user.
+            string message = $"BackgroundAudio: Failed to open media file. Error {args.ExtendedErrorCode}. {args.ErrorMessage}";
+            logger.LogMessage(message);
+            CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => {
+                MessageDialog MDialog = new MessageDialog(message, "Error in ASOT Listener audio service");
+                await MDialog.ShowAsync();
+            });
         }
 
         private void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
