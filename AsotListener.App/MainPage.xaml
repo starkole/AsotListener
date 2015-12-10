@@ -104,7 +104,6 @@
                                     FontSize="24"/>
                                 <TextBlock
                                     Text="{Binding Status, Converter={StaticResource EnumToLocalizedNamesConverter}}"
-                                    TextWrapping="Wrap"
                                     Pivot.SlideInAnimationGroup="1"
                                     CommonNavigationTransitionInfo.IsStaggerElement="True"
                                     Style="{ThemeResource ListViewItemTextBlockStyle}"

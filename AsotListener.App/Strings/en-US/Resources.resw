@@ -132,6 +132,15 @@
   <data name="EpisodesPivotItem.Header" xml:space="preserve">
     <value>episodes</value>
   </data>
+  <data name="EpisodeStatus.Downloading" xml:space="preserve">
+    <value>downloading</value>
+  </data>
+  <data name="EpisodeStatus.Loaded" xml:space="preserve">
+    <value>loaded</value>
+  </data>
+  <data name="EpisodeStatus.Playing" xml:space="preserve">
+    <value>playing</value>
+  </data>
   <data name="NowPlayingText.Text" xml:space="preserve">
     <value>now playing</value>
   </data>
