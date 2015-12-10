@@ -117,6 +117,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AddToPlaylistContextMenuItem.Text" xml:space="preserve">
+    <value>add to now playing</value>
+  </data>
+  <data name="CancelDownloadContextMenuItem.Text" xml:space="preserve">
+    <value>cancel downloading</value>
+  </data>
+  <data name="DeleteContextMenuItem.Text" xml:space="preserve">
+    <value>delete</value>
+  </data>
+  <data name="DownloadContextMenuItem.Text" xml:space="preserve">
+    <value>download</value>
+  </data>
   <data name="EpisodesPivotItem.Header" xml:space="preserve">
     <value>episodes</value>
   </data>
@@ -125,6 +137,9 @@
   </data>
   <data name="Pivot.Title" xml:space="preserve">
     <value>ASOT PLAYER</value>
+  </data>
+  <data name="PlayContextMenuItem.Text" xml:space="preserve">
+    <value>play</value>
   </data>
   <data name="PlayerPivotItem.Header" xml:space="preserve">
     <value>player</value>

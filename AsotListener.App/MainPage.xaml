@@ -48,6 +48,7 @@
                                     <MenuFlyout>
                                         <MenuFlyoutItem 
                                             x:Name="DownloadContextMenuItem"
+                                            x:Uid="DownloadContextMenuItem"
                                             Text="download"
                                             Visibility="{Binding 
                                             Converter={StaticResource ContextMenuVisibilityConverter},
@@ -56,6 +57,7 @@
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="CancelDownloadContextMenuItem"
+                                            x:Uid="CancelDownloadContextMenuItem"
                                             Text="cancel downloading"
                                             Visibility="{Binding 
                                             Converter={StaticResource ContextMenuVisibilityConverter},
@@ -64,6 +66,7 @@
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="DeleteContextMenuItem"
+                                            x:Uid="DeleteContextMenuItem"
                                             Text="delete"
                                             Visibility="{Binding 
                                             Converter={StaticResource ContextMenuVisibilityConverter},
@@ -72,6 +75,7 @@
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="PlayContextMenuItem"
+                                            x:Uid="PlayContextMenuItem"
                                             Text="play"
                                             Visibility="{Binding 
                                             Converter={StaticResource ContextMenuVisibilityConverter},
@@ -80,6 +84,7 @@
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
                                             x:Name="AddToPlaylistContextMenuItem"
+                                            x:Uid="AddToPlaylistContextMenuItem"
                                             Text="add to now playing"
                                             Visibility="{Binding 
                                             Converter={StaticResource ContextMenuVisibilityConverter},
