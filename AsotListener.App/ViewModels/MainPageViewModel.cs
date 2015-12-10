@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.App.ViewModels
 {
     using Services.Contracts;
+    using Windows.UI.Xaml;
     using Models;
     using System;
 
@@ -8,7 +9,6 @@
     {
         #region Fields
 
-        private readonly IApplicationSettingsHelper applicationSettingsHelper;
         private readonly PlayerViewModel playerModel;
         private readonly EpisodesViewModel episodesViewModel;
 
@@ -35,11 +35,8 @@
             playerModel = new PlayerViewModel(logger, playlist, applicationSettingsHelper);
             episodesViewModel = new EpisodesViewModel(logger, fileUtils, playlist, loaderFactory, parser);
 
-            this.applicationSettingsHelper = applicationSettingsHelper;
-
-
-            Windows.UI.Xaml.Application.Current.Suspending += onAppSuspending;
-            Windows.UI.Xaml.Application.Current.Resuming += onAppResuming;
+            Application.Current.Suspending += onAppSuspending;
+            Application.Current.Resuming += onAppResuming;
         }
 
         #endregion
@@ -48,13 +45,15 @@
 
         private async void onAppResuming(object sender, object eventArgs)
         {
-            await EpisodesModel.RestoreEpisodesList();            
+            await EpisodesModel.RestoreEpisodesList();
+            await PlayerModel.Playlist.SavePlaylistToLocalStorage();
         }
 
         private async void onAppSuspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             await EpisodesModel.StoreEpisodesList();
+            await PlayerModel.Playlist.LoadPlaylistFromLocalStorage();
             deferral.Complete();
         }
 
