@@ -12,6 +12,7 @@
     using AudioPlayer;
     using Windows.ApplicationModel.Background;
     using Windows.UI.Core;
+    using Windows.UI.Xaml;
 
     public class PlayerViewModel : BaseModel, IDisposable
     {
@@ -54,7 +55,11 @@
         public IconElement PlayButtonIcon
         {
             get { return playButtonIcon; }
-            set { SetField(ref playButtonIcon, value, nameof(PlayButtonIcon)); }
+            set
+            {
+                value.Opacity = 1;
+                SetField(ref playButtonIcon, value, nameof(PlayButtonIcon));
+            }
         }
 
         public ICommand PreviousTrackCommand { get; }
@@ -89,8 +94,8 @@
 
             //Adding App suspension handlers here so that we can unsubscribe handlers 
             //that access to BackgroundMediaPlayer events
-            App.Current.Suspending += ForegroundApp_Suspending;
-            App.Current.Resuming += ForegroundApp_Resuming;
+            Application.Current.Suspending += ForegroundApp_Suspending;
+            Application.Current.Resuming += ForegroundApp_Resuming;
 
             logger.LogMessage("Foreground audio player initialized.");
         }
