@@ -13,6 +13,7 @@
     using Windows.ApplicationModel.Background;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
+    using Windows.Foundation.Diagnostics;
 
     public class PlayerViewModel : BaseModel, IDisposable
     {
@@ -301,8 +302,8 @@
         /// </summary>
         private void AddMediaPlayerEventHandlers()
         {
-            BackgroundMediaPlayer.Current.CurrentStateChanged += this.MediaPlayer_CurrentStateChanged;
-            BackgroundMediaPlayer.MessageReceivedFromBackground += this.BackgroundMediaPlayer_MessageReceivedFromBackground;
+            BackgroundMediaPlayer.Current.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
+            BackgroundMediaPlayer.MessageReceivedFromBackground += BackgroundMediaPlayer_MessageReceivedFromBackground;
         }
 
         /// <summary>
@@ -312,18 +313,25 @@
         {
             logger.LogMessage("Foreground audio player Starting Background Task...");
             AddMediaPlayerEventHandlers();
-            //bool result = ServerInitialized.WaitOne(2000);
-            //if (result == true)
-            //{
-            var message = new ValueSet() { { Constants.StartPlayback, "0" } };
-            BackgroundMediaPlayer.SendMessageToBackground(message);
-            //}
-            //else
-            //{
-            //    var message = "Background Audio Task didn't start in expected time";
-            //    logger.LogMessage(message, Windows.Foundation.Diagnostics.LoggingLevel.Error);
-            //    throw new Exception(message);
-            //}
+
+            updateBackgroundTaskRunningStatus();
+            if (isMyBackgroundTaskRunning)
+            {
+                ServerInitialized.Set();
+            }
+
+            bool result = ServerInitialized.WaitOne(Constants.BackgroundAudioWaitingTime);
+            if (result == true)
+            {
+                var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+            }
+            else
+            {
+                var message = "Background Audio Task didn't start in expected time";
+                logger.LogMessage(message, LoggingLevel.Error);
+                throw new Exception(message);
+            }
         }
 
         #endregion

@@ -82,7 +82,7 @@
             //Send information to foreground that background task has been started if app is active
             if (foregroundAppState != ForegroundAppStatus.Suspended)
             {
-                ValueSet message = new ValueSet() { { Constants.BackgroundTaskStarted, "" } };
+                ValueSet message = new ValueSet() { { Constants.BackgroundTaskStarted, string.Empty } };
                 BackgroundMediaPlayer.SendMessageToForeground(message);
             }
             BackgroundTaskStarted.Set();
@@ -119,7 +119,8 @@
         {
             if (!backgroundtaskrunning)
             {
-                bool result = BackgroundTaskStarted.WaitOne(2000);
+                logger.LogMessage("Background Audio Task: It seems the task is not running. Waiting for it to start.");
+                bool result = BackgroundTaskStarted.WaitOne(Constants.BackgroundAudioWaitingTime);
                 if (!result)
                 {
                     const string message = "Background Task didn't initialize in time.";

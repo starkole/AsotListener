@@ -20,5 +20,7 @@
         public const string AppState = "AppState";
         public const string BackgroundTaskState = "BackgroundTaskState";
         public const string SkipPrevious = "SkipPrevious";
+
+        public const int BackgroundAudioWaitingTime = 2000;
     }
 }
