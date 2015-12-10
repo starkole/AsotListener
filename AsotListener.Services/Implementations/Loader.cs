@@ -59,9 +59,9 @@
                     }
                     
                     logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
-                    string filename = fileUtils.CreateFilename(episode.Name, i);
+                    string filename = fileUtils.GetEpisodePartFilename(episode.Name, i);
                     using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
-                    using (Stream streamToWriteTo = await fileUtils.GetStreamForWrite(filename))
+                    using (Stream streamToWriteTo = await fileUtils.GetStreamForWriteToLocalFolder(filename))
                     {
                         logger.LogMessage("Loader: Download started.");
                         await streamToReadFrom.CopyToAsync(streamToWriteTo);

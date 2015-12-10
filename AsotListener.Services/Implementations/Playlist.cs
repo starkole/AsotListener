@@ -20,7 +20,8 @@
         private const string playlistFilename = "playlist.xml";
         private const string currentTrackFilename = "current_track.xml";
 
-        private static ILogger logger;
+        private ILogger logger;
+        private IFileUtils fileUtils;
 
         public static IPlayList Instance => lazy.Value;
 
@@ -53,86 +54,19 @@
         {
             // TODO: Use DI here
             logger = Logger.Instance;
+            fileUtils = FileUtils.Instance;
         }
 
         public async Task SavePlaylistToLocalStorage()
         {
-            try
-            {
-                logger.LogMessage("Saving playlist to file...");
-                MemoryStream listData = new MemoryStream();
-                DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<AudioTrack>));
-                serializer.WriteObject(listData, TrackList);
-
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(playlistFilename, CreationCollisionOption.ReplaceExisting);
-                using (Stream fileStream = await file.OpenStreamForWriteAsync())
-                {
-                    listData.Seek(0, SeekOrigin.Begin);
-                    await listData.CopyToAsync(fileStream);
-                }
-
-                logger.LogMessage("Playlist has been saved.");
-            }
-            catch (Exception e)
-            {
-                logger.LogMessage($"Cannot save playlist. {e.Message}", LoggingLevel.Error);
-            }
-
-            try
-            {
-                logger.LogMessage("Saving current track to file...");
-                MemoryStream listData = new MemoryStream();
-                DataContractSerializer serializer = new DataContractSerializer(typeof(AudioTrack));
-                serializer.WriteObject(listData, CurrentTrack);
-
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(currentTrackFilename, CreationCollisionOption.ReplaceExisting);
-                using (Stream fileStream = await file.OpenStreamForWriteAsync())
-                {
-                    listData.Seek(0, SeekOrigin.Begin);
-                    await listData.CopyToAsync(fileStream);
-                }
-
-                logger.LogMessage("Current track has been saved.");
-            }
-            catch (Exception e)
-            {
-                logger.LogMessage($"Cannot save current track. {e.Message}", LoggingLevel.Error);
-            }
+            await fileUtils.SaveToXmlFile(TrackList, playlistFilename);
+            await fileUtils.SaveToXmlFile(CurrentTrack, currentTrackFilename);
         }
 
         public async Task LoadPlaylistFromLocalStorage()
         {
-            try
-            {
-                logger.LogMessage("Reading playlist from file...");
-                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(playlistFilename);
-                using (IInputStream inStream = await file.OpenSequentialReadAsync())
-                {
-                    DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<AudioTrack>));
-                    TrackList = serializer.ReadObject(inStream.AsStreamForRead()) as ObservableCollection<AudioTrack>;
-                }
-                logger.LogMessage("Playlist has been successfully read from file.");
-            }
-            catch (Exception e)
-            {
-                logger.LogMessage($"Error reading playlist. {e.Message}", LoggingLevel.Error);
-            }
-
-            try
-            {
-                logger.LogMessage("Reading current track from file...");
-                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(currentTrackFilename);
-                using (IInputStream inStream = await file.OpenSequentialReadAsync())
-                {
-                    DataContractSerializer serializer = new DataContractSerializer(typeof(AudioTrack));
-                    CurrentTrack = serializer.ReadObject(inStream.AsStreamForRead()) as AudioTrack;
-                }
-                logger.LogMessage("Current track has been successfully read from file.");
-            }
-            catch (Exception e)
-            {
-                logger.LogMessage($"Error reading current track. {e.Message}", LoggingLevel.Error);
-            }
+            TrackList = await fileUtils.ReadFromXmlFile<ObservableCollection<AudioTrack>>(playlistFilename);
+            CurrentTrack = await fileUtils.ReadFromXmlFile<AudioTrack>(currentTrackFilename);
 
             if (TrackList == null || !TrackList.Any())
             {

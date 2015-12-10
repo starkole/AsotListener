@@ -79,23 +79,7 @@
 
         public async Task RestoreEpisodesList()
         {
-            try
-            {
-                logger.LogMessage("Reading episode list from file...");
-                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(episodeListFileName);
-                using (IInputStream inStream = await file.OpenSequentialReadAsync())
-                {
-                    // Deserialize the Session State
-                    DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<Episode>));
-                    EpisodeList = serializer.ReadObject(inStream.AsStreamForRead()) as ObservableCollection<Episode>;
-                }
-                logger.LogMessage("Episode list has been successfully read from file.");
-            }
-            catch (Exception e)
-            {
-                logger.LogMessage($"Error reading episodes list. {e.Message}", LoggingLevel.Error);
-            }
-
+            EpisodeList = await fileUtils.ReadFromXmlFile<ObservableCollection<Episode>>(episodeListFileName);
             if (EpisodeList == null || !EpisodeList.Any())
             {
                 await loadEpisodeListFromServer();
@@ -108,26 +92,7 @@
 
         public async Task StoreEpisodesList()
         {
-            try
-            {
-                logger.LogMessage("Saving episode list to file...");
-                MemoryStream listData = new MemoryStream();
-                DataContractSerializer serializer = new DataContractSerializer(typeof(ObservableCollection<Episode>));
-                serializer.WriteObject(listData, EpisodeList);
-
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(episodeListFileName, CreationCollisionOption.ReplaceExisting);
-                using (Stream fileStream = await file.OpenStreamForWriteAsync())
-                {
-                    listData.Seek(0, SeekOrigin.Begin);
-                    await listData.CopyToAsync(fileStream);
-                }
-
-                logger.LogMessage("Episode list has been saved.");
-            }
-            catch (Exception e)
-            {
-                logger.LogMessage($"Cannot save episodes list. {e.Message}", LoggingLevel.Error);
-            }
+            await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
         }
 
         #endregion
