@@ -17,12 +17,8 @@
         public const string AppResumed = "AppResumed";
         public const string StartPlayback = "StartPlayback";
         public const string SkipNext = "SkipNext";
-        public const string Position = "Position";
         public const string AppState = "AppState";
         public const string BackgroundTaskState = "BackgroundTaskState";
         public const string SkipPrevious = "SkipPrevious";
-        public const string Trackchanged = "TrackChanged"; // TODO: Rename this properly
-
-        
     }
 }

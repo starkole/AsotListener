@@ -10,8 +10,6 @@
     using Windows.UI.Xaml.Input;
     using Windows.UI.Input;
     using Windows.UI.Xaml.Controls.Primitives;
-    using System.Diagnostics;
-    using Windows.Media.Playback;
     using Services.Contracts;
     using Services.Implementations;
 
@@ -22,17 +20,14 @@
         private IApplicationSettingsHelper applicationSettingsHelper;
         private readonly ILogger logger;
 
-        // TODO: Move text labels to resources
-        //private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-
         public MainPage()
         {
             logger = Logger.Instance;
             applicationSettingsHelper = ApplicationSettingsHelper.Instance;
             var fileUtils = FileUtils.Instance;
             var playlist = Playlist.Instance;
-            var loaderFactory = new LoaderFactory(logger, fileUtils);
             var parser = Parser.Instance;
+            var loaderFactory = new LoaderFactory(logger, fileUtils);
 
             mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils, playlist, parser, loaderFactory);
                    
@@ -48,7 +43,6 @@
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>
         public NavigationHelper NavigationHelper => navigationHelper;
-
         public MainPageViewModel MainPageViewModel => mainPageViewModel;
 
         #region NavigationHelper registration
@@ -69,14 +63,13 @@
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             logger.LogMessage("Navigated to MainPage.");
-            this.navigationHelper.OnNavigatedTo(e);
+            navigationHelper.OnNavigatedTo(e);
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Active.ToString());
             var param = e.Parameter as string;
             if (param == Constants.StartPlayback)
             {
                 logger.LogMessage("Starting playback from MainPage navigation handler.");
-                MainPivot.SelectedItem = PlayerPivotItem;
-                
+                MainPivot.SelectedItem = PlayerPivotItem;                
                 MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
             }
         }
@@ -84,10 +77,13 @@
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             logger.LogMessage("Navigated away from MainPage.");
-            this.navigationHelper.OnNavigatedFrom(e);
+            navigationHelper.OnNavigatedFrom(e);
         }
 
+        #endregion
+
         #region IDisposable Support
+
         private bool disposedValue = false; // To detect redundant calls
 
         void Dispose(bool disposing)
@@ -96,6 +92,7 @@
             {
                 if (disposing)
                 {
+                    logger.LogMessage("Disposing MainPageViewModel.");
                     mainPageViewModel.Dispose();
                 }
 
@@ -108,23 +105,28 @@
         {
             Dispose(true);
         }
-        #endregion
 
         #endregion
+        
+        #region Event Handlers
 
-        private void OnElementHolding(object sender, HoldingRoutedEventArgs args)
+        private void OnEpisodeListElementHolding(object sender, HoldingRoutedEventArgs args)
         {
-            // TODO: Find out how to move this handler to view model
-            Debug.WriteLine("Holding event with HoldingState=" + args.HoldingState.ToString());
+            logger.LogMessage($"Holding event with HoldingState={args.HoldingState}");
 
             // this event is fired multiple times. We do not want to show the menu twice
-            if (args.HoldingState != HoldingState.Started) return;
+            if (args.HoldingState == HoldingState.Started)
+            {
+                FrameworkElement element = sender as FrameworkElement;
+                if (element != null)
+                {
+                    // If the menu was attached properly, we just need to call this handy method
+                    logger.LogMessage("Opening context menu.");
+                    FlyoutBase.ShowAttachedFlyout(element);
+                }
+            }
+        } 
 
-            FrameworkElement element = sender as FrameworkElement;
-            if (element == null) return;
-
-            // If the menu was attached properly, we just need to call this handy method
-            FlyoutBase.ShowAttachedFlyout(element);
-        }
+        #endregion
     }
 }
