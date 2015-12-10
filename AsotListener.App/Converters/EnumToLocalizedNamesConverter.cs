@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.App.Converters
 {
     using System;
+    using Models;
     using Models.Attributes;
     using Windows.UI.Xaml.Data;
 
@@ -16,9 +17,10 @@
         /// <returns>The value to be passed to the target dependency property</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var enumValue = value as Enum;
-            var attr = enumValue?.GetAttribute<LocalizedDisplayAttribute>();
-            return attr?.Name ?? string.Empty;
+            //var enumValue = (EpisodeStatus)value;
+            //var attr = enumValue.GetAttribute<LocalizedDisplayAttribute>();
+            //return attr?.Name ?? string.Empty;
+            return value.ToString();
         }
 
         /// <summary>

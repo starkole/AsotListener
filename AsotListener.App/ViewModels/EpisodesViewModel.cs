@@ -139,6 +139,7 @@
             }
 
             // TODO: Implement command logic
+            // TODO: Don't forget to update status.
         }
 
         private async void deleteEpisodeFromStorage(object boxedEpisode)
@@ -148,6 +149,7 @@
             {
                 await fileUtils.DeleteEpisode(episode.Name);
             }
+            episode.Status = EpisodeStatus.CanBeLoaded;
         }
 
         private async void playEpisode(object boxedEpisode)
@@ -234,8 +236,8 @@
 
         private bool canEpisodeBeDeleted(Episode episode) =>
             episode != null &&
-            episode.Status == EpisodeStatus.Loaded &&
-            episode.Status == EpisodeStatus.Playing;
+            (episode.Status == EpisodeStatus.Loaded ||
+            episode.Status == EpisodeStatus.Playing);
 
         #endregion
 
