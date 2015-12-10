@@ -1,4 +1,4 @@
-﻿namespace AsotListener.App.Converters
+﻿namespace AsotListener.Models
 {
     public enum ContextMenuItem
     {

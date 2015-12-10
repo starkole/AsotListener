@@ -82,9 +82,13 @@
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DisplayAttribute.cs" />
+    <Compile Include="Attributes\EnumAttributeExtension.cs" />
+    <Compile Include="Attributes\LocalizedDisplayAttribute.cs" />
     <Compile Include="AudioTrack.cs" />
     <Compile Include="BaseModel.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="ContextMenuItem.cs" />
     <Compile Include="Episode.cs" />
     <Compile Include="EpisodeStatus.cs" />
     <Compile Include="ForegroundAppStatus.cs" />

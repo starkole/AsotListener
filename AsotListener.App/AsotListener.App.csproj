@@ -88,8 +88,8 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converters\ContextMenuItem.cs" />
     <Compile Include="Converters\ContextMenuVisibilityConverter.cs" />
+    <Compile Include="Converters\EnumToLocalizedNamesConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
