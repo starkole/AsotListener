@@ -4,7 +4,7 @@
 
     public enum EpisodeStatus
     {
-        [LocalizedDisplay("")]
+        [LocalizedDisplay("", "EpisodeStatus.CanBeLoaded")]
         CanBeLoaded,
 
         [LocalizedDisplay("Downloading", "EpisodeStatus.Downloading")]

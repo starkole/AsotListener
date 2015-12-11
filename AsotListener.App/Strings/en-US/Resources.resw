@@ -156,4 +156,7 @@
   <data name="RefreshAppBarButton.Label" xml:space="preserve">
     <value>refresh</value>
   </data>
+  <data name="EpisodeStatus.CanBeLoaded" xml:space="preserve">
+    <value> </value>
+  </data>
 </root>

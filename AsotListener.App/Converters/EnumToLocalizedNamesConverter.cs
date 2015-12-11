@@ -17,8 +17,9 @@
         /// <returns>The value to be passed to the target dependency property</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            //var enumValue = (EpisodeStatus)value;
-            //var attr = enumValue.GetAttribute<LocalizedDisplayAttribute>();
+            // TODO: Check if this works
+            //var enumValue = value as Enum;
+            //var attr = enumValue?.GetAttribute<LocalizedDisplayAttribute>();
             //return attr?.Name ?? string.Empty;
             return value.ToString();
         }
