@@ -80,6 +80,14 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <ProjectReference Include="..\AsotListener.Models\AsotListener.Models.csproj">
+      <Project>{ddfb9b19-6b9f-45df-9f4c-9be123dc96cf}</Project>
+      <Name>AsotListener.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AsotListener.Services\AsotListener.Services.csproj">
+      <Project>{94c4ee75-6366-4e09-95f4-5c4414b09754}</Project>
+      <Name>AsotListener.Services</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Downloader.cs" />

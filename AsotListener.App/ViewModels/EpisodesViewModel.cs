@@ -14,6 +14,11 @@
     using Windows.Storage.Streams;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml;
+    using Windows.Networking.BackgroundTransfer;
+    using System.Collections.Generic;
+    using System.Threading;
+    using Windows.UI.Core;
+    using Windows.ApplicationModel.Core;
 
     public class EpisodesViewModel : BaseModel, IDisposable
     {
@@ -21,6 +26,9 @@
 
         private const string episodeListFileName = "episodeList.xml";
         private ObservableCollection<Episode> episodes;
+        private BackgroundDownloader backgroundDownloader;
+        Dictionary<Episode, List<DownloadOperation>> activeDownloadsByEpisode;
+        Dictionary<DownloadOperation, Episode> activeDownloadsByDownload;
         private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
         private readonly IPlayList playlist;
@@ -49,9 +57,9 @@
         #region Ctor
 
         public EpisodesViewModel(
-            ILogger logger, 
-            IFileUtils fileUtils, 
-            IPlayList playlist, 
+            ILogger logger,
+            IFileUtils fileUtils,
+            IPlayList playlist,
             ILoaderFactory loaderFactory,
             IParser parser)
         {
@@ -68,9 +76,10 @@
             PlayCommand = new RelayCommand((Action<object>)playEpisode);
             AddToPlaylistCommand = new RelayCommand((Action<object>)addToPlaylistCommand);
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            RestoreEpisodesList();
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            activeDownloadsByEpisode = new Dictionary<Episode, List<DownloadOperation>>();
+            activeDownloadsByDownload = new Dictionary<DownloadOperation, Episode>();
+
+            initializeModelAsync();
         }
 
         #endregion
@@ -118,15 +127,26 @@
                 return;
             }
 
-            // TODO: Implement loading queue
+            if (backgroundDownloader == null)
+            {
+                backgroundDownloader = new BackgroundDownloader();
+            }
 
             using (ILoader loader = loaderFactory.GetLoader())
             {
                 string episodePage = await loader.FetchEpisodePageAsync(episode);
                 episode.DownloadLinks = parser.ExtractDownloadLinks(episodePage);
-                episode.Status = EpisodeStatus.Downloading;
-                await loader.DownloadEpisodeAsync(episode);
-                episode.Status = EpisodeStatus.Loaded;
+            }
+
+            episode.Status = EpisodeStatus.Downloading;
+            for (var i = 0; i < episode.DownloadLinks.Length; i++)
+            {
+                var downloader = new BackgroundDownloader();
+                var uri = new Uri(episode.DownloadLinks[i]);
+                var file = await fileUtils.GetEpisodePartFile(episode.Name, i);
+                var download = downloader.CreateDownload(uri, file);
+                download.CostPolicy = BackgroundTransferCostPolicy.UnrestrictedOnly;
+                handleDownloadAsync(download, episode, DownloadState.NotStarted);
             }
         }
 
@@ -138,8 +158,13 @@
                 return;
             }
 
-            // TODO: Implement command logic
-            // TODO: Don't forget to update status.
+            // Making shallow copy of the list here because it will be affected by handleDownloadAsync method.
+            var episodeDownloads = activeDownloadsByEpisode[episode].ToList(); //TODO: Integrity check
+            foreach (var download in episodeDownloads)
+            {
+                logger.LogMessage($"Stopping download from {download.RequestedUri} to {download.ResultFile.Name}", LoggingLevel.Warning);
+                download.AttachAsync().Cancel();
+            }
         }
 
         private async void deleteEpisodeFromStorage(object boxedEpisode)
@@ -193,6 +218,105 @@
         #endregion
 
         #region Private Methods
+        private async void initializeModelAsync()
+        {
+            await RestoreEpisodesList();
+            await retrieveActiveDownloads();
+        }
+
+        private async Task retrieveActiveDownloads()
+        {
+            logger.LogMessage("Obtaining background downloads...");
+            IReadOnlyList<DownloadOperation> downloads = await BackgroundDownloader.GetCurrentDownloadsAsync();
+            logger.LogMessage($"{downloads.Count} background downloads found.");
+            foreach (var download in downloads)
+            {
+                string filename = download.ResultFile.Name;
+                string episodeName = fileUtils.ExtractEpisodeNameFromFilename(filename);
+
+                var episode = EpisodeList.Where(e => e.Name.StartsWith(episodeName)).FirstOrDefault();
+                if (episode == null)
+                {
+                    logger.LogMessage($"Stale download detected. Stopping download from {download.RequestedUri} to {download.ResultFile.Name}", LoggingLevel.Warning);
+                    download.AttachAsync().Cancel();
+                    fileUtils.TryDeleteFile(filename).Start();
+                    break;
+                }
+                
+                handleDownloadAsync(download, episode, DownloadState.AlreadyRunning);
+            }
+        }
+
+        private async void handleDownloadAsync(DownloadOperation download, Episode episode, DownloadState downloadState)
+        {
+            try
+            {
+                // Register download
+                activeDownloadsByDownload.Add(download, episode);
+                if (activeDownloadsByEpisode.Keys.Contains(episode))
+                {
+                    activeDownloadsByEpisode[episode].Add(download);
+                }
+                else
+                {
+                    activeDownloadsByEpisode.Add(episode, new List<DownloadOperation>() { download });
+                }
+
+                // Start and attach handlers
+                Progress<DownloadOperation> progressCallback = new Progress<DownloadOperation>(downloadProgress);
+                if (downloadState == DownloadState.NotStarted)
+                {
+                    await download.StartAsync().AsTask(progressCallback);
+                }
+                if (downloadState == DownloadState.AlreadyRunning)
+                {
+                    await download.AttachAsync().AsTask(progressCallback);
+                }
+
+                ResponseInformation response = download.GetResponseInformation();
+                logger.LogMessage($"Download of {download.ResultFile.Name} completed. Status Code: {response.StatusCode}");
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = EpisodeStatus.Loaded);
+            }
+            catch (TaskCanceledException)
+            {
+                logger.LogMessage("Download cancelled.");
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = EpisodeStatus.CanBeLoaded);
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error {ex.Message}", LoggingLevel.Error);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = EpisodeStatus.CanBeLoaded);
+            }
+            finally
+            {
+                // TODO: Add integrity checks and logging here, maybe extract to separate method  
+                logger.LogMessage($"Unregistering download of file {download.ResultFile.Name}.");
+                activeDownloadsByDownload.Remove(download);
+                activeDownloadsByEpisode[episode].Remove(download);
+                if (!activeDownloadsByEpisode[episode].Any())
+                {
+                    logger.LogMessage($"No downloads left for episode {episode.Name}. Unregistering episode.");
+                    activeDownloadsByEpisode.Remove(episode);
+                }
+                logger.LogMessage($"Download of file {download.ResultFile.Name} has been unregistered.");
+            }
+        }
+
+        private async void downloadProgress(DownloadOperation download)
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Episode episode = activeDownloadsByDownload[download];
+                episode.OverallDownloadSize = activeDownloadsByEpisode[episode].Sum((Func<DownloadOperation, double>)getTotalBytesToDownload);
+                episode.DownloadedAmount = activeDownloadsByEpisode[episode].Sum(d => (double)d.Progress.BytesReceived);
+            });
+        }
+
+        private double getTotalBytesToDownload(DownloadOperation download)
+        {
+            var total = download.Progress.TotalBytesToReceive;
+            return total == 0 ? Constants.DefaultEpisodeSize : total;
+        }
 
         private async Task<AudioTrack> addEpisodeToPlaylist(Episode episode)
         {
@@ -219,17 +343,22 @@
 
         private async Task updateEpisodesStates()
         {
-            if (this.EpisodeList == null || !this.EpisodeList.Any())
+            if (EpisodeList == null || !EpisodeList.Any())
             {
                 return;
             }
 
             var existingFileNames = await fileUtils.GetDownloadedFileNamesList();
-            foreach (Episode episode in this.EpisodeList)
+            foreach (Episode episode in EpisodeList)
             {
                 if (existingFileNames.Contains(episode.Name))
                 {
                     episode.Status = EpisodeStatus.Loaded;
+                }
+
+                if (activeDownloadsByEpisode.ContainsKey(episode))
+                {
+                    episode.Status = EpisodeStatus.Downloading;
                 }
             }
         }

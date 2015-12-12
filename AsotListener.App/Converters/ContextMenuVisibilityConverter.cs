@@ -18,10 +18,11 @@
         public object Convert(object value, Type targetType, object itemType, string language)
         {
             Visibility result = Visibility.Collapsed;
-            Episode episode = value as Episode;
             ContextMenuItem menuItem;
+            EpisodeStatus status;
             bool isItemTypeValid = Enum.TryParse(itemType.ToString(), out menuItem);
-            if (episode == null || !isItemTypeValid)
+            bool isStatusValid = Enum.TryParse(value.ToString(), out status);
+            if (!isStatusValid || !isItemTypeValid)
             {
                 return result;
             }
@@ -30,31 +31,31 @@
             switch (menuItem)
             {
                 case ContextMenuItem.Download:
-                    if (episode.Status == EpisodeStatus.CanBeLoaded)
+                    if (status == EpisodeStatus.CanBeLoaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.CancelDownload:
-                    if (episode.Status == EpisodeStatus.Downloading)
+                    if (status == EpisodeStatus.Downloading)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.Delete:
-                    if (episode.Status == EpisodeStatus.Loaded)
+                    if (status == EpisodeStatus.Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.Play:
-                    if (episode.Status == EpisodeStatus.Loaded)
+                    if (status == EpisodeStatus.Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.AddToPlaylist:
-                    if (episode.Status == EpisodeStatus.Loaded)
+                    if (status == EpisodeStatus.Loaded)
                     {
                         result = Visibility.Visible;
                     }

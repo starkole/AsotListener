@@ -8,11 +8,14 @@
     public interface IFileUtils
     {
         string GetEpisodePartFilename(string name, int partNumber);
+        Task<IStorageFile> GetEpisodePartFile(string name, int partNumber);
         Task<IList<string>> GetDownloadedFileNamesList();
         Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName);
         Task<Stream> GetStreamForWriteToLocalFolder(string filename);
         Task DeleteEpisode(string episodeName);
         Task<T> ReadFromXmlFile<T>(string filename) where T : class;
         Task SaveToXmlFile<T>(T objectToSave, string filename) where T : class;
+        Task TryDeleteFile(string filename);
+        string ExtractEpisodeNameFromFilename(string filenameWithExtension);
     }
 }

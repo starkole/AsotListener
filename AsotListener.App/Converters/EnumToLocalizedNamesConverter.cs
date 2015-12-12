@@ -18,10 +18,10 @@
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             // TODO: Check if this works
-            //var enumValue = value as Enum;
-            //var attr = enumValue?.GetAttribute<LocalizedDisplayAttribute>();
-            //return attr?.Name ?? string.Empty;
-            return value.ToString();
+            var enumValue = value as Enum;
+            var attr = enumValue?.GetAttribute<LocalizedDisplayAttribute>();
+            return attr?.Name ?? string.Empty;
+            //return value.ToString();
         }
 
         /// <summary>

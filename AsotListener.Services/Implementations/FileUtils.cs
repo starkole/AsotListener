@@ -36,25 +36,39 @@
             return await file.OpenStreamForWriteAsync();
         }
 
+        public async Task<IStorageFile> GetEpisodePartFile(string name, int partNumber)
+        {
+            var filename = GetEpisodePartFilename(name, partNumber);
+            return await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+        }
+
         public string GetEpisodePartFilename(string name, int partNumber) =>
             name + partNumberDelimiter + partNumber.ToString() + fileExtension;
 
         public async Task<IList<string>> GetDownloadedFileNamesList()
         {
+            logger.LogMessage("Obtaining list of downloaded files...");
             IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
-            return files?
+            var result = files?
                 .Where(f => f.FileType == fileExtension)
                 .Select(f => stripEndNumberFromFilename(f.DisplayName))
                 .Distinct()
                 .ToList();
+            result = result ?? new List<string>();
+            logger.LogMessage($"Found {result.Count} files.");
+            return result;
         }
 
         public async Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName)
         {
+            logger.LogMessage($"Obtaining file list for episode {episodeName}...");
             IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
-            return files?
+            var result = files?
                 .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName))
                 .ToList();
+            result = result ?? new List<StorageFile>();
+            logger.LogMessage($"Found {result.Count} files.");
+            return result;
         }
 
         public async Task DeleteEpisode(string episodeName)
@@ -62,14 +76,24 @@
             var files = await GetFilesListForEpisode(episodeName);
             if (files == null)
             {
+                logger.LogMessage($"No files found to delete for episode {episodeName}.", LoggingLevel.Warning);
                 return;
             }
 
             foreach (var file in files)
             {
-                await file.DeleteAsync();
+                try
+                {
+                    logger.LogMessage($"Deleting file {file.Name}...");
+                    await file.DeleteAsync();
+                    logger.LogMessage("File deleted successfully.");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogMessage($"Exception while deleting the file {file.Name}. {ex.Message}", LoggingLevel.Error);
+                }
             }
-        } 
+        }
 
         public async Task SaveToXmlFile<T>(T objectToSave, string filename) where T : class
         {
@@ -127,6 +151,35 @@
             }
         }
 
+        public async Task TryDeleteFile(string filename)
+        {
+            logger.LogMessage($"Trying to delete file from {filename}...");
+            var file = await localFolder.GetFileAsync(filename);
+            if (file == null)
+            {
+                logger.LogMessage("File not found.");
+                return;
+            }
+
+            try
+            {
+                logger.LogMessage($"Deleting file {file.Name}...");
+                await file.DeleteAsync();
+                logger.LogMessage("File deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception while deleting the file {file.Name}. {ex.Message}", LoggingLevel.Error);
+            }
+        }
+
+        public string ExtractEpisodeNameFromFilename(string filenameWithExtension)
+        {
+            string filename = stripExtensionFromFilename(filenameWithExtension);
+            string result = stripEndNumberFromFilename(filename);
+            return result;
+        }
+
         #endregion
 
         #region Helper Methods
@@ -134,8 +187,16 @@
         private string stripEndNumberFromFilename(string filename)
         {
             Regex numberAtTheEnd = new Regex(partNumberDelimiter + "[0-9]+$");
-            return numberAtTheEnd.Replace(filename, string.Empty);
-        } 
+            string result = numberAtTheEnd.Replace(filename, string.Empty);
+            return result;
+        }
+
+        private string stripExtensionFromFilename(string filenameWithExtension)
+        {
+            Regex numberAtTheEnd = new Regex("(" + fileExtension + ")$");
+            string result = numberAtTheEnd.Replace(filenameWithExtension, string.Empty);
+            return result;
+        }
 
         #endregion
     }

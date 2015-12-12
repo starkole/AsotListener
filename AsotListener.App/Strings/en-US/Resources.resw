@@ -132,13 +132,13 @@
   <data name="EpisodesPivotItem.Header" xml:space="preserve">
     <value>episodes</value>
   </data>
-  <data name="EpisodeStatus.Downloading" xml:space="preserve">
+  <data name="EpisodeStatusDownloading" xml:space="preserve">
     <value>downloading</value>
   </data>
-  <data name="EpisodeStatus.Loaded" xml:space="preserve">
+  <data name="EpisodeStatusLoaded" xml:space="preserve">
     <value>loaded</value>
   </data>
-  <data name="EpisodeStatus.Playing" xml:space="preserve">
+  <data name="EpisodeStatusPlaying" xml:space="preserve">
     <value>playing</value>
   </data>
   <data name="NowPlayingText.Text" xml:space="preserve">
@@ -156,7 +156,7 @@
   <data name="RefreshAppBarButton.Label" xml:space="preserve">
     <value>refresh</value>
   </data>
-  <data name="EpisodeStatus.CanBeLoaded" xml:space="preserve">
+  <data name="EpisodeStatusCanBeLoaded" xml:space="preserve">
     <value> </value>
   </data>
 </root>

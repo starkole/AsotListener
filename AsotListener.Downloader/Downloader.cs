@@ -6,16 +6,61 @@
     using System.Text;
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Background;
+    using Services.Contracts;
+    using Services.Implementations;
+    using Models;
 
     public sealed class Downloader : IBackgroundTask, IDisposable
     {
-        public void Run(IBackgroundTaskInstance taskInstance)
+        private IDownloadList downloads;
+        private ILoaderFactory loaderFactory;
+        private ILogger logger;
+        private IFileUtils fileUtils;
+        private IParser parser;
+
+        public async void Run(IBackgroundTaskInstance taskInstance)
         {
             var deferral = taskInstance.GetDeferral();
-            
-            // TODO: Implement task logic here.
 
+            downloads = DownloadList.Instance;
+            logger = Logger.Instance;
+            parser = Parser.Instance;
+            fileUtils = FileUtils.Instance;
+            loaderFactory = new LoaderFactory(logger, fileUtils);
+
+            logger.LogMessage("Background downloader started.");
+
+            while (downloads.Any())
+            {
+                Episode episode = null;
+                bool operationResult = false;
+                while (downloads.Any() && !operationResult)
+                {
+                    operationResult = downloads.TryGetFirst(out episode);
+                }
+
+                if (episode == null)
+                {
+                    break;
+                }
+
+                await downloadEpisode(episode);
+            }
+
+            logger.LogMessage("Background downloader - exiting.");
             deferral.Complete();
+        }
+
+        private async Task downloadEpisode(Episode episode)
+        {
+            using (ILoader loader = loaderFactory.GetLoader())
+            {
+                string episodePage = await loader.FetchEpisodePageAsync(episode);
+                episode.DownloadLinks = parser.ExtractDownloadLinks(episodePage);
+                episode.Status = EpisodeStatus.Downloading;
+                await loader.DownloadEpisodeAsync(episode);
+                episode.Status = EpisodeStatus.Loaded;
+            }
         }
 
         #region IDisposable Support

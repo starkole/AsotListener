@@ -1,10 +1,15 @@
 ﻿namespace AsotListener.Models
 {
-    public class Episode : BaseModel
+    using Windows.UI.Xaml;
+
+    public class Episode: BaseModel
     {
         private string name;
         private string url;
         private EpisodeStatus status = EpisodeStatus.CanBeLoaded;
+        private double overallDownloadSize = double.MaxValue;
+        private double downloadedAmount = 0;
+        private Visibility downloadProgressbarVisibility = Visibility.Collapsed;
 
         public string Name
         {
@@ -21,7 +26,37 @@
         public EpisodeStatus Status
         {
             get { return status; }
-            set { SetField(ref status, value, nameof(Status)); }
+            set
+            {
+                if (value == EpisodeStatus.Downloading)
+                {
+                    DownloadProgressbarVisibility = Visibility.Visible;
+                }
+                else
+                {
+                    DownloadProgressbarVisibility = Visibility.Collapsed;
+                }
+
+                SetField(ref status, value, nameof(Status));
+            }
+        }
+
+        public double OverallDownloadSize
+        {
+            get { return overallDownloadSize; }
+            set { SetField(ref overallDownloadSize, value, nameof(OverallDownloadSize)); }
+        }
+
+        public double DownloadedAmount
+        {
+            get { return downloadedAmount; }
+            set { SetField(ref downloadedAmount, value, nameof(DownloadedAmount)); }
+        }
+
+        public Visibility DownloadProgressbarVisibility
+        {
+            get { return downloadProgressbarVisibility; }
+            set { SetField(ref downloadProgressbarVisibility, value, nameof(DownloadProgressbarVisibility)); }
         }
 
         public string[] DownloadLinks { get; set; }

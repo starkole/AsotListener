@@ -47,25 +47,34 @@
                 return;
             }
 
-            for (var i=0; i< episode.DownloadLinks.Length; i++)
+            for (var i = 0; i < episode.DownloadLinks.Length; i++)
             {
                 logger.LogMessage($"Loader: starting download part {i} of {episode.DownloadLinks.Length} into file");
 
+                string filename = fileUtils.GetEpisodePartFilename(episode.Name, i);
                 using (HttpResponseMessage response = await httpClient.GetAsync(episode.DownloadLinks[i], HttpCompletionOption.ResponseHeadersRead))
                 {
                     if (!response.IsSuccessStatusCode)
                     {
                         logger.LogMessage($"Loader: server connection error. Status {response.StatusCode} {response.ReasonPhrase}", LoggingLevel.Error);
+                        break;
                     }
-                    
-                    logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
-                    string filename = fileUtils.GetEpisodePartFilename(episode.Name, i);
-                    using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
-                    using (Stream streamToWriteTo = await fileUtils.GetStreamForWriteToLocalFolder(filename))
+
+                    try
                     {
-                        logger.LogMessage("Loader: Download started.");
-                        await streamToReadFrom.CopyToAsync(streamToWriteTo);
-                        logger.LogMessage("Loader: Download complete.");
+                        logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
+                        using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
+                        using (Stream streamToWriteTo = await fileUtils.GetStreamForWriteToLocalFolder(filename))
+                        {
+                            logger.LogMessage("Loader: Download started.");
+                            await streamToReadFrom.CopyToAsync(streamToWriteTo);
+                            logger.LogMessage("Loader: Download complete.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogMessage($"Loader: exception while downloading the file. {ex.Message}", LoggingLevel.Error);
+                        await fileUtils.TryDeleteFile(filename);
                     }
                 }
             }

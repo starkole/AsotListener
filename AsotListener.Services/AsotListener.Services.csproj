@@ -88,6 +88,7 @@
   <ItemGroup>
     <Compile Include="Contracts\ILoaderFactory.cs" />
     <Compile Include="Implementations\ApplicationSettingsHelper.cs" />
+    <Compile Include="Implementations\DownloadList.cs" />
     <Compile Include="Implementations\FileUtils.cs" />
     <Compile Include="Contracts\IApplicationSettingsHelper.cs" />
     <Compile Include="Contracts\IFileUtils.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Contracts\ILogger.cs" />
     <Compile Include="Contracts\IParser.cs" />
     <Compile Include="Contracts\IPlayList.cs" />
+    <Compile Include="Contracts\IDownloadList.cs" />
     <Compile Include="Implementations\Loader.cs" />
     <Compile Include="Implementations\LoaderFactory.cs" />
     <Compile Include="Implementations\Logger.cs" />

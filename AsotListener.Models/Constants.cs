@@ -22,5 +22,6 @@
         public const string SkipPrevious = "SkipPrevious";
 
         public const int BackgroundAudioWaitingTime = 2000;
+        public const double DefaultEpisodeSize = 400 * 1024 * 1024; // 400MB
     }
 }

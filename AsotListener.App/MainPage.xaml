@@ -38,6 +38,7 @@
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel 
+                                MinWidth="300"
                                 Margin="0,0,0,9.5" 
                                 Holding="OnEpisodeListElementHolding">
                                 <StackPanel.Resources>
@@ -50,7 +51,7 @@
                                             x:Name="DownloadContextMenuItem"
                                             x:Uid="DownloadContextMenuItem"
                                             Text="download"
-                                            Visibility="{Binding 
+                                            Visibility="{Binding Status, 
                                             Converter={StaticResource ContextMenuVisibilityConverter},
                                             ConverterParameter=Download}"
                                             Command="{Binding DataContext.DownloadCommand, ElementName=EpisodesPivotItem}"
@@ -59,7 +60,7 @@
                                             x:Name="CancelDownloadContextMenuItem"
                                             x:Uid="CancelDownloadContextMenuItem"
                                             Text="cancel downloading"
-                                            Visibility="{Binding 
+                                            Visibility="{Binding Status,
                                             Converter={StaticResource ContextMenuVisibilityConverter},
                                             ConverterParameter=CancelDownload}"
                                             Command="{Binding DataContext.CancelDownloadCommand, ElementName=EpisodesPivotItem}"
@@ -68,7 +69,7 @@
                                             x:Name="DeleteContextMenuItem"
                                             x:Uid="DeleteContextMenuItem"
                                             Text="delete"
-                                            Visibility="{Binding 
+                                            Visibility="{Binding Status,
                                             Converter={StaticResource ContextMenuVisibilityConverter},
                                             ConverterParameter=Delete}"
                                             Command="{Binding DataContext.DeleteCommand, ElementName=EpisodesPivotItem}"
@@ -77,7 +78,7 @@
                                             x:Name="PlayContextMenuItem"
                                             x:Uid="PlayContextMenuItem"
                                             Text="play"
-                                            Visibility="{Binding 
+                                            Visibility="{Binding Status,
                                             Converter={StaticResource ContextMenuVisibilityConverter},
                                             ConverterParameter=Play}"
                                             Command="{Binding DataContext.PlayCommand, ElementName=EpisodesPivotItem}"
@@ -86,7 +87,7 @@
                                             x:Name="AddToPlaylistContextMenuItem"
                                             x:Uid="AddToPlaylistContextMenuItem"
                                             Text="add to now playing"
-                                            Visibility="{Binding 
+                                            Visibility="{Binding Status,
                                             Converter={StaticResource ContextMenuVisibilityConverter},
                                             ConverterParameter=AddToPlaylist}"
                                             Command="{Binding DataContext.AddToPlaylistCommand, ElementName=EpisodesPivotItem}"
@@ -110,6 +111,13 @@
                                     Margin="10,0,19,0" 
                                     FontSize="18" 
                                     FontStyle="Italic"/>
+                                <ProgressBar 
+                                    Foreground="{ThemeResource ProgressBarForegroundThemeBrush}"
+                                    Height="3"
+                                    Minimum="0"
+                                    Maximum="{Binding OverallDownloadSize}"
+                                    Value="{Binding DownloadedAmount}"
+                                    Visibility="{Binding DownloadProgressbarVisibility}"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>

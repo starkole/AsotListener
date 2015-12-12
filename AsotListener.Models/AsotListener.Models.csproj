@@ -89,6 +89,7 @@
     <Compile Include="BaseModel.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="ContextMenuItem.cs" />
+    <Compile Include="DownloadState.cs" />
     <Compile Include="Episode.cs" />
     <Compile Include="EpisodeStatus.cs" />
     <Compile Include="ForegroundAppStatus.cs" />

@@ -4,16 +4,16 @@
 
     public enum EpisodeStatus
     {
-        [LocalizedDisplay("", "EpisodeStatus.CanBeLoaded")]
+        [LocalizedDisplay("", "EpisodeStatusCanBeLoaded")]
         CanBeLoaded,
 
-        [LocalizedDisplay("Downloading", "EpisodeStatus.Downloading")]
+        [LocalizedDisplay("Downloading", "EpisodeStatusDownloading")]
         Downloading,
 
-        [LocalizedDisplay("Loaded", "EpisodeStatus.Loaded")]
+        [LocalizedDisplay("Loaded", "EpisodeStatusLoaded")]
         Loaded,
 
-        [LocalizedDisplay("Playing", "EpisodeStatus.Playing")]
+        [LocalizedDisplay("Playing", "EpisodeStatusPlaying")]
         Playing
     }
 }
