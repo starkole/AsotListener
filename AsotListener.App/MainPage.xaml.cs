@@ -72,6 +72,12 @@
                 MainPivot.SelectedItem = PlayerPivotItem;                
                 MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
             }
+
+            if (param == Constants.OpenPlayer)
+            {
+                logger.LogMessage("Opening player from MainPage navigation handler.");
+                MainPivot.SelectedItem = PlayerPivotItem;
+            }
         }
         
         protected override void OnNavigatedFrom(NavigationEventArgs e)

@@ -165,6 +165,10 @@
                         logger.LogMessage("Skipping to previous");
                         audioManager.SkipToPrevious();
                         break;
+                    case Constants.PausePlayback:
+                        logger.LogMessage("Trying to pause playback");
+                        audioManager.PausePlayback();
+                        break;
                 }
             }
         }

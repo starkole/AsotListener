@@ -98,6 +98,7 @@
             Application.Current.Suspending += ForegroundApp_Suspending;
             Application.Current.Resuming += ForegroundApp_Resuming;
 
+            initialize();
             logger.LogMessage("Foreground audio player initialized.");
         }
 
@@ -193,11 +194,13 @@
             {
                 if (MediaPlayerState.Playing == BackgroundMediaPlayer.Current.CurrentState)
                 {
-                    BackgroundMediaPlayer.Current.Pause();
+                    var message = new ValueSet() { { Constants.PausePlayback, string.Empty } };
+                    BackgroundMediaPlayer.SendMessageToBackground(message);
                 }
                 else if (MediaPlayerState.Paused == BackgroundMediaPlayer.Current.CurrentState)
                 {
-                    BackgroundMediaPlayer.Current.Play();
+                    var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
+                    BackgroundMediaPlayer.SendMessageToBackground(message);
                 }
                 else if (MediaPlayerState.Closed == BackgroundMediaPlayer.Current.CurrentState)
                 {
@@ -276,6 +279,28 @@
         #endregion
 
         #region Helper Methods
+        private async void initialize()
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            if (isMyBackgroundTaskRunning)
+            {
+                // Playlist has been already loaded
+                // TODO: This is ugly and should be replaced with some NavigationService
+                rootFrame?.Navigate(typeof(MainPage), Constants.OpenPlayer);
+                return;
+            }
+
+            await Playlist.LoadPlaylistFromLocalStorage();
+            if (Playlist.CurrentTrack == null)
+            {
+                return;
+            }
+
+            // TODO: This is ugly and should be replaced with some NavigationService
+            rootFrame?.Navigate(typeof(MainPage), Constants.OpenPlayer);
+        }
+
         private void updateBackgroundTaskRunningStatus()
         {
             object value = applicationSettingsHelper.ReadSettingsValue(Constants.BackgroundTaskState);

@@ -27,9 +27,9 @@
 
         public AudioManager(
             ILogger logger,
-            IPlayList playlist, 
-            MediaPlayer mediaPlayer, 
-            SystemMediaTransportControls smtc, 
+            IPlayList playlist,
+            MediaPlayer mediaPlayer,
+            SystemMediaTransportControls smtc,
             Action backgroundTaskWaitAction)
         {
             this.logger = logger;
@@ -63,18 +63,27 @@
         {
             if (sender.CurrentState == MediaPlayerState.Playing)
             {
+                logger.LogMessage("BackgroundAudio: Player playing.");
                 smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
-                if (playlist.CurrentTrack.StartPosition != TimeSpan.FromSeconds(0))
+                if (playlist.CurrentTrack.StartPosition != TimeSpan.Zero)
                 {
                     // Start position must be set after payback has already been started
-                    sender.Position = playlist.CurrentTrack.StartPosition;
-                    playlist.CurrentTrack.StartPosition = TimeSpan.FromSeconds(0);
+                    sender.Position = playlist.CurrentTrack.StartPosition;                    
                 }
+
+                sender.Volume = 1;
             }
 
             if (sender.CurrentState == MediaPlayerState.Paused)
             {
+                logger.LogMessage("BackgroundAudio: Player paused.");
                 smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
+                if (sender.Position != TimeSpan.Zero)
+                {
+                    logger.LogMessage("BackgroundAudio: Saving track position.");
+                    playlist.CurrentTrack.StartPosition = sender.Position;
+                    SaveCurrentState();
+                }
             }
         }
 
@@ -83,7 +92,8 @@
             string message = $"BackgroundAudio: Failed to open media file. Error {args.ExtendedErrorCode}. {args.ErrorMessage}";
             logger.LogMessage(message);
             CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => {
+            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
                 MessageDialog MDialog = new MessageDialog(message, "Error in ASOT Listener audio service");
                 await MDialog.ShowAsync();
             });
@@ -92,6 +102,7 @@
         private void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
         {
             logger.LogMessage("BackgroundAudio: File opened - start playing.");
+            sender.Volume = 0; // Will be set to 1 in MediaPlayer_CurrentStateChanged handler
             sender.Play();
             smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
@@ -192,6 +203,15 @@
         {
             logger.LogMessage("BackgroundAudio: Playing all tracks.");
             StartTrackAt(0);
+        }
+
+        public void PausePlayback()
+        {
+            if (mediaPlayer.CurrentState == MediaPlayerState.Playing)
+            {
+                logger.LogMessage("BackgroundAudio: Pausing playback manually.");
+                mediaPlayer.Pause();
+            }
         }
 
         public async void StartPlayback()

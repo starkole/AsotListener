@@ -190,11 +190,12 @@
                 existingTracks.First() :
                 await addEpisodeToPlaylist(episode);
             await playlist.SavePlaylistToLocalStorage();
+            episode.Status = EpisodeStatus.Playing;
 
             // Navigate to player and start playback
             // TODO: This is ugly and should be replaced with some NavigationService
             Frame rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(MainPage), Constants.StartPlayback);
+            rootFrame?.Navigate(typeof(MainPage), Constants.StartPlayback);
         }
 
         private async void addToPlaylistCommand(object boxedEpisode)
@@ -213,6 +214,7 @@
 
             await addEpisodeToPlaylist(episode);
             await playlist.SavePlaylistToLocalStorage();
+            episode.Status = EpisodeStatus.Playing;
         }
 
         #endregion
