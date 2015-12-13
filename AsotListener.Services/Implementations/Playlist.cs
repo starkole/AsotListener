@@ -1,29 +1,20 @@
 ﻿namespace AsotListener.Services.Implementations
 {
-    using System;
     using System.Collections.ObjectModel;
-    using System.IO;
     using System.Linq;
-    using System.Runtime.Serialization;
     using System.Threading.Tasks;
     using Contracts;
     using Models;
-    using Windows.Foundation.Diagnostics;
-    using Windows.Storage;
-    using Windows.Storage.Streams;
 
     public sealed class Playlist : BaseModel, IPlayList
     {
-        private static Lazy<IPlayList> lazy = new Lazy<IPlayList>(() => new Playlist());
-        private static ObservableCollection<AudioTrack> trackList = new ObservableCollection<AudioTrack>();
-        private static AudioTrack currentTrack;
+        private ObservableCollection<AudioTrack> trackList = new ObservableCollection<AudioTrack>();
+        private AudioTrack currentTrack;
         private const string playlistFilename = "playlist.xml";
         private const string currentTrackFilename = "current_track.xml";
 
         private ILogger logger;
         private IFileUtils fileUtils;
-
-        public static IPlayList Instance => lazy.Value;
 
         public ObservableCollection<AudioTrack> TrackList
         {
@@ -50,11 +41,10 @@
             }
         }
 
-        private Playlist()
+        public Playlist(ILogger logger, IFileUtils fileUtils)
         {
-            // TODO: Use DI here
-            logger = Logger.Instance;
-            fileUtils = FileUtils.Instance;
+            this.logger = logger;
+            this.fileUtils = fileUtils;
         }
 
         public async Task SavePlaylistToLocalStorage()
@@ -67,12 +57,7 @@
         {
             TrackList = await fileUtils.ReadFromXmlFile<ObservableCollection<AudioTrack>>(playlistFilename);
             CurrentTrack = await fileUtils.ReadFromXmlFile<AudioTrack>(currentTrackFilename);
-
-            if (TrackList == null || !TrackList.Any())
-            {
-                TrackList = new ObservableCollection<AudioTrack>();
-            }
-
+            TrackList = TrackList ?? new ObservableCollection<AudioTrack>();
             if (CurrentTrack != null && !TrackList.Contains(currentTrack))
             {
                 TrackList.Add(CurrentTrack);

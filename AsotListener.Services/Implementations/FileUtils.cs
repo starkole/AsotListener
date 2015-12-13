@@ -14,18 +14,15 @@
 
     public class FileUtils : IFileUtils
     {
-        private static Lazy<IFileUtils> lazy = new Lazy<IFileUtils>(() => new FileUtils());
         private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
         private ILogger logger;
 
         private const string fileExtension = ".mp3";
         private const string partNumberDelimiter = "_";
 
-        public static IFileUtils Instance => lazy.Value;
-
-        private FileUtils()
+        public FileUtils(ILogger logger)
         {
-            logger = Logger.Instance;
+            this.logger = logger;
         }
 
         #region Public Methods

@@ -11,7 +11,7 @@
     using Windows.UI.Input;
     using Windows.UI.Xaml.Controls.Primitives;
     using Services.Contracts;
-    using Services.Implementations;
+    using Ioc;
 
     public sealed partial class MainPage : Page, IDisposable
     {
@@ -22,14 +22,11 @@
 
         public MainPage()
         {
-            logger = Logger.Instance;
-            applicationSettingsHelper = ApplicationSettingsHelper.Instance;
-            var fileUtils = FileUtils.Instance;
-            var playlist = Playlist.Instance;
-            var parser = Parser.Instance;
-            var loaderFactory = new LoaderFactory(logger, fileUtils);
+            IContainer container = Container.Instance;
 
-            mainPageViewModel = new MainPageViewModel(logger, applicationSettingsHelper, fileUtils, playlist, parser, loaderFactory);
+            logger = container.Resolve<ILogger>();
+            applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
+            mainPageViewModel = container.Resolve<MainPageViewModel>();
                    
             NavigationCacheMode = NavigationCacheMode.Required;
             navigationHelper = new NavigationHelper(this);

@@ -22,7 +22,9 @@
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
         public App()
-        {            
+        {
+            AsotListener.App.IoC.Register();
+
             InitializeComponent();
             Suspending += OnSuspending;
             UnhandledException += OnUnhandledException;

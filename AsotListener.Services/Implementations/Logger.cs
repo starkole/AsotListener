@@ -1,19 +1,15 @@
 ﻿namespace AsotListener.Services.Implementations
 {
-    using System;
     using System.Diagnostics;
     using Contracts;
     using Windows.Foundation.Diagnostics;
 
     public class Logger : ILogger
     {
-        private static Lazy<ILogger> lazy = new Lazy<ILogger>(() => new Logger());
         LoggingSession loggingSession;
         LoggingChannel loggingChannel;
 
-        public static ILogger Instance => lazy.Value;
-
-        private Logger()
+        public Logger()
         {
             loggingSession = new LoggingSession("ASOT Listener");
             loggingChannel = new LoggingChannel("Common logging channel");

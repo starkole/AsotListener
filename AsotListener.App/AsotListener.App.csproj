@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Converters\ContextMenuVisibilityConverter.cs" />
     <Compile Include="Converters\EnumToLocalizedNamesConverter.cs" />
+    <Compile Include="IoC.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -156,6 +157,10 @@
     <ProjectReference Include="..\AsotListener.AudioPlayer\AsotListener.AudioPlayer.csproj">
       <Project>{b2691f43-d755-48cc-84a1-d70c25291c1d}</Project>
       <Name>AsotListener.AudioPlayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AsotListener.Ioc\AsotListener.Ioc.csproj">
+      <Project>{c11befe8-3fba-43bd-b79e-adb800ff835f}</Project>
+      <Name>AsotListener.Ioc</Name>
     </ProjectReference>
     <ProjectReference Include="..\AsotListener.Models\AsotListener.Models.csproj">
       <Project>{ddfb9b19-6b9f-45df-9f4c-9be123dc96cf}</Project>

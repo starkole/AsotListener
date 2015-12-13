@@ -6,12 +6,12 @@
 
     public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
     {
-        private static Lazy<IApplicationSettingsHelper> lazy =
-            new Lazy<IApplicationSettingsHelper>(() => new ApplicationSettingsHelper());
+        private ILogger logger;
 
-        public static IApplicationSettingsHelper Instance => lazy.Value;
-
-        private ApplicationSettingsHelper() { }
+        public ApplicationSettingsHelper(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         /// <summary>
         /// Function to read a setting value and clear it after reading it

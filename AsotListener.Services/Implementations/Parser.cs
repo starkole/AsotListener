@@ -3,7 +3,6 @@
     using System.Text.RegularExpressions;
     using Models;
     using System.Collections.ObjectModel;
-    using System;
     using Contracts;
 
     /// <summary>
@@ -14,12 +13,12 @@
         private const string EPISODE_REGEX = @"(/episode/\?p=\d+)"">(.*)<";
         private const string DOWNLOAD_LINK_REGEX = @"http://\S*\.mp3";
         private const string EPISODE_NAME_START = @"A State Of Trance: ";
+        private ILogger logger;
 
-        private static Lazy<IParser> lazy = new Lazy<IParser>(() => new Parser());
-
-        public static IParser Instance => lazy.Value;
-
-        private Parser() { }
+        public Parser(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         /// <summary>
         /// Extracts episodes information from given html page

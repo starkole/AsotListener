@@ -8,8 +8,8 @@
     using Windows.Foundation.Collections;
     using Models;
     using Services.Contracts;
-    using Services.Implementations;
     using Windows.Foundation.Diagnostics;
+    using Ioc;
 
     /* This is the Sample background task that will start running the first time 
  * MediaPlayer singleton instance is accessed from foreground. When a new audio 
@@ -54,12 +54,15 @@
         /// <param name="taskInstance"></param>
         public void Run(IBackgroundTaskInstance taskInstance)
         {
-            logger = Logger.Instance;
+            Services.IoC.Register();
+            IContainer container = Container.Instance;
+            logger = container.Resolve<ILogger>();
+            applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
             logger.LogMessage($"Background Audio Task {taskInstance.Task.Name} starting...");
 
             audioManager = new AudioManager(
                 logger,
-                Playlist.Instance,
+                container.Resolve<IPlayList>(),
                 BackgroundMediaPlayer.Current,
                 SystemMediaTransportControls.GetForCurrentView(),
                 waitForTaskReinitialization);
@@ -68,7 +71,6 @@
             taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
             taskInstance.Task.Completed += Taskcompleted;
 
-            applicationSettingsHelper = ApplicationSettingsHelper.Instance;
             var value = applicationSettingsHelper.ReadSettingsValue(Constants.AppState) as string;
             foregroundAppState = ForegroundAppStatus.Unknown;
             if (!string.IsNullOrEmpty(value))

@@ -80,6 +80,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <ProjectReference Include="..\AsotListener.Ioc\AsotListener.Ioc.csproj">
+      <Project>{c11befe8-3fba-43bd-b79e-adb800ff835f}</Project>
+      <Name>AsotListener.Ioc</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AsotListener.Models\AsotListener.Models.csproj">
       <Project>{ddfb9b19-6b9f-45df-9f4c-9be123dc96cf}</Project>
       <Name>AsotListener.Models</Name>
@@ -88,7 +92,6 @@
   <ItemGroup>
     <Compile Include="Contracts\ILoaderFactory.cs" />
     <Compile Include="Implementations\ApplicationSettingsHelper.cs" />
-    <Compile Include="Implementations\DownloadList.cs" />
     <Compile Include="Implementations\FileUtils.cs" />
     <Compile Include="Contracts\IApplicationSettingsHelper.cs" />
     <Compile Include="Contracts\IFileUtils.cs" />
@@ -96,10 +99,10 @@
     <Compile Include="Contracts\ILogger.cs" />
     <Compile Include="Contracts\IParser.cs" />
     <Compile Include="Contracts\IPlayList.cs" />
-    <Compile Include="Contracts\IDownloadList.cs" />
     <Compile Include="Implementations\Loader.cs" />
     <Compile Include="Implementations\LoaderFactory.cs" />
     <Compile Include="Implementations\Logger.cs" />
+    <Compile Include="IoC.cs" />
     <Compile Include="Navigation\LoadStateEventArgs.cs" />
     <Compile Include="Navigation\NavigationHelper.cs" />
     <Compile Include="Navigation\SaveStateEventArgs.cs" />
