@@ -8,6 +8,7 @@
     using Windows.UI.Xaml.Media.Animation;
     using Windows.UI.Xaml.Navigation;
     using Services;
+    using System.Diagnostics;
 
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
@@ -22,8 +23,17 @@
         /// </summary>
         public App()
         {            
-            this.InitializeComponent();
-            this.Suspending += this.OnSuspending;
+            InitializeComponent();
+            Suspending += OnSuspending;
+            UnhandledException += OnUnhandledException;
+        }
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+#if DEBUG
+            // TODO: Use logger here
+            Debug.WriteLine($"Unhandled exception occurred. {e.Message}");
+#endif
         }
 
         /// <summary>
@@ -35,9 +45,9 @@
         protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
 #if DEBUG
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
-                this.DebugSettings.EnableFrameRateCounter = true;
+                DebugSettings.EnableFrameRateCounter = true;
             }
 #endif            
             Frame rootFrame = Window.Current.Content as Frame;
@@ -80,15 +90,15 @@
                 // Removes the turnstile navigation for startup.
                 if (rootFrame.ContentTransitions != null)
                 {
-                    this.transitions = new TransitionCollection();
+                    transitions = new TransitionCollection();
                     foreach (var c in rootFrame.ContentTransitions)
                     {
-                        this.transitions.Add(c);
+                        transitions.Add(c);
                     }
                 }
 
                 rootFrame.ContentTransitions = null;
-                rootFrame.Navigated += this.RootFrame_FirstNavigated;
+                rootFrame.Navigated += RootFrame_FirstNavigated;
 
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
@@ -104,13 +114,13 @@
         }
 
         /// <summary>
-        /// Restores the content transitions after the app has launched.        /// </summary>
-
+        /// Restores the content transitions after the app has launched.        
+        /// </summary>
         private void RootFrame_FirstNavigated(object sender, NavigationEventArgs e)
         {
             var rootFrame = sender as Frame;
-            rootFrame.ContentTransitions = this.transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
-            rootFrame.Navigated -= this.RootFrame_FirstNavigated;
+            rootFrame.ContentTransitions = transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
+            rootFrame.Navigated -= RootFrame_FirstNavigated;
         }
 
         /// <summary>
@@ -123,6 +133,7 @@
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+            // TODO: Wire up view models here
             await SuspensionManager.SaveAsync();
             deferral.Complete();
         }
