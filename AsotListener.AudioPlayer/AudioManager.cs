@@ -51,6 +51,12 @@
             smtc.IsPlayEnabled = true;
             smtc.IsNextEnabled = true;
             smtc.IsPreviousEnabled = true;
+            
+            // TODO: Check if I need this controls
+            smtc.IsFastForwardEnabled = true;
+            smtc.IsRewindEnabled = true;
+            smtc.IsChannelUpEnabled = true;
+            smtc.IsChannelDownEnabled = true;
 
             logger.LogMessage("Background Audio Manager has been initialized.");
         }
@@ -94,6 +100,7 @@
             CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
+                // TODO: Check if this works
                 MessageDialog MDialog = new MessageDialog(message, "Error in ASOT Listener audio service");
                 await MDialog.ShowAsync();
             });
