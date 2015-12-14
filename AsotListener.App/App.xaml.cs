@@ -53,7 +53,7 @@
                 DebugSettings.EnableFrameRateCounter = true;
             }
 #endif            
-            navigationService.Navigate(NavigationParameter.OpenMainPage);
+            navigationService.Initialize(NavigationParameter.OpenMainPage);
             Window.Current.Activate();
         }
     }
