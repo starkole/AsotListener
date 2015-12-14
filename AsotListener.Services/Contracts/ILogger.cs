@@ -6,6 +6,6 @@
     {
         void LogMessage(string message);
         void LogMessage(string message, LoggingLevel loggingLevel);
-        void SaveLogsToFile(string fileName);
+        void SaveLogsToFile();
     }
 }

@@ -1,10 +1,11 @@
 ﻿namespace AsotListener.Services.Implementations
 {
+    using System;
     using System.Diagnostics;
     using Contracts;
     using Windows.Foundation.Diagnostics;
 
-    public class Logger : ILogger
+    public sealed class Logger : ILogger, IDisposable
     {
         LoggingSession loggingSession;
         LoggingChannel loggingChannel;
@@ -30,9 +31,16 @@
 #endif
         }
 
-        public void SaveLogsToFile(string filename)
+        public void SaveLogsToFile()
         {
             // TODO: Implement this
-        }        
+        }
+
+        public void Dispose()
+        {
+            loggingSession.RemoveLoggingChannel(loggingChannel);
+            loggingChannel.Dispose();
+            loggingSession.Dispose();
+        }
     }
 }
