@@ -307,14 +307,8 @@
         
         private void updateBackgroundTaskRunningStatus()
         {
-            object value = applicationSettingsHelper.ReadSettingsValue(Constants.BackgroundTaskState);
-            if (value == null)
-            {
-                isMyBackgroundTaskRunning = false;
-                return;
-            }
-
-            isMyBackgroundTaskRunning = ((string)value).Equals(Constants.BackgroundTaskRunning);
+            string taskState = applicationSettingsHelper.ReadSettingsValue<string>(Constants.BackgroundTaskState);
+            isMyBackgroundTaskRunning = taskState == Constants.BackgroundTaskRunning;
         }
 
         /// <summary>

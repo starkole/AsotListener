@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.Services.Implementations
 {
     using Contracts;
+    using Windows.Foundation.Diagnostics;
     using Windows.Storage;
 
     public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
@@ -15,19 +16,22 @@
         /// <summary>
         /// Function to read a setting value and clear it after reading it
         /// </summary>
-        public object ReadSettingsValue(string key) //TODO: Use generic here
+        public T ReadSettingsValue<T>(string key) where T : class
         {
             logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
             if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
             {
-                logger.LogMessage(
-                    $"No {key} parameter found in LoaclSettings.", 
-                    Windows.Foundation.Diagnostics.LoggingLevel.Warning);
+                logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
                 return null;
             }
             else
             {
-                var value = ApplicationData.Current.LocalSettings.Values[key];
+                var value = ApplicationData.Current.LocalSettings.Values[key] as T;
+                if (value == null)
+                {
+                    logger.LogMessage($"Cannot cast {key} parameter to type {typeof(T)}.", LoggingLevel.Warning);
+                }
+
                 return value;
             }
         }

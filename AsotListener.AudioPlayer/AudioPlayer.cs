@@ -72,7 +72,7 @@
             taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
             taskInstance.Task.Completed += Taskcompleted;
 
-            var value = applicationSettingsHelper.ReadSettingsValue(Constants.AppState) as string;
+            string value = applicationSettingsHelper.ReadSettingsValue<string>(Constants.AppState);
             foregroundAppState = ForegroundAppStatus.Unknown;
             if (!string.IsNullOrEmpty(value))
             {
