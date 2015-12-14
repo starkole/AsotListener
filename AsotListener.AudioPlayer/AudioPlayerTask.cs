@@ -33,7 +33,7 @@
     /// Impalements IBackgroundTask to provide an entry point for app code to be run in background. 
     /// Also takes care of handling UVC and communication channel with foreground
     /// </summary>
-    public sealed class AudioPlayer : IBackgroundTask, IDisposable
+    public sealed class AudioPlayerTask : IBackgroundTask, IDisposable
     {
         #region Private fields
 

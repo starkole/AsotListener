@@ -26,14 +26,9 @@
         </m3:InitialRotationPreference>
       </m3:VisualElements>
       <Extensions>
-        <Extension Category="windows.backgroundTasks" EntryPoint="AsotListener.AudioPlayer.AudioPlayer">
+        <Extension Category="windows.backgroundTasks" EntryPoint="AsotListener.AudioPlayer.AudioPlayerTask">
           <BackgroundTasks>
             <Task Type="audio" />
-          </BackgroundTasks>
-        </Extension>
-        <Extension Category="windows.backgroundTasks" EntryPoint="AsotListener.Downloader">
-          <BackgroundTasks>
-            <Task Type="systemEvent" />
           </BackgroundTasks>
         </Extension>
       </Extensions>
