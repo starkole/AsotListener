@@ -8,15 +8,13 @@
     using Models;
     using System.Windows.Input;
     using Windows.Foundation.Diagnostics;
-    using Windows.UI.Xaml.Controls;
-    using Windows.UI.Xaml;
     using Windows.Networking.BackgroundTransfer;
     using System.Collections.Generic;
     using Windows.UI.Core;
     using Windows.ApplicationModel.Core;
     using Models.Enums;
 
-    public class EpisodesViewModel : BaseModel, IDisposable
+    public class EpisodesViewModel : BaseModel
     {
         #region Fields
 
@@ -366,32 +364,6 @@
             episode != null &&
             (episode.Status == EpisodeStatus.Loaded ||
             episode.Status == EpisodeStatus.Playing);
-
-        #endregion
-
-        #region IDisposable Support
-
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
 
         #endregion
     }

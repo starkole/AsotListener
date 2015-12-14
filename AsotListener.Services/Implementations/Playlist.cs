@@ -1,7 +1,6 @@
 ﻿namespace AsotListener.Services.Implementations
 {
     using System.Collections.ObjectModel;
-    using System.Linq;
     using System.Threading.Tasks;
     using Contracts;
     using Models;
