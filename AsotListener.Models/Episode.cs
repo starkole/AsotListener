@@ -1,5 +1,6 @@
 ﻿namespace AsotListener.Models
 {
+    using Enums;
     using Windows.UI.Xaml;
 
     public class Episode: BaseModel

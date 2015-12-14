@@ -3,22 +3,23 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
-    using Services.Navigation;
     using ViewModels;
-    using System;
     using Models;
     using Windows.UI.Xaml.Input;
     using Windows.UI.Input;
     using Windows.UI.Xaml.Controls.Primitives;
     using Services.Contracts;
     using Ioc;
+    using Models.Enums;
+    using Windows.Phone.UI.Input;
 
-    public sealed partial class MainPage : Page, IDisposable
+    public sealed partial class MainPage : Page
     {
-        private readonly NavigationHelper navigationHelper;
         private readonly MainPageViewModel mainPageViewModel;
         private IApplicationSettingsHelper applicationSettingsHelper;
         private readonly ILogger logger;
+
+        public MainPageViewModel MainPageViewModel => mainPageViewModel;
 
         public MainPage()
         {
@@ -29,20 +30,15 @@
             mainPageViewModel = container.Resolve<MainPageViewModel>();
                    
             NavigationCacheMode = NavigationCacheMode.Required;
-            navigationHelper = new NavigationHelper(this);
-
+            
             InitializeComponent();
+            Loaded += onPageLoaded;
+            Unloaded += onPageUnloaded;
 
             logger.LogMessage("MainPage has been created.");
         }
 
-        /// <summary>
-        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
-        /// </summary>
-        public NavigationHelper NavigationHelper => navigationHelper;
-        public MainPageViewModel MainPageViewModel => mainPageViewModel;
-
-        #region NavigationHelper registration
+        #region Navigation
 
         /// <summary>
         /// The methods provided in this section are simply used to allow
@@ -59,58 +55,33 @@
         /// handlers that cannot cancel the navigation request.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            logger.LogMessage("Navigated to MainPage.");
-            navigationHelper.OnNavigatedTo(e);
+            base.OnNavigatedTo(e);
+            logger.LogMessage($"Navigated to MainPage with parameter {e.Parameter}.");
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Active.ToString());
-            var param = e.Parameter as string;
-            if (param == Constants.StartPlayback)
-            {
-                logger.LogMessage("Starting playback from MainPage navigation handler.");
-                MainPivot.SelectedItem = PlayerPivotItem;                
-                MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
-            }
 
-            if (param == Constants.OpenPlayer)
+            //TODO: Check if this works.
+            NavigationParameter navigationParameter = e.Parameter is NavigationParameter ?
+                (NavigationParameter)e.Parameter : 
+                NavigationParameter.OpenMainPage;
+
+            switch (navigationParameter)
             {
-                logger.LogMessage("Opening player from MainPage navigation handler.");
-                MainPivot.SelectedItem = PlayerPivotItem;
+                case NavigationParameter.OpenPlayer:
+                    logger.LogMessage("Opening player from MainPage navigation handler.");
+                    MainPivot.SelectedItem = PlayerPivotItem;
+                    break;
+                case NavigationParameter.StartPlayback:
+                    logger.LogMessage("Starting playback from MainPage navigation handler.");
+                    MainPivot.SelectedItem = PlayerPivotItem;
+                    MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
+                    break;
+                default:
+                    break;
             }
         }
         
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            logger.LogMessage("Navigated away from MainPage.");
-            navigationHelper.OnNavigatedFrom(e);
-        }
-
         #endregion
-
-        #region IDisposable Support
-
-        private bool disposedValue = false; // To detect redundant calls
-
-        void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    logger.LogMessage("Disposing MainPageViewModel.");
-                    mainPageViewModel.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        #endregion
-        
+       
         #region Event Handlers
 
         private void OnEpisodeListElementHolding(object sender, HoldingRoutedEventArgs args)
@@ -124,11 +95,32 @@
                 if (element != null)
                 {
                     // If the menu was attached properly, we just need to call this handy method
-                    logger.LogMessage("Opening context menu.");
+                    logger.LogMessage("MainPage: Opening context menu.");
                     FlyoutBase.ShowAttachedFlyout(element);
                 }
             }
-        } 
+        }
+
+        private void onHardwareBackButtonPressed(object sender, BackPressedEventArgs e)
+        {
+            logger.LogMessage("Hardware back button pressed.");
+            if (Frame.CanGoBack)
+            {
+                logger.LogMessage("Navigating back.");
+                e.Handled = true;
+                Frame.GoBack();
+            }
+        }
+
+        private void onPageLoaded(object sender, RoutedEventArgs e)
+        {
+            HardwareButtons.BackPressed += onHardwareBackButtonPressed;
+        }
+
+        private void onPageUnloaded(object sender, RoutedEventArgs e)
+        {
+            HardwareButtons.BackPressed -= onHardwareBackButtonPressed;
+        }
 
         #endregion
     }

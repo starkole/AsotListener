@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.App.Converters
 {
     using System;
+    using Models.Enums;
     using Models;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Data;

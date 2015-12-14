@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Models
+﻿namespace AsotListener.Models.Enums
 {
     public enum DownloadState
     {

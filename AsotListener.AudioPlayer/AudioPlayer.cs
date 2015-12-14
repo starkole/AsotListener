@@ -10,6 +10,7 @@
     using Services.Contracts;
     using Windows.Foundation.Diagnostics;
     using Ioc;
+    using Models.Enums;
 
     /* This is the Sample background task that will start running the first time 
  * MediaPlayer singleton instance is accessed from foreground. When a new audio 

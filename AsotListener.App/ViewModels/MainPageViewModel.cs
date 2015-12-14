@@ -1,42 +1,36 @@
 ﻿namespace AsotListener.App.ViewModels
 {
-    using Services.Contracts;
     using Windows.UI.Xaml;
     using Models;
-    using System;
+    using Services.Contracts;
 
-    public class MainPageViewModel : BaseModel, IDisposable
+    public class MainPageViewModel : BaseModel
     {
         #region Fields
 
-        private readonly PlayerViewModel playerModel;
-        private readonly EpisodesViewModel episodesViewModel;
+        private readonly ILogger logger;
 
         #endregion
 
         #region Properties
 
-        public PlayerViewModel PlayerModel => playerModel;
-        public EpisodesViewModel EpisodesModel => episodesViewModel;
-        
+        public PlayerViewModel PlayerModel { get; }
+        public EpisodesViewModel EpisodesModel { get; }
+
 
         #endregion
 
         #region Ctor
 
-        public MainPageViewModel(
-            ILogger logger,
-            IApplicationSettingsHelper applicationSettingsHelper,
-            IFileUtils fileUtils,
-            IPlayList playlist,
-            IParser parser,
-            ILoaderFactory loaderFactory)
+        public MainPageViewModel(PlayerViewModel playerModel, EpisodesViewModel episodesViewModel, ILogger logger)
         {
-            playerModel = new PlayerViewModel(logger, playlist, applicationSettingsHelper);
-            episodesViewModel = new EpisodesViewModel(logger, fileUtils, playlist, loaderFactory, parser);
+            PlayerModel = playerModel;
+            EpisodesModel = episodesViewModel;
+            this.logger = logger;
 
             Application.Current.Suspending += onAppSuspending;
             Application.Current.Resuming += onAppResuming;
+            logger.LogMessage("Main page view model created.");
         }
 
         #endregion
@@ -45,45 +39,23 @@
 
         private async void onAppResuming(object sender, object eventArgs)
         {
+            logger.LogMessage("Application resuming. Loading view models state...");
+            // TODO: Do I really need this here?
             await EpisodesModel.RestoreEpisodesList();
-            await PlayerModel.Playlist.SavePlaylistToLocalStorage();
+            await PlayerModel.Playlist.LoadPlaylistFromLocalStorage();
+            logger.LogMessage("View models state loaded.");
         }
 
         private async void onAppSuspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+            logger.LogMessage("Application suspending. Saving view models state...");
             await EpisodesModel.StoreEpisodesList();
-            await PlayerModel.Playlist.LoadPlaylistFromLocalStorage();
+            await PlayerModel.Playlist.SavePlaylistToLocalStorage();
+            logger.LogMessage("View models state saved.");
             deferral.Complete();
         }
 
-        #endregion
-                
-        #region IDisposable Support
-
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {                    
-                    episodesViewModel.Dispose();
-                    playerModel.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
+        #endregion                
     }
 }

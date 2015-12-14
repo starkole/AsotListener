@@ -21,7 +21,6 @@
         public const string BackgroundTaskState = "BackgroundTaskState";
         public const string SkipPrevious = "SkipPrevious";
         public const string PausePlayback = "PausePlayback";
-        public const string OpenPlayer = "OpenPlayer";
 
         public const int BackgroundAudioWaitingTime = 2000;
         public const double DefaultEpisodeSize = 400 * 1024 * 1024; // 400MB

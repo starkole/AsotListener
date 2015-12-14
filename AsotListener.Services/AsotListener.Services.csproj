@@ -99,18 +99,15 @@
     <Compile Include="Contracts\ILogger.cs" />
     <Compile Include="Contracts\IParser.cs" />
     <Compile Include="Contracts\IPlayList.cs" />
+    <Compile Include="Contracts\INavigationService.cs" />
     <Compile Include="Implementations\Loader.cs" />
     <Compile Include="Implementations\LoaderFactory.cs" />
     <Compile Include="Implementations\Logger.cs" />
+    <Compile Include="Implementations\NavigationService.cs" />
     <Compile Include="IoC.cs" />
-    <Compile Include="Navigation\LoadStateEventArgs.cs" />
-    <Compile Include="Navigation\NavigationHelper.cs" />
-    <Compile Include="Navigation\SaveStateEventArgs.cs" />
-    <Compile Include="Navigation\StateEventHandlers.cs" />
     <Compile Include="Implementations\Parser.cs" />
     <Compile Include="Implementations\Playlist.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SuspensionManager.cs" />
   </ItemGroup>
   <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">

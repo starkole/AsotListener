@@ -7,18 +7,14 @@
     using Services.Contracts;
     using Models;
     using System.Windows.Input;
-    using System.Runtime.Serialization;
-    using System.IO;
-    using Windows.Storage;
     using Windows.Foundation.Diagnostics;
-    using Windows.Storage.Streams;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml;
     using Windows.Networking.BackgroundTransfer;
     using System.Collections.Generic;
-    using System.Threading;
     using Windows.UI.Core;
     using Windows.ApplicationModel.Core;
+    using Models.Enums;
 
     public class EpisodesViewModel : BaseModel, IDisposable
     {
@@ -34,6 +30,7 @@
         private readonly IPlayList playlist;
         private readonly ILoaderFactory loaderFactory;
         private readonly IParser parser;
+        private readonly INavigationService navigationService;
 
         #endregion
 
@@ -61,13 +58,15 @@
             IFileUtils fileUtils,
             IPlayList playlist,
             ILoaderFactory loaderFactory,
-            IParser parser)
+            IParser parser,
+            INavigationService navigationService)
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
             this.playlist = playlist;
             this.loaderFactory = loaderFactory;
             this.parser = parser;
+            this.navigationService = navigationService;
 
             RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
             DownloadCommand = new RelayCommand(downloadEpisode);
@@ -79,7 +78,13 @@
             activeDownloadsByEpisode = new Dictionary<Episode, List<DownloadOperation>>();
             activeDownloadsByDownload = new Dictionary<DownloadOperation, Episode>();
 
-            initializeModelAsync();
+            initializeAsync();
+        }
+
+        private async void initializeAsync()
+        {
+            await RestoreEpisodesList();
+            await retrieveActiveDownloads();
         }
 
         #endregion
@@ -191,11 +196,7 @@
                 await addEpisodeToPlaylist(episode);
             await playlist.SavePlaylistToLocalStorage();
             episode.Status = EpisodeStatus.Playing;
-
-            // Navigate to player and start playback
-            // TODO: This is ugly and should be replaced with some NavigationService
-            Frame rootFrame = Window.Current.Content as Frame;
-            rootFrame?.Navigate(typeof(MainPage), Constants.StartPlayback);
+            navigationService.Navigate(NavigationParameter.StartPlayback);
         }
 
         private async void addToPlaylistCommand(object boxedEpisode)
@@ -220,12 +221,7 @@
         #endregion
 
         #region Private Methods
-        private async void initializeModelAsync()
-        {
-            await RestoreEpisodesList();
-            await retrieveActiveDownloads();
-        }
-
+        
         private async Task retrieveActiveDownloads()
         {
             logger.LogMessage("Obtaining background downloads...");
@@ -311,6 +307,7 @@
                 Episode episode = activeDownloadsByDownload[download];
                 episode.OverallDownloadSize = activeDownloadsByEpisode[episode].Sum((Func<DownloadOperation, double>)getTotalBytesToDownload);
                 episode.DownloadedAmount = activeDownloadsByEpisode[episode].Sum(d => (double)d.Progress.BytesReceived);
+                logger.LogMessage($"Downloaded {episode.DownloadedAmount} of {episode.OverallDownloadSize} bytes.");
             });
         }
 

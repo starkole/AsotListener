@@ -2,18 +2,16 @@
 {
     using System;
     using System.Threading;
-    using System.Threading.Tasks;
     using System.Windows.Input;
     using Models;
     using Services.Contracts;
     using Windows.Foundation.Collections;
     using Windows.Media.Playback;
     using Windows.UI.Xaml.Controls;
-    using AudioPlayer;
-    using Windows.ApplicationModel.Background;
     using Windows.UI.Core;
     using Windows.UI.Xaml;
     using Windows.Foundation.Diagnostics;
+    using Models.Enums;
 
     public class PlayerViewModel : BaseModel, IDisposable
     {
@@ -28,8 +26,9 @@
         private IconElement playButtonIcon;
         private bool isMyBackgroundTaskRunning = false;
         private IApplicationSettingsHelper applicationSettingsHelper;
-        private AutoResetEvent ServerInitialized;
+        private AutoResetEvent backgroundAudioInitializedEvent;
         private ILogger logger;
+        private INavigationService navigationService;
 
         #endregion
 
@@ -53,7 +52,7 @@
             set { SetField(ref isPlayButtonEnabled, value, nameof(IsPlayButtonEnabled)); }
         }
 
-        public IconElement PlayButtonIcon
+        public IconElement PlayButtonIcon // TODO: Use two separate buttons for play and pause
         {
             get { return playButtonIcon; }
             set
@@ -73,10 +72,15 @@
 
         #region Ctor
 
-        public PlayerViewModel(ILogger logger, IPlayList playlist, IApplicationSettingsHelper applicationSettingsHelper)
+        public PlayerViewModel(
+            ILogger logger, 
+            IPlayList playlist, 
+            IApplicationSettingsHelper applicationSettingsHelper,
+            INavigationService navigationService)
         {
-            ServerInitialized = new AutoResetEvent(false);
+            backgroundAudioInitializedEvent = new AutoResetEvent(false);
             this.logger = logger;
+            this.navigationService = navigationService;
 
             Playlist = playlist;
             this.applicationSettingsHelper = applicationSettingsHelper;
@@ -98,7 +102,28 @@
             Application.Current.Suspending += ForegroundApp_Suspending;
             Application.Current.Resuming += ForegroundApp_Resuming;
 
-            initialize();
+            initializeAsync();
+        }
+
+        private async void initializeAsync()
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            if (isMyBackgroundTaskRunning)
+            {
+                // Playlist has been already loaded
+                navigationService.Navigate(NavigationParameter.OpenPlayer);
+                return;
+            }
+
+            await Playlist.LoadPlaylistFromLocalStorage();
+            if (Playlist.CurrentTrack == null)
+            {
+                return;
+            }
+
+            navigationService.Navigate(NavigationParameter.OpenPlayer);
+
             logger.LogMessage("Foreground audio player initialized.");
         }
 
@@ -270,7 +295,7 @@
                 if (key == Constants.BackgroundTaskStarted)
                 {
                     logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
-                    ServerInitialized.Set();
+                    backgroundAudioInitializedEvent.Set();
                     return;
                 }
             }
@@ -279,38 +304,7 @@
         #endregion
 
         #region Helper Methods
-        private async void initialize()
-        {
-            Frame rootFrame = Window.Current.Content as Frame;
-
-            if (isMyBackgroundTaskRunning)
-            {
-                // Playlist has been already loaded
-                // TODO: This is ugly and should be replaced with some NavigationService
-                rootFrame.Loaded += OnRootFrameLoaded;
-                return;
-            }
-
-            await Playlist.LoadPlaylistFromLocalStorage();
-
-            if (Playlist.CurrentTrack == null)
-            {
-                return;
-            }
-
-            // TODO: This is ugly and should be replaced with some NavigationService
-            rootFrame.Loaded += OnRootFrameLoaded;
-        }
-
-        private void OnRootFrameLoaded(object sender, RoutedEventArgs e)
-        {
-            IsPlayButtonEnabled = true;
-
-            Frame rootFrame = sender as Frame;
-            rootFrame.Loaded -= OnRootFrameLoaded;
-            rootFrame.Navigate(typeof(MainPage), Constants.OpenPlayer);
-        }
-
+        
         private void updateBackgroundTaskRunningStatus()
         {
             object value = applicationSettingsHelper.ReadSettingsValue(Constants.BackgroundTaskState);
@@ -352,10 +346,10 @@
             updateBackgroundTaskRunningStatus();
             if (isMyBackgroundTaskRunning)
             {
-                ServerInitialized.Set();
+                backgroundAudioInitializedEvent.Set();
             }
 
-            bool result = ServerInitialized.WaitOne(Constants.BackgroundAudioWaitingTime);
+            bool result = backgroundAudioInitializedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
             if (result == true)
             {
                 var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
@@ -381,7 +375,7 @@
             {
                 if (disposing)
                 {
-                    this.ServerInitialized.Dispose();
+                    this.backgroundAudioInitializedEvent.Dispose();
                 }
 
                 disposedValue = true;
