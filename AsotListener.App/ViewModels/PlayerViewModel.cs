@@ -287,18 +287,28 @@
             {
                 // Playlist has been already loaded
                 // TODO: This is ugly and should be replaced with some NavigationService
-                rootFrame?.Navigate(typeof(MainPage), Constants.OpenPlayer);
+                rootFrame.Loaded += OnRootFrameLoaded;
                 return;
             }
 
             await Playlist.LoadPlaylistFromLocalStorage();
+
             if (Playlist.CurrentTrack == null)
             {
                 return;
             }
 
             // TODO: This is ugly and should be replaced with some NavigationService
-            rootFrame?.Navigate(typeof(MainPage), Constants.OpenPlayer);
+            rootFrame.Loaded += OnRootFrameLoaded;
+        }
+
+        private void OnRootFrameLoaded(object sender, RoutedEventArgs e)
+        {
+            IsPlayButtonEnabled = true;
+
+            Frame rootFrame = sender as Frame;
+            rootFrame.Loaded -= OnRootFrameLoaded;
+            rootFrame.Navigate(typeof(MainPage), Constants.OpenPlayer);
         }
 
         private void updateBackgroundTaskRunningStatus()
