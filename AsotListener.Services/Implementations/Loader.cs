@@ -1,12 +1,10 @@
 ﻿namespace AsotListener.Services.Implementations
 {
     using System;
-    using System.IO;
     using System.Net.Http;
     using System.Threading.Tasks;
     using Contracts;
     using Models;
-    using Windows.Foundation.Diagnostics;
 
     public sealed class Loader : ILoader
     {
@@ -26,17 +24,18 @@
 
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(connectionTimeoutSeconds);
+            logger.LogMessage("Loader initialized.");
         }
 
         public async Task<string> FetchEpisodeListAsync()
         {
-            logger.LogMessage("Loader: fetching episode list.");
+            logger.LogMessage("Loader: Fetching episode list.");
             return await httpClient.GetStringAsync(mainUrl);
         }
 
         public async Task<string> FetchEpisodePageAsync(Episode episode)
         {
-            logger.LogMessage("Loader: fetching episode page.");
+            logger.LogMessage("Loader: Fetching episode page.");
             return await httpClient.GetStringAsync(mainUrl + episode.Url);
         }
 

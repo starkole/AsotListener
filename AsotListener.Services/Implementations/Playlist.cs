@@ -12,8 +12,8 @@
         private const string playlistFilename = "playlist.xml";
         private const string currentTrackFilename = "current_track.xml";
 
-        private ILogger logger;
-        private IFileUtils fileUtils;
+        private readonly ILogger logger;
+        private readonly IFileUtils fileUtils;
 
         public ObservableCollection<AudioTrack> TrackList
         {
@@ -48,17 +48,24 @@
 
         public async Task SavePlaylistToLocalStorage()
         {
+            logger.LogMessage("Saving playlist state to local storage...");
             await fileUtils.SaveToXmlFile(TrackList, playlistFilename);
             await fileUtils.SaveToXmlFile(CurrentTrack, currentTrackFilename);
+            logger.LogMessage("Playlist state saved.");
         }
 
         public async Task LoadPlaylistFromLocalStorage()
         {
+            logger.LogMessage("Loading playlist state from local storage...");
             TrackList = await fileUtils.ReadFromXmlFile<ObservableCollection<AudioTrack>>(playlistFilename);
             CurrentTrack = await fileUtils.ReadFromXmlFile<AudioTrack>(currentTrackFilename);
+            logger.LogMessage("Playlist loaded.");
             TrackList = TrackList ?? new ObservableCollection<AudioTrack>();
             if (CurrentTrack != null && !TrackList.Contains(currentTrack))
             {
+                logger.LogMessage(
+                    "Current track is not present in playlist. Adding it to playlist.", 
+                    Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 TrackList.Add(CurrentTrack);
             }
         }

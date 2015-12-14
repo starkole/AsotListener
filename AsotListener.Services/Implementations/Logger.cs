@@ -14,11 +14,12 @@
             loggingSession = new LoggingSession("ASOT Listener");
             loggingChannel = new LoggingChannel("Common logging channel");
             loggingSession.AddLoggingChannel(loggingChannel);
+            LogMessage("Logger initialized.");
         }
 
         public void LogMessage(string message)
         {
-            this.LogMessage(message, LoggingLevel.Verbose);
+            LogMessage(message, LoggingLevel.Verbose);
         }
 
         public void LogMessage(string message, LoggingLevel loggingLevel)

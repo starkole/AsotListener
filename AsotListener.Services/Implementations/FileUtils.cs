@@ -24,11 +24,12 @@
         {
             this.logger = logger;
         }
-
+        // TODO: Add exception handling.
         #region Public Methods
 
         public async Task<IStorageFile> GetEpisodePartFile(string name, int partNumber)
         {
+            logger.LogMessage($"FileUtils: getting file #{partNumber} for episode {name}");
             var filename = GetEpisodePartFilename(name, partNumber);
             return await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
         }

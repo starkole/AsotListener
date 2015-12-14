@@ -1,6 +1,5 @@
 ﻿namespace AsotListener.Services.Implementations
 {
-    using System;
     using Contracts;
     using Windows.Storage;
 
@@ -16,34 +15,19 @@
         /// <summary>
         /// Function to read a setting value and clear it after reading it
         /// </summary>
-        public object ReadSettingsValue(string key)
+        public object ReadSettingsValue(string key) //TODO: Use generic here
         {
-            // TODO: Add logging here
+            logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
             if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
             {
+                logger.LogMessage(
+                    $"No {key} parameter found in LoaclSettings.", 
+                    Windows.Foundation.Diagnostics.LoggingLevel.Warning);
                 return null;
             }
             else
             {
                 var value = ApplicationData.Current.LocalSettings.Values[key];
-                return value;
-            }
-        }
-
-        /// <summary>
-        /// Function to read a setting value and clear it after reading it
-        /// </summary>
-        public object ReadAndRemoveSettingsValue(string key)
-        {
-            // TODO: Add logging here
-            if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
-            {
-                return null;
-            }
-            else
-            {
-                var value = ApplicationData.Current.LocalSettings.Values[key];
-                ApplicationData.Current.LocalSettings.Values.Remove(key);
                 return value;
             }
         }
@@ -53,7 +37,7 @@
         /// </summary>
         public void SaveSettingsValue(string key, object value)
         {
-            // TODO: Add logging here
+            logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
             if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
             {
                 ApplicationData.Current.LocalSettings.Values.Add(key, value);

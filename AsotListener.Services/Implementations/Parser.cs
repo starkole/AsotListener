@@ -8,7 +8,7 @@
     /// <summary>
     /// Provides methods for parsing html pages
     /// </summary>
-    public class Parser : IParser
+    public sealed class Parser : IParser
     {
         private const string EPISODE_REGEX = @"(/episode/\?p=\d+)"">(.*)<";
         private const string DOWNLOAD_LINK_REGEX = @"http://\S*\.mp3";
@@ -27,6 +27,7 @@
         /// <returns>List of Episode objects or empty list</returns>
         public ObservableCollection<Episode> ParseEpisodeList(string EpisodeListHtmlPage)
         {
+            logger.LogMessage("Parsing episode list...");
             Regex regex = new Regex(EPISODE_REGEX);
             MatchCollection matches = regex.Matches(EpisodeListHtmlPage);
             ObservableCollection<Episode> result = new ObservableCollection<Episode>();
@@ -45,6 +46,7 @@
                 }
             };
 
+            logger.LogMessage("Episode list parsed.");
             return result;
         }
 
@@ -55,6 +57,8 @@
         /// <returns>List of download links or empty list</returns>
         public string[] ExtractDownloadLinks(string EpisodeHtmlPage)
         {
+            logger.LogMessage("Extracting download links...");
+
             Regex regex = new Regex(DOWNLOAD_LINK_REGEX);
             MatchCollection matches = regex.Matches(EpisodeHtmlPage);
             if (matches.Count == 0)
@@ -68,6 +72,7 @@
                 result[i] = matches[i].Value;
             }
 
+            logger.LogMessage("Download links extracted.");
             return result;
         }
 

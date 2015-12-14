@@ -45,7 +45,7 @@
 
                 if (frame.Content == null)
                 {
-                    logger.LogMessage("NavigationService: Root frame is empty. Removing transitions for first-time navigation.");
+                    logger.LogMessage("NavigationService: Root frame is empty. Removing transitions for the first-time navigation.");
                     if (frame.ContentTransitions != null)
                     {
                         transitions = new TransitionCollection();
