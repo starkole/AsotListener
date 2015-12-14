@@ -8,6 +8,5 @@
     {
         Task<string> FetchEpisodeListAsync();
         Task<string> FetchEpisodePageAsync(Episode episode);
-        Task DownloadEpisodeAsync(Episode episode);
     }
 }

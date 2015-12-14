@@ -10,10 +10,10 @@
 
     public sealed class Loader : ILoader
     {
-        private const string MAIN_URL = "http://asotarchive.org";
-        private const string FALLBACK_FILENAME = "file";
-        private const string FILE_EXTENSION = ".mp3";
-        private const int CONNECTION_TIMEOUT_SECONDS = 30;
+        private const string mainUrl = "http://asotarchive.org";
+        private const string fallbackFilename = "file";
+        private const string fileExtension = ".mp3";
+        private const int connectionTimeoutSeconds = 30;
 
         private HttpClient httpClient;
         private ILogger logger;
@@ -25,59 +25,19 @@
             this.fileUtils = fileUtils;
 
             httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS);
+            httpClient.Timeout = TimeSpan.FromSeconds(connectionTimeoutSeconds);
         }
 
         public async Task<string> FetchEpisodeListAsync()
         {
             logger.LogMessage("Loader: fetching episode list.");
-            return await httpClient.GetStringAsync(MAIN_URL);
+            return await httpClient.GetStringAsync(mainUrl);
         }
 
         public async Task<string> FetchEpisodePageAsync(Episode episode)
         {
             logger.LogMessage("Loader: fetching episode page.");
-            return await httpClient.GetStringAsync(MAIN_URL + episode.Url);
-        }
-
-        public async Task DownloadEpisodeAsync(Episode episode)
-        {
-            if (episode.DownloadLinks == null || episode.DownloadLinks.Length < 1)
-            {
-                return;
-            }
-
-            for (var i = 0; i < episode.DownloadLinks.Length; i++)
-            {
-                logger.LogMessage($"Loader: starting download part {i} of {episode.DownloadLinks.Length} into file");
-
-                string filename = fileUtils.GetEpisodePartFilename(episode.Name, i);
-                using (HttpResponseMessage response = await httpClient.GetAsync(episode.DownloadLinks[i], HttpCompletionOption.ResponseHeadersRead))
-                {
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        logger.LogMessage($"Loader: server connection error. Status {response.StatusCode} {response.ReasonPhrase}", LoggingLevel.Error);
-                        break;
-                    }
-
-                    try
-                    {
-                        logger.LogMessage($"Loader: Have to download {response.Content.Headers.ContentLength} bytes");
-                        using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
-                        using (Stream streamToWriteTo = await fileUtils.GetStreamForWriteToLocalFolder(filename))
-                        {
-                            logger.LogMessage("Loader: Download started.");
-                            await streamToReadFrom.CopyToAsync(streamToWriteTo);
-                            logger.LogMessage("Loader: Download complete.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogMessage($"Loader: exception while downloading the file. {ex.Message}", LoggingLevel.Error);
-                        await fileUtils.TryDeleteFile(filename);
-                    }
-                }
-            }
+            return await httpClient.GetStringAsync(mainUrl + episode.Url);
         }
 
         public void Dispose()

@@ -27,12 +27,6 @@
 
         #region Public Methods
 
-        public async Task<Stream> GetStreamForWriteToLocalFolder(string filename)
-        {
-            StorageFile file = await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
-            return await file.OpenStreamForWriteAsync();
-        }
-
         public async Task<IStorageFile> GetEpisodePartFile(string name, int partNumber)
         {
             var filename = GetEpisodePartFilename(name, partNumber);
