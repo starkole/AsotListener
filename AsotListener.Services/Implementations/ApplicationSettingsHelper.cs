@@ -1,39 +1,57 @@
 ﻿namespace AsotListener.Services.Implementations
 {
+    using System;
+    using System.Threading;
     using Contracts;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage;
 
-    public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
+    public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper, IDisposable
     {
         private ILogger logger;
+        private Mutex mutex;
 
         public ApplicationSettingsHelper(ILogger logger)
         {
+            mutex = new Mutex(false, "AsotApplicationSettingsHelperMutex");
             this.logger = logger;
             logger.LogMessage("ApplicationSettingsHelper initialized.");
         }
-
+        
         /// <summary>
         /// Function to read a setting value and clear it after reading it
         /// </summary>
         public T ReadSettingsValue<T>(string key) where T : class
         {
-            logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
-            if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+            mutex.WaitOne();
+            try
             {
-                logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
+
+                logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
+                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+                {
+                    logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
+                    return null;
+                }
+                else
+                {
+                    var value = ApplicationData.Current.LocalSettings.Values[key] as T;
+                    if (value == null)
+                    {
+                        logger.LogMessage($"Cannot cast {key} parameter to type {typeof(T)}.", LoggingLevel.Warning);
+                    }
+
+                    return value;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception on reading from LoaclSettings. {ex.Message}", LoggingLevel.Error);
                 return null;
             }
-            else
+            finally
             {
-                var value = ApplicationData.Current.LocalSettings.Values[key] as T;
-                if (value == null)
-                {
-                    logger.LogMessage($"Cannot cast {key} parameter to type {typeof(T)}.", LoggingLevel.Warning);
-                }
-
-                return value;
+                mutex.ReleaseMutex();
             }
         }
 
@@ -42,15 +60,32 @@
         /// </summary>
         public void SaveSettingsValue(string key, object value)
         {
-            logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
-            if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+            mutex.WaitOne();
+            try
             {
-                ApplicationData.Current.LocalSettings.Values.Add(key, value);
+                logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
+                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+                {
+                    ApplicationData.Current.LocalSettings.Values.Add(key, value);
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values[key] = value;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                ApplicationData.Current.LocalSettings.Values[key] = value;
+                logger.LogMessage($"Exception on saving to LoaclSettings. {ex.Message}", LoggingLevel.Error);
             }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
+        }
+
+        public void Dispose()
+        {
+            mutex.Dispose();
         }
     }
 }
