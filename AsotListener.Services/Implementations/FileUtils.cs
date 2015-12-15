@@ -11,9 +11,11 @@
     using System.Runtime.Serialization;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage.Streams;
+    using System.Threading;
 
-    public class FileUtils : IFileUtils
+    public sealed class FileUtils : IFileUtils, IDisposable
     {
+        private Mutex mutex;
         private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
         private ILogger logger;
 
@@ -22,6 +24,7 @@
 
         public FileUtils(ILogger logger)
         {
+            mutex = new Mutex(false, "AsotListener.FileUtils.Mutex");
             this.logger = logger;
             logger.LogMessage("FileUtils initialized.");
         }
@@ -99,6 +102,7 @@
 
             try
             {
+                mutex.WaitOne();
                 MemoryStream listData = new MemoryStream();
                 DataContractSerializer serializer = new DataContractSerializer(typeof(T));
                 serializer.WriteObject(listData, objectToSave);
@@ -115,6 +119,10 @@
             {
                 logger.LogMessage($"Error. Cannot serialize. {e.Message}", LoggingLevel.Error);
             }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
         }
 
         public async Task<T> ReadFromXmlFile<T>(string filename) where T : class
@@ -123,11 +131,12 @@
             if (string.IsNullOrEmpty(filename))
             {
                 logger.LogMessage("File name was not specified.", LoggingLevel.Error);
-                return default(T);
+                return null;
             }
 
             try
             {
+                mutex.WaitOne();
                 StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(filename);
                 using (IInputStream inStream = await file.OpenSequentialReadAsync())
                 {
@@ -140,7 +149,11 @@
             catch (Exception e)
             {
                 logger.LogMessage($"Error reading object from file. {e.Message}", LoggingLevel.Error);
-                return default(T);
+                return null;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
             }
         }
 
@@ -171,6 +184,11 @@
             string filename = stripExtensionFromFilename(filenameWithExtension);
             string result = stripEndNumberFromFilename(filename);
             return result;
+        }
+
+        public void Dispose()
+        {
+            mutex.Dispose();
         }
 
         #endregion

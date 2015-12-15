@@ -13,20 +13,19 @@
 
         public ApplicationSettingsHelper(ILogger logger)
         {
-            mutex = new Mutex(false, "AsotApplicationSettingsHelperMutex");
+            mutex = new Mutex(false, "AsotListener.ApplicationSettingsHelper.Mutex");
             this.logger = logger;
             logger.LogMessage("ApplicationSettingsHelper initialized.");
         }
-        
+
         /// <summary>
         /// Function to read a setting value and clear it after reading it
         /// </summary>
         public T ReadSettingsValue<T>(string key) where T : class
         {
-            mutex.WaitOne();
             try
             {
-
+                mutex.WaitOne();
                 logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
                 if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
                 {
@@ -60,9 +59,9 @@
         /// </summary>
         public void SaveSettingsValue(string key, object value)
         {
-            mutex.WaitOne();
             try
             {
+                mutex.WaitOne();
                 logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
                 if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
                 {
