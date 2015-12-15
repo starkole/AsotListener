@@ -13,6 +13,7 @@
     using Windows.UI.Core;
     using Windows.ApplicationModel.Core;
     using Models.Enums;
+    using Windows.UI.Popups;
 
     public class EpisodesViewModel : BaseModel
     {
@@ -147,6 +148,17 @@
                 var downloader = new BackgroundDownloader();
                 var uri = new Uri(episode.DownloadLinks[i]);
                 var file = await fileUtils.GetEpisodePartFile(episode.Name, i);
+                if (file == null)
+                {
+                    CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+                    await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                    {
+                        MessageDialog MDialog = new MessageDialog("Cannot create file to save episode.", "Error in ASOT Listener");
+                        await MDialog.ShowAsync();
+                    });
+                    break;
+                }
+
                 var download = downloader.CreateDownload(uri, file);
                 download.CostPolicy = BackgroundTransferCostPolicy.UnrestrictedOnly;
                 handleDownloadAsync(download, episode, DownloadState.NotStarted);

@@ -28,14 +28,21 @@
             this.logger = logger;
             logger.LogMessage("FileUtils initialized.");
         }
-        // TODO: Add exception handling.
         #region Public Methods
 
         public async Task<IStorageFile> GetEpisodePartFile(string name, int partNumber)
         {
-            logger.LogMessage($"FileUtils: getting file #{partNumber} for episode {name}");
-            var filename = GetEpisodePartFilename(name, partNumber);
-            return await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+            try
+            {
+                logger.LogMessage($"FileUtils: getting file #{partNumber} for episode {name}");
+                var filename = GetEpisodePartFilename(name, partNumber);
+                return await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception while creating the file. {ex.Message}", LoggingLevel.Error);
+                return null;
+            }
         }
 
         public string GetEpisodePartFilename(string name, int partNumber) =>
@@ -44,26 +51,41 @@
         public async Task<IList<string>> GetDownloadedFileNamesList()
         {
             logger.LogMessage("Obtaining list of downloaded files...");
-            IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
-            var result = files?
-                .Where(f => f.FileType == fileExtension)
-                .Select(f => stripEndNumberFromFilename(f.DisplayName))
-                .Distinct()
-                .ToList();
-            result = result ?? new List<string>();
-            logger.LogMessage($"Found {result.Count} files.");
+            var result = new List<string>();
+            try
+            {
+
+                IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+                result = files?
+                    .Where(f => f.FileType == fileExtension)
+                    .Select(f => stripEndNumberFromFilename(f.DisplayName))
+                    .Distinct()
+                    .ToList() ?? result;
+                logger.LogMessage($"Found {result.Count} files.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception while getting downloaded file list. {ex.Message}", LoggingLevel.Error);
+            }
             return result;
         }
 
         public async Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName)
         {
             logger.LogMessage($"Obtaining file list for episode {episodeName}...");
-            IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
-            var result = files?
-                .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName))
-                .ToList();
-            result = result ?? new List<StorageFile>();
-            logger.LogMessage($"Found {result.Count} files.");
+            var result = new List<StorageFile>();
+            try
+            {
+                IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+                result = files?
+                    .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName))
+                    .ToList() ?? result;
+                logger.LogMessage($"Found {result.Count} files.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception while getting episode file list. {ex.Message}", LoggingLevel.Error);
+            }
             return result;
         }
 
@@ -160,22 +182,21 @@
         public async Task TryDeleteFile(string filename)
         {
             logger.LogMessage($"Trying to delete file from {filename}...");
-            var file = await localFolder.GetFileAsync(filename);
-            if (file == null)
-            {
-                logger.LogMessage("File not found.");
-                return;
-            }
-
             try
             {
-                logger.LogMessage($"Deleting file {file.Name}...");
+                var file = await localFolder.GetFileAsync(filename);
+                if (file == null)
+                {
+                    logger.LogMessage("File not found.");
+                    return;
+                }
+
                 await file.DeleteAsync();
                 logger.LogMessage("File deleted successfully.");
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Exception while deleting the file {file.Name}. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"Exception while deleting the file {filename}. {ex.Message}", LoggingLevel.Error);
             }
         }
 
