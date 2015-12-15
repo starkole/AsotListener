@@ -16,17 +16,15 @@
     /// Impalements IBackgroundTask to provide an entry point for app code to be run in background. 
     /// Also takes care of handling UVC and communication channel with foreground
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
-    public sealed class AudioPlayerTask : IBackgroundTask
+    public sealed class AudioPlayerTask : IBackgroundTask, IDisposable
     {
         #region Private fields
 
-        private bool isCleanedUp = false;
+        private bool isDisposed = false;
         private AudioManager audioManager;
-        private BackgroundTaskDeferral deferral; // Used to keep task alive
+        private BackgroundTaskDeferral deferral;
         private ForegroundAppStatus foregroundAppState = ForegroundAppStatus.Unknown;
         private AutoResetEvent BackgroundTaskStartedEvent = new AutoResetEvent(false);
-        private bool backgroundtaskrunning = false;
         private IApplicationSettingsHelper applicationSettingsHelper;
         private ILogger logger;
 
@@ -48,8 +46,7 @@
             logger = container.Resolve<ILogger>();
             logger.LogMessage($"Background Audio Task {taskInstance.Task.Name} starting...");
             applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
-
-            var playlist = container.Resolve<IPlayList>();
+            IPlayList playlist = container.Resolve<IPlayList>();
             await playlist.LoadPlaylistFromLocalStorage();
 
             audioManager = new AudioManager(
@@ -59,29 +56,19 @@
                 SystemMediaTransportControls.GetForCurrentView(),
                 waitForTaskReinitialization);
 
-            // Associate a cancellation and completed handlers with the background task.
             taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
             taskInstance.Task.Completed += Taskcompleted;
+            BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
 
             string value = applicationSettingsHelper.ReadSettingsValue<string>(Constants.AppState);
             foregroundAppState = ForegroundAppStatus.Unknown;
-            if (!string.IsNullOrEmpty(value))
-            {
-                Enum.TryParse(value, out foregroundAppState);
-            }
-
-            //Initialize message channel 
-            BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
-
-            //Send information to foreground that background task has been started if app is active
+            Enum.TryParse(value, out foregroundAppState);
             if (foregroundAppState != ForegroundAppStatus.Suspended)
             {
                 ValueSet message = new ValueSet() { { Constants.BackgroundTaskStarted, string.Empty } };
                 BackgroundMediaPlayer.SendMessageToForeground(message);
             }
             BackgroundTaskStartedEvent.Set();
-            backgroundtaskrunning = true;
-
             applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskRunning);
         }
 
@@ -91,7 +78,7 @@
         void Taskcompleted(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
             logger.LogMessage($"Background Audio Task {sender.TaskId} Completed...");
-            cleanUp();
+            Dispose();
             deferral.Complete();
         }
 
@@ -104,50 +91,20 @@
         private void OnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
             logger.LogMessage($"Background Audio Task {sender.Task.TaskId} Cancel requested because of {reason}.");
-            cleanUp();
+            Dispose();
             deferral.Complete();
         }
 
         private void waitForTaskReinitialization()
         {
-            if (!backgroundtaskrunning)
+            logger.LogMessage("Background Audio Task: It seems the task is not running. Waiting for it to start.");
+            bool result = BackgroundTaskStartedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
+            if (!result)
             {
-                logger.LogMessage("Background Audio Task: It seems the task is not running. Waiting for it to start.");
-                bool result = BackgroundTaskStartedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
-                if (!result)
-                {
-                    const string message = "Background Task didn't initialize in time.";
-                    logger.LogMessage(message, LoggingLevel.Error);
-                    throw new Exception(message);
-                }
+                const string message = "Background Task didn't initialize in time.";
+                logger.LogMessage(message, LoggingLevel.Critical);
+                throw new Exception(message);
             }
-        }
-
-        private void cleanUp()
-        {
-            if (isCleanedUp)
-            {
-                return;
-            }
-
-            try
-            {
-                applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskCancelled);
-                applicationSettingsHelper.SaveSettingsValue(Constants.AppState, Enum.GetName(typeof(ForegroundAppStatus), foregroundAppState));
-                backgroundtaskrunning = false;
-
-                BackgroundTaskStartedEvent.Dispose();
-                audioManager.Dispose();
-                BackgroundMediaPlayer.Shutdown();
-                logger.SaveLogsToFile();
-                isCleanedUp = true;
-            }
-            catch (Exception ex)
-            {
-                logger.LogMessage($"Error when disposing background audio task. {ex.Message}", LoggingLevel.Error);
-            }
-
-            logger.LogMessage($"Background Audio Task has been shut down correctly.");
         }
 
         #endregion
@@ -159,30 +116,30 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void BackgroundMediaPlayer_MessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
+        private void BackgroundMediaPlayer_MessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
             foreach (string key in e.Data.Keys)
             {
                 switch (key)
                 {
                     case Constants.AppSuspended:
-                        logger.LogMessage("BackgroundAudioTask: App suspending"); // App is suspended, you can save your task state at this point
+                        logger.LogMessage("BackgroundAudioTask: Foreground app suspending");
                         foregroundAppState = ForegroundAppStatus.Suspended;
-                        audioManager.SaveCurrentState();
                         break;
                     case Constants.AppResumed:
-                        logger.LogMessage("BackgroundAudioTask: App resuming"); // App is resumed, now subscribe to message channel
+                        logger.LogMessage("BackgroundAudioTask: Foreground app resuming");
                         foregroundAppState = ForegroundAppStatus.Active;
+
                         break;
-                    case Constants.StartPlayback: //Foreground App process has signaled that it is ready for playback
+                    case Constants.StartPlayback:
                         logger.LogMessage("BackgroundAudioTask: Starting Playback");
                         audioManager.StartPlayback();
                         break;
-                    case Constants.SkipNext: // User has chosen to skip track from app context.
+                    case Constants.SkipNext:
                         logger.LogMessage("BackgroundAudioTask: Skipping to next");
                         audioManager.SkipToNext();
                         break;
-                    case Constants.SkipPrevious: // User has chosen to skip track from app context.
+                    case Constants.SkipPrevious:
                         logger.LogMessage("BackgroundAudioTask: Skipping to previous");
                         audioManager.SkipToPrevious();
                         break;
@@ -192,6 +149,39 @@
                         break;
                 }
             }
+        }
+
+        #endregion
+
+        #region IDisposable Support
+
+        void Dispose(bool disposing)
+        {
+            if (isDisposed || !disposing)
+            {
+                return;
+            }
+
+            try
+            {
+                applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskCancelled);
+                BackgroundTaskStartedEvent.Dispose();
+                audioManager.Dispose();
+                BackgroundMediaPlayer.Shutdown();
+                logger.SaveLogsToFile();
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error when disposing background audio task. {ex.Message}", LoggingLevel.Error);
+            }
+
+            logger.LogMessage($"Background Audio Task has been shut down correctly.");
+            isDisposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
         }
 
         #endregion

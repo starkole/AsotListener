@@ -10,11 +10,13 @@
     using Windows.Foundation.Diagnostics;
     using Windows.UI.Core;
     using Windows.UI.Popups;
+    using System.Threading.Tasks;
 
     internal class AudioManager : IDisposable
     {
         #region Private Fields
 
+        private bool isDisposed = false;
         private readonly ILogger logger;
         private IPlayList playlist;
         private MediaPlayer mediaPlayer;
@@ -51,21 +53,15 @@
             smtc.IsPlayEnabled = true;
             smtc.IsNextEnabled = true;
             smtc.IsPreviousEnabled = true;
-            
-            // TODO: Check if I need this controls
-            smtc.IsFastForwardEnabled = true;
-            smtc.IsRewindEnabled = true;
-            smtc.IsChannelUpEnabled = true;
-            smtc.IsChannelDownEnabled = true;
 
-            logger.LogMessage("Background Audio Manager has been initialized.");
+            logger.LogMessage("BackgroundAudio: Background Audio Manager has been initialized.");
         }
 
         #endregion
 
         #region MediaPlayer Handlers
 
-        private void MediaPlayer_CurrentStateChanged(MediaPlayer sender, object args)
+        private async void MediaPlayer_CurrentStateChanged(MediaPlayer sender, object args)
         {
             if (sender.CurrentState == MediaPlayerState.Playing)
             {
@@ -74,9 +70,10 @@
                 if (playlist.CurrentTrack.StartPosition != TimeSpan.Zero)
                 {
                     // Start position must be set after payback has already been started
-                    sender.Position = playlist.CurrentTrack.StartPosition;                    
+                    sender.Position = playlist.CurrentTrack.StartPosition;
                 }
 
+                // Set volume to 100%
                 sender.Volume = 1;
             }
 
@@ -87,22 +84,14 @@
                 if (sender.Position != TimeSpan.Zero)
                 {
                     logger.LogMessage("BackgroundAudio: Saving track position.");
-                    playlist.CurrentTrack.StartPosition = sender.Position;
-                    SaveCurrentState();
+                    await SaveCurrentState();
                 }
             }
         }
 
         private async void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
-            string message = $"BackgroundAudio: Failed to open media file. Error {args.ExtendedErrorCode}. {args.ErrorMessage}";
-            logger.LogMessage(message);
-            CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-            {
-                MessageDialog MDialog = new MessageDialog(message, "Error in ASOT Listener audio service");
-                await MDialog.ShowAsync();
-            });
+            await showErrorMessageToUserAsync($"BackgroundAudio: Failed to play media file. Error {args.ExtendedErrorCode}. {args.ErrorMessage}");
         }
 
         private void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
@@ -140,20 +129,20 @@
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.Play:
-                    logger.LogMessage("UVC play button pressed");
+                    logger.LogMessage("BackgroundAudio: UVC play button pressed");
                     backgroundTaskWaitAction();
                     StartPlayback();
                     break;
                 case SystemMediaTransportControlsButton.Pause:
-                    logger.LogMessage("UVC pause button pressed");
+                    logger.LogMessage("BackgroundAudio: UVC pause button pressed");
                     mediaPlayer.Pause();
                     break;
                 case SystemMediaTransportControlsButton.Next:
-                    logger.LogMessage("UVC next button pressed");
+                    logger.LogMessage("BackgroundAudio: UVC next button pressed");
                     SkipToNext();
                     break;
                 case SystemMediaTransportControlsButton.Previous:
-                    logger.LogMessage("UVC previous button pressed");
+                    logger.LogMessage("BackgroundAudio: UVC previous button pressed");
                     SkipToPrevious();
                     break;
             }
@@ -200,7 +189,7 @@
 
         public void SkipToPrevious()
         {
-            logger.LogMessage("BackgroundAudio: Going to previous track.");
+            logger.LogMessage("BackgroundAudio: Returning to previous track.");
             smtc.PlaybackStatus = MediaPlaybackStatus.Changing;
             StartTrackAt(playlist.CurrentTrackIndex - 1);
         }
@@ -241,39 +230,56 @@
                 }
             }
 
-            // Set AutoPlay to false because we set MediaPlayer_MediaOpened event handler to start playback
-            mediaPlayer.AutoPlay = false;
-            var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
-            mediaPlayer.SetFileSource(file);
-            logger.LogMessage($"BackgroundAudio: Set file source to {file.Name} ({file.Path}).");
+            try
+            {
+                // Set AutoPlay to false because we set MediaPlayer_MediaOpened event handler to start playback
+                mediaPlayer.AutoPlay = false;
+                var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
+                mediaPlayer.SetFileSource(file);
+                logger.LogMessage($"BackgroundAudio: Set file source to {file.Name} ({file.Path}).");
+            }
+            catch (Exception ex)
+            {
+                await showErrorMessageToUserAsync($"BackgroundAudio: Failed to open media file. {ex.Message}");
+            }
         }
 
-        public void SaveCurrentState()
+        public async Task SaveCurrentState()
         {
             logger.LogMessage("BackgroundAudio: Saving current state.");
             playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
-            playlist.SavePlaylistToLocalStorage();
+            await playlist.SavePlaylistToLocalStorage();
         }
 
-        public void LoadState()
+        public async Task LoadState()
         {
             logger.LogMessage("BackgroundAudio: Loading playlist from local storage.");
-            playlist.LoadPlaylistFromLocalStorage();
+            await playlist.LoadPlaylistFromLocalStorage();
         }
+
+        private async Task showErrorMessageToUserAsync(string message)
+        {
+            logger.LogMessage(message);
+            CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                MessageDialog MDialog = new MessageDialog(message, "Error in ASOT Listener audio service");
+                await MDialog.ShowAsync();
+            });
+        }
+
 
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!isDisposed)
             {
                 if (disposing)
                 {
                     mediaPlayer.Pause();
-                    SaveCurrentState();
 
                     mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
                     mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
@@ -284,16 +290,15 @@
                     smtc.PropertyChanged -= Smtc_PropertyChanged;
                 }
 
-                disposedValue = true;
+                isDisposed = true;
             }
         }
 
-        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
         }
+
         #endregion
     }
 }
