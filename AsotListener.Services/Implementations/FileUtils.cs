@@ -23,6 +23,7 @@
         public FileUtils(ILogger logger)
         {
             this.logger = logger;
+            logger.LogMessage("FileUtils initialized.");
         }
         // TODO: Add exception handling.
         #region Public Methods

@@ -11,6 +11,7 @@
         public ApplicationSettingsHelper(ILogger logger)
         {
             this.logger = logger;
+            logger.LogMessage("ApplicationSettingsHelper initialized.");
         }
 
         /// <summary>

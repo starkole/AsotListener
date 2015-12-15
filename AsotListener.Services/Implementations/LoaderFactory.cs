@@ -11,6 +11,7 @@
         {
             this.fileUtils = fileUtils;
             this.logger = logger;
+            logger.LogMessage("LoaderFactory initialized.");
         }
 
         public ILoader GetLoader() => new Loader(logger, fileUtils);

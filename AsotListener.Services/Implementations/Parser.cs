@@ -18,6 +18,7 @@
         public Parser(ILogger logger)
         {
             this.logger = logger;
+            logger.LogMessage("Playlist initialized.");
         }
 
         /// <summary>

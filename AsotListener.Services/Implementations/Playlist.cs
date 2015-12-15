@@ -44,6 +44,7 @@
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
+            logger.LogMessage("Playlist initialized.");
         }
 
         public async Task SavePlaylistToLocalStorage()

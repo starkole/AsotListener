@@ -2,7 +2,6 @@
 {
     using Windows.ApplicationModel.Activation;
     using Windows.UI.Xaml;
-    using Windows.UI.Xaml.Media.Animation;
     using System.Diagnostics;
     using Services.Contracts;
     using Ioc;
@@ -30,7 +29,6 @@
             UnhandledException += OnUnhandledException;
 
             navigationService = container.Resolve<INavigationService>();
-            navigationService.MainPageType = typeof(MainPage);
             logger = container.Resolve<ILogger>();
             logger.LogMessage("Application initialized.");
         }
@@ -53,7 +51,7 @@
                 DebugSettings.EnableFrameRateCounter = true;
             }
 #endif            
-            navigationService.Initialize(NavigationParameter.OpenMainPage);
+            navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
             Window.Current.Activate();
         }
     }

@@ -38,17 +38,23 @@
         /// The Run method is the entry point of a background task. 
         /// </summary>
         /// <param name="taskInstance"></param>
-        public void Run(IBackgroundTaskInstance taskInstance)
+        public async void Run(IBackgroundTaskInstance taskInstance)
         {
-            Services.IoC.Register();
+            deferral = taskInstance.GetDeferral();
+
             IContainer container = Container.Instance;
+            Services.IoC.Register();
+
             logger = container.Resolve<ILogger>();
-            applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
             logger.LogMessage($"Background Audio Task {taskInstance.Task.Name} starting...");
+            applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
+
+            var playlist = container.Resolve<IPlayList>();
+            await playlist.LoadPlaylistFromLocalStorage();
 
             audioManager = new AudioManager(
                 logger,
-                container.Resolve<IPlayList>(),
+                playlist,
                 BackgroundMediaPlayer.Current,
                 SystemMediaTransportControls.GetForCurrentView(),
                 waitForTaskReinitialization);
@@ -77,7 +83,6 @@
             backgroundtaskrunning = true;
 
             applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskRunning);
-            deferral = taskInstance.GetDeferral();
         }
 
         /// <summary>
@@ -99,7 +104,7 @@
         private void OnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
             logger.LogMessage($"Background Audio Task {sender.Task.TaskId} Cancel requested because of {reason}.");
-            cleanUp();            
+            cleanUp();
             deferral.Complete();
         }
 

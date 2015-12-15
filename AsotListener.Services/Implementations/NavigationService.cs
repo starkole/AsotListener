@@ -15,16 +15,11 @@
         #region Fileds
 
         private Frame frame;
+        private Type mainPageType;
         private TransitionCollection transitions;
         private ILogger logger;
         private bool isInitialized = false;
-        private Action deferredNavigationAction;
-
-        #endregion
-
-        #region Properties
-
-        public Type MainPageType { get; set; }
+        private EventHandler<object> deferredNavigationHandler;
 
         #endregion
 
@@ -39,8 +34,9 @@
 
         #region Public Methods
 
-        public void Initialize(NavigationParameter parameter)
+        public void Initialize(Type mainPageType, NavigationParameter parameter)
         {
+            this.mainPageType = mainPageType;
             Frame frame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -74,7 +70,7 @@
             }
 
             this.frame = frame;
-            if (!frame.Navigate(MainPageType, parameter))
+            if (!frame.Navigate(mainPageType, parameter))
             {
                 string message = "Navigation service initialization error.";
                 logger.LogMessage(message, LoggingLevel.Critical);
@@ -87,13 +83,18 @@
             if (!isInitialized)
             {
                 logger.LogMessage($"NavigationService: Root frame hasn't initialized yet. Schedule navigation with parameter {parameter}.");
-                deferredNavigationAction = () => { Navigate(parameter); };
+                deferredNavigationHandler = (_, __) =>
+                {
+                    logger.LogMessage("NavigationService: Executing deferred navigation handler.");
+                    frame.LayoutUpdated -= deferredNavigationHandler;
+                    Navigate(parameter);
+                };
                 return;
             }
 
             logger.LogMessage($"NavigationService: Navigating with parameter {parameter}.");
-            
-            if (!frame.Navigate(MainPageType, parameter))
+
+            if (!frame.Navigate(mainPageType, parameter))
             {
                 logger.LogMessage("Navigation error.", LoggingLevel.Error);
             }
@@ -111,7 +112,10 @@
             rootFrame.Navigated -= onRootFrameFirstNavigated;
             logger.LogMessage("NavigationService: Root frame transitions restored.");
             isInitialized = true;
-            deferredNavigationAction?.Invoke();
+            if (deferredNavigationHandler != null)
+            {
+                rootFrame.LayoutUpdated += deferredNavigationHandler;
+            }
         }
 
         #endregion
