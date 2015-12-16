@@ -5,6 +5,7 @@
     using Models;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Data;
+    using static Models.Enums.EpisodeStatus;
 
     public class ContextMenuVisibilityConverter : IValueConverter
     {
@@ -28,35 +29,34 @@
                 return result;
             }
 
-
             switch (menuItem)
             {
                 case ContextMenuItem.Download:
-                    if (status == EpisodeStatus.CanBeLoaded)
+                    if (status == CanBeLoaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.CancelDownload:
-                    if (status == EpisodeStatus.Downloading)
+                    if (status == Downloading)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.Delete:
-                    if (status == EpisodeStatus.Loaded)
+                    if (status == Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.Play:
-                    if (status == EpisodeStatus.Loaded)
+                    if (status == Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case ContextMenuItem.AddToPlaylist:
-                    if (status == EpisodeStatus.Loaded)
+                    if (status == Loaded)
                     {
                         result = Visibility.Visible;
                     }
