@@ -83,12 +83,14 @@
             Application.Current.Suspending += onAppSuspending;
             
             initializeAsync();
+            logger.LogMessage("EpisodesViewModel: Initialized.");
         }
 
         private async void initializeAsync()
         {
             await loadEpisodesList();
             await retrieveActiveDownloads();
+            logger.LogMessage("EpisodesViewModel: State restored.");
         }
 
         #endregion
@@ -97,6 +99,7 @@
 
         private async Task loadEpisodeListFromServer()
         {
+            logger.LogMessage("EpisodesViewModel: Loading episode list from server...");
             using (ILoader loader = loaderFactory.GetLoader())
             {
                 string episodeListPage = await loader.FetchEpisodeListAsync();
@@ -104,13 +107,16 @@
             }
             await updateEpisodesStates();
             await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
+            logger.LogMessage("EpisodesViewModel: Episode list loaded.");
         }
 
         private async Task downloadEpisode(object boxedEpisode)
         {
+            logger.LogMessage("EpisodesViewModel: Downloading episode...");
             var episode = boxedEpisode as Episode;
             if (episode == null)
             {
+                logger.LogMessage("EpisodesViewModel: Invalid episode specified for download.", LoggingLevel.Warning);
                 return;
             }
 
@@ -123,55 +129,64 @@
             episode.Status = Downloading;
             for (var i = 0; i < episode.DownloadLinks.Length; i++)
             {
-                var downloader = new BackgroundDownloader();
-                var uri = new Uri(episode.DownloadLinks[i]);
-                var file = await fileUtils.GetEpisodePartFile(episode.Name, i);
-                if (file == null)
-                {
-                    CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-                    await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-                    {
-                        MessageDialog MDialog = new MessageDialog("Cannot create file to save episode.", "Error in ASOT Listener");
-                        await MDialog.ShowAsync();
-                    });
-                    break;
-                }
-
-                var download = downloader.CreateDownload(uri, file);
-                download.CostPolicy = BackgroundTransferCostPolicy.UnrestrictedOnly;
-                handleDownloadAsync(download, episode, DownloadState.NotStarted);
+                await scheduleDownloadAsync(episode, i);
             }
+            logger.LogMessage($"EpisodesViewModel: All downloads for episode {episode.Name} have been scheduled successfully.");
         }
-
+        
         private void cancelDownload(object boxedEpisode)
         {
+            logger.LogMessage("EpisodesViewModel: Cancelling download...");
             var episode = boxedEpisode as Episode;
-            if (episode == null && episode.Status != Downloading)
+            if (episode == null)
             {
+                logger.LogMessage("EpisodesViewModel: Cannot cancel downloads. Invalid episode specified. ", LoggingLevel.Warning);
                 return;
             }
 
-            // Making shallow copy of the list here because it will be affected by handleDownloadAsync method.
-            var episodeDownloads = activeDownloadsByEpisode[episode].ToList(); //TODO: Integrity check
+            if (episode.Status != Downloading)
+            {
+                logger.LogMessage("EpisodesViewModel: Cannot cancel downloads. Episode status is wrong.", LoggingLevel.Warning);
+                return;
+            }
+
+            if (!activeDownloadsByEpisode.ContainsKey(episode))
+            {
+                logger.LogMessage("EpisodesViewModel: Cannot cancel downloads. No downloads list found.", LoggingLevel.Warning);
+                return;
+            }
+
+            if (!activeDownloadsByEpisode[episode].Any())
+            {
+                logger.LogMessage("EpisodesViewModel: Cannot cancel downloads. Downloads list is empty.", LoggingLevel.Warning);
+                return;
+            }
+
+            // Making shallow copy of the list here because on cancelling episode, 
+            // handleDownloadAsync method will delete if from original list.
+            var episodeDownloads = activeDownloadsByEpisode[episode].ToList();
             foreach (var download in episodeDownloads)
             {
                 logger.LogMessage($"Stopping download from {download.RequestedUri} to {download.ResultFile.Name}", LoggingLevel.Warning);
                 download.AttachAsync().Cancel();
             }
+            logger.LogMessage($"EpisodesViewModel: All downloads for episode {episode.Name} have been cancelled successfully.");
         }
 
         private async void deleteEpisodeFromStorage(object boxedEpisode)
         {
+            logger.LogMessage("EpisodesViewModel: Deleting episode...");
             var episode = boxedEpisode as Episode;
             if (canEpisodeBeDeleted(episode))
             {
                 await fileUtils.DeleteEpisode(episode.Name);
             }
             episode.Status = CanBeLoaded;
+            logger.LogMessage("EpisodesViewModel: Episode has been deleted.");
         }
 
         private async void playEpisode(object boxedEpisode)
-        {
+        {            
             var episode = boxedEpisode as Episode;
             if (episode == null && episode.Status != Loaded)
             {
@@ -257,6 +272,29 @@
                 
                 handleDownloadAsync(download, episode, DownloadState.AlreadyRunning);
             }
+        }
+
+        private async Task scheduleDownloadAsync(Episode episode, int partNumber)
+        {
+            logger.LogMessage($"EpisodesViewModel: Scheduling download part {partNumber + 1} of {episode.DownloadLinks.Length}.");
+            var downloader = new BackgroundDownloader();
+            var uri = new Uri(episode.DownloadLinks[partNumber]);
+            var file = await fileUtils.GetEpisodePartFile(episode.Name, partNumber);
+            if (file == null)
+            {
+                CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+                await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                {
+                    MessageDialog MDialog = new MessageDialog("Cannot create file to save episode.", "Error in ASOT Listener");
+                    await MDialog.ShowAsync();
+                });
+                return;
+            }
+
+            var download = downloader.CreateDownload(uri, file);
+            download.CostPolicy = BackgroundTransferCostPolicy.UnrestrictedOnly;
+            handleDownloadAsync(download, episode, DownloadState.NotStarted);
+            logger.LogMessage($"EpisodesViewModel: Successfully scheduled download from {episode.DownloadLinks[partNumber]} to {file.Name}.");
         }
 
         private async void handleDownloadAsync(DownloadOperation download, Episode episode, DownloadState downloadState)
