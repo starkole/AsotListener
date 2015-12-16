@@ -5,24 +5,18 @@
     /// </summary>
     public static class Constants
     {
-        public const string LOGGING_SESSION_NAME = "AsotListenerLoggingSession";
+        public const string LoggingSessionName = "AsotListenerLoggingSession";
         public const string Playlist = "Playlist";
         public const string CurrentTrack = "CurrentTrack";
         public const string EpisodesList = "EpisodesList";
 
-        public const string BackgroundTaskStarted = "BackgroundTaskStarted";
-        public const string BackgroundTaskRunning = "BackgroundTaskRunning";
-        public const string BackgroundTaskCancelled = "BackgroundTaskCancelled";
-        public const string AppSuspended = "AppSuspended";
-        public const string AppResumed = "AppResumed";
         public const string StartPlayback = "StartPlayback";
         public const string SkipNext = "SkipNext";
-        public const string AppState = "AppState";
-        public const string BackgroundTaskState = "BackgroundTaskState";
+        public const string IsBackgroundTaskRunning = "IsBackgroundTaskRunning";
         public const string SkipPrevious = "SkipPrevious";
         public const string PausePlayback = "PausePlayback";
 
-        public const int BackgroundAudioWaitingTime = 2000;
+        public const int BackgroundAudioWaitingTime = 2000; // 2 sec.
         public const double DefaultEpisodeSize = 400 * 1024 * 1024; // 400MB
     }
 }

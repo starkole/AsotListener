@@ -57,7 +57,6 @@
         {
             base.OnNavigatedTo(e);
             logger.LogMessage($"Navigated to MainPage with parameter {e.Parameter}.");
-            applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Active.ToString());
 
             NavigationParameter navigationParameter = e.Parameter is NavigationParameter ?
                 (NavigationParameter)e.Parameter : 

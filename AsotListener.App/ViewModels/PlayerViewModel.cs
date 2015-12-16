@@ -4,6 +4,7 @@
     using System.Threading;
     using System.Windows.Input;
     using Models;
+    using System.Linq;
     using Services.Contracts;
     using Windows.Foundation.Collections;
     using Windows.Media.Playback;
@@ -13,7 +14,7 @@
     using Windows.Foundation.Diagnostics;
     using Models.Enums;
 
-    public class PlayerViewModel : BaseModel, IDisposable
+    public sealed class PlayerViewModel : BaseModel, IDisposable
     {
         #region Fields
 
@@ -24,7 +25,6 @@
         private IconElement pauseIcon;
         private IconElement playIcon;
         private IconElement playButtonIcon;
-        private bool isMyBackgroundTaskRunning = false;
         private IApplicationSettingsHelper applicationSettingsHelper;
         private AutoResetEvent backgroundAudioInitializedEvent;
         private ILogger logger;
@@ -33,6 +33,7 @@
         #endregion
 
         #region Properties
+        private bool IsBackgroundTaskRunning => applicationSettingsHelper.ReadSettingsValue<bool>(Constants.IsBackgroundTaskRunning);
 
         public bool IsPreviousButtonEnabled
         {
@@ -93,10 +94,8 @@
 
             // Using explicit casts here because of http://stackoverflow.com/questions/2057146/compiler-ambiguous-invocation-error-anonymous-method-and-method-group-with-fun
             PreviousTrackCommand = new RelayCommand((Action)onPreviousTrackAction);
-            NextTrackCommand = new RelayCommand((Action)onNextButtonAction);
+            NextTrackCommand = new RelayCommand((Action)onNextTrackAction);
             PlayPauseCommand = new RelayCommand((Action)onPlayPauseAction);
-
-            updateBackgroundTaskRunningStatus();
 
             Application.Current.Suspending += ForegroundApp_Suspending;
             Application.Current.Resuming += ForegroundApp_Resuming;
@@ -129,23 +128,12 @@
         void ForegroundApp_Resuming(object sender, object e)
         {
             logger.LogMessage("Foreground audio player resuming...");
-            applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Active.ToString());
-
-            updateBackgroundTaskRunningStatus();
-            if (isMyBackgroundTaskRunning)
+            if (IsBackgroundTaskRunning)
             {
                 AddMediaPlayerEventHandlers();
-                ValueSet message = new ValueSet() { { Constants.AppResumed, DateTime.Now.ToString() } };
-                BackgroundMediaPlayer.SendMessageToBackground(message);
-
-                if (mediaPlayer.CurrentState == MediaPlayerState.Playing)
-                {
-                    PlayButtonIcon = pauseIcon;
-                }
-                else
-                {
-                    PlayButtonIcon = playIcon;
-                }
+                PlayButtonIcon = mediaPlayer.CurrentState == MediaPlayerState.Playing ?
+                    pauseIcon :
+                    playIcon;
             }
             else
             {
@@ -162,11 +150,7 @@
         void ForegroundApp_Suspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-            logger.LogMessage("Foreground audio player suspending...");
-            ValueSet message = new ValueSet() { { Constants.AppSuspended, DateTime.Now.ToString() } };
-            BackgroundMediaPlayer.SendMessageToBackground(message);
             RemoveMediaPlayerEventHandlers();
-            applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Suspended.ToString());
             logger.LogMessage("Foreground audio player suspended.");
             deferral.Complete();
         }
@@ -201,34 +185,22 @@
 
             // Play button will be enabled when media player will be ready
             IsPlayButtonEnabled = false;
-            updateBackgroundTaskRunningStatus();
-            if (isMyBackgroundTaskRunning)
+
+            if (IsBackgroundTaskRunning &&
+                mediaPlayer.CurrentState == MediaPlayerState.Playing)
             {
-                if (MediaPlayerState.Playing == mediaPlayer.CurrentState)
-                {
-                    var message = new ValueSet() { { Constants.PausePlayback, string.Empty } };
-                    BackgroundMediaPlayer.SendMessageToBackground(message);
-                }
-                else if (MediaPlayerState.Paused == mediaPlayer.CurrentState)
-                {
-                    var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
-                    BackgroundMediaPlayer.SendMessageToBackground(message);
-                }
-                else if (MediaPlayerState.Closed == mediaPlayer.CurrentState)
-                {
-                    StartBackgroundAudioTask();
-                }
+                var message = new ValueSet() { { Constants.PausePlayback, string.Empty } };
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+                return;
             }
-            else
-            {
-                StartBackgroundAudioTask();
-            }
+
+            WaitForBackgroundAudioTask();
         }
 
         /// <summary>
         /// Tells the background audio agent to skip to the next track.
         /// </summary>
-        private void onNextButtonAction()
+        private void onNextTrackAction()
         {
             logger.LogMessage("Foreground audio player 'Next Track' command fired.");
 
@@ -243,7 +215,7 @@
 
         #endregion
 
-        #region Background MediaPlayer Event handlers
+        #region MediaPlayer Event handlers
 
         /// <summary>
         /// MediaPlayer state changed event handlers. 
@@ -251,23 +223,24 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        private async void MediaPlayer_CurrentStateChanged(MediaPlayer sender, object args)
+        private async void onMediaPlayerCurrentStateChanged(MediaPlayer sender, object args)
         {
             logger.LogMessage("Foreground audio player 'MediaPlayer_CurrentStateChanged' event fired.");
 
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                IsPlayButtonEnabled = true;
-                switch (sender.CurrentState)
+                if (sender.CurrentState == MediaPlayerState.Playing)
                 {
-                    case MediaPlayerState.Playing:
-                        PlayButtonIcon = pauseIcon;
-                        IsNextButtonEnabled = true;
-                        IsPreviousButtonEnabled = true;
-                        break;
-                    case MediaPlayerState.Paused:
-                        PlayButtonIcon = playIcon;
-                        break;
+                    IsPlayButtonEnabled = true;
+                    IsNextButtonEnabled = true;
+                    IsPreviousButtonEnabled = true;
+                    PlayButtonIcon = pauseIcon;
+                }
+
+                if (sender.CurrentState == MediaPlayerState.Paused)
+                {
+                    IsPlayButtonEnabled = true;
+                    PlayButtonIcon = playIcon;
                 }
             });
         }
@@ -275,16 +248,12 @@
         /// <summary>
         /// This event fired when a message is received from Background Process
         /// </summary>
-        void BackgroundMediaPlayer_MessageReceivedFromBackground(object sender, MediaPlayerDataReceivedEventArgs e)
+        void onMessageReceivedFromBackground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
-            foreach (string key in e.Data.Keys)
+            if (e.Data.ContainsKey(Constants.IsBackgroundTaskRunning))
             {
-                if (key == Constants.BackgroundTaskStarted)
-                {
-                    logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
-                    backgroundAudioInitializedEvent.Set();
-                    return;
-                }
+                logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
+                backgroundAudioInitializedEvent.Set();
             }
         }
 
@@ -292,19 +261,13 @@
 
         #region Helper Methods
 
-        private void updateBackgroundTaskRunningStatus()
-        {
-            string taskState = applicationSettingsHelper.ReadSettingsValue<string>(Constants.BackgroundTaskState);
-            isMyBackgroundTaskRunning = taskState == Constants.BackgroundTaskRunning;
-        }
-
         /// <summary>
         /// Unsubscribes to MediaPlayer events. Should run only on suspend
         /// </summary>
         private void RemoveMediaPlayerEventHandlers()
         {
-            mediaPlayer.CurrentStateChanged -= this.MediaPlayer_CurrentStateChanged;
-            BackgroundMediaPlayer.MessageReceivedFromBackground -= this.BackgroundMediaPlayer_MessageReceivedFromBackground;
+            mediaPlayer.CurrentStateChanged -= onMediaPlayerCurrentStateChanged;
+            BackgroundMediaPlayer.MessageReceivedFromBackground -= onMessageReceivedFromBackground;
         }
 
         /// <summary>
@@ -312,20 +275,18 @@
         /// </summary>
         private void AddMediaPlayerEventHandlers()
         {
-            mediaPlayer.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
-            BackgroundMediaPlayer.MessageReceivedFromBackground += BackgroundMediaPlayer_MessageReceivedFromBackground;
+            mediaPlayer.CurrentStateChanged += onMediaPlayerCurrentStateChanged;
+            BackgroundMediaPlayer.MessageReceivedFromBackground += onMessageReceivedFromBackground;
         }
 
         /// <summary>
         /// Initialize Background Media Player Handlers and starts playback
         /// </summary>
-        private void StartBackgroundAudioTask()
+        private void WaitForBackgroundAudioTask()
         {
-            logger.LogMessage("Foreground audio player Starting Background Task...");
+            logger.LogMessage("Foreground audio player: waiting for Background Task...");
             AddMediaPlayerEventHandlers();
-
-            updateBackgroundTaskRunningStatus();
-            if (isMyBackgroundTaskRunning)
+            if (IsBackgroundTaskRunning)
             {
                 backgroundAudioInitializedEvent.Set();
             }
@@ -338,7 +299,7 @@
             }
             else
             {
-                var message = "Background Audio Task didn't start in expected time";
+                var message = "Foreground audio player: Background Audio Task didn't start in expected time";
                 logger.LogMessage(message, LoggingLevel.Error);
                 throw new Exception(message);
             }
@@ -346,28 +307,11 @@
 
         #endregion
 
-        #region IDisposable Support
+        #region IDisposable
 
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    this.backgroundAudioInitializedEvent.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
+            backgroundAudioInitializedEvent.Dispose();
         }
 
         #endregion

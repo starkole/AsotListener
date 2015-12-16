@@ -10,7 +10,6 @@
     using Services.Contracts;
     using Windows.Foundation.Diagnostics;
     using Ioc;
-    using Models.Enums;
 
     /// <summary>
     /// Impalements IBackgroundTask to provide an entry point for app code to be run in background. 
@@ -23,7 +22,6 @@
         private bool isDisposed = false;
         private AudioManager audioManager;
         private BackgroundTaskDeferral deferral;
-        private ForegroundAppStatus foregroundAppState = ForegroundAppStatus.Unknown;
         private AutoResetEvent BackgroundTaskStartedEvent = new AutoResetEvent(false);
         private IApplicationSettingsHelper applicationSettingsHelper;
         private ILogger logger;
@@ -39,12 +37,14 @@
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             deferral = taskInstance.GetDeferral();
+            taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
+            taskInstance.Task.Completed += Taskcompleted;
 
             IContainer container = Container.Instance;
             Services.IoC.Register();
 
             logger = container.Resolve<ILogger>();
-            logger.LogMessage($"Background Audio Task {taskInstance.Task.Name} starting...");
+            logger.LogMessage($"BackgroundAudioTask {taskInstance.Task.Name} starting...");
             applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
             IPlayList playlist = container.Resolve<IPlayList>();
             await playlist.LoadPlaylistFromLocalStorage();
@@ -56,21 +56,14 @@
                 SystemMediaTransportControls.GetForCurrentView(),
                 waitForTaskReinitialization);
 
-            taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
-            taskInstance.Task.Completed += Taskcompleted;
             BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
+           
+            applicationSettingsHelper.SaveSettingsValue(Constants.IsBackgroundTaskRunning, true);
 
-            string value = applicationSettingsHelper.ReadSettingsValue<string>(Constants.AppState);
-            foregroundAppState = ForegroundAppStatus.Unknown;
-            Enum.TryParse(value, out foregroundAppState);
-            if (foregroundAppState != ForegroundAppStatus.Suspended)
-            {
-                ValueSet message = new ValueSet() { { Constants.BackgroundTaskStarted, string.Empty } };
-                BackgroundMediaPlayer.SendMessageToForeground(message);
-            }
             BackgroundTaskStartedEvent.Set();
-            applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskRunning);
-            logger.LogMessage($"Background Audio Task initialized.");
+            ValueSet message = new ValueSet() { { Constants.IsBackgroundTaskRunning, true } };
+            BackgroundMediaPlayer.SendMessageToForeground(message);            
+            logger.LogMessage($"BackgroundAudioTask initialized.");
         }
 
         /// <summary>
@@ -98,11 +91,11 @@
 
         private void waitForTaskReinitialization()
         {
-            logger.LogMessage("Background Audio Task: It seems the task is not running. Waiting for it to start.");
+            logger.LogMessage("BackgroundAudioTask: It seems the task is not running yet. Waiting for it to start.");
             bool result = BackgroundTaskStartedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
             if (!result)
             {
-                const string message = "Background Task didn't initialize in time.";
+                const string message = "BackgroundAudioTask: Background Task didn't initialize in time.";
                 logger.LogMessage(message, LoggingLevel.Critical);
                 throw new Exception(message);
             }
@@ -123,15 +116,6 @@
             {
                 switch (key)
                 {
-                    case Constants.AppSuspended:
-                        logger.LogMessage("BackgroundAudioTask: Foreground app suspending");
-                        foregroundAppState = ForegroundAppStatus.Suspended;
-                        break;
-                    case Constants.AppResumed:
-                        logger.LogMessage("BackgroundAudioTask: Foreground app resuming");
-                        foregroundAppState = ForegroundAppStatus.Active;
-
-                        break;
                     case Constants.StartPlayback:
                         logger.LogMessage("BackgroundAudioTask: Starting Playback");
                         audioManager.StartPlayback();
@@ -165,18 +149,18 @@
 
             try
             {
-                applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskCancelled);
+                applicationSettingsHelper?.SaveSettingsValue(Constants.IsBackgroundTaskRunning, false);
                 BackgroundTaskStartedEvent.Dispose();
-                audioManager.Dispose();
+                audioManager?.Dispose();
                 BackgroundMediaPlayer.Shutdown();
-                logger.SaveLogsToFile();
+                logger?.SaveLogsToFile();
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Error when disposing background audio task. {ex.Message}", LoggingLevel.Error);
+                logger?.LogMessage($"BackgroundAudioTask: Error when disposing. {ex.Message}", LoggingLevel.Error);
             }
 
-            logger.LogMessage($"Background Audio Task has been shut down correctly.");
+            logger?.LogMessage($"BackgroundAudioTask has been shut down correctly.");
             isDisposed = true;
         }
 

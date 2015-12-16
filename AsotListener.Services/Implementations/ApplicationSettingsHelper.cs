@@ -20,7 +20,7 @@
         /// <summary>
         /// Function to read a setting value and clear it after reading it
         /// </summary>
-        public T ReadSettingsValue<T>(string key) where T : class
+        public T ReadSettingsValue<T>(string key)
         {
             using (var mutex = new Mutex(true, mutexName))
             {
@@ -31,23 +31,18 @@
                     if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
                     {
                         logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
-                        return null;
+                        return default(T);
                     }
                     else
                     {
-                        var value = ApplicationData.Current.LocalSettings.Values[key] as T;
-                        if (value == null)
-                        {
-                            logger.LogMessage($"Cannot cast {key} parameter to type {typeof(T)}.", LoggingLevel.Warning);
-                        }
-
+                        var value = (T)ApplicationData.Current.LocalSettings.Values[key];
                         return value;
                     }
                 }
                 catch (Exception ex)
                 {
                     logger.LogMessage($"Exception on reading from LoaclSettings. {ex.Message}", LoggingLevel.Error);
-                    return null;
+                    return default(T);
                 }
                 finally
                 {

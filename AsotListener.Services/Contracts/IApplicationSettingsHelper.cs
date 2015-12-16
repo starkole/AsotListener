@@ -2,7 +2,7 @@
 {
     public interface IApplicationSettingsHelper
     {
-        T ReadSettingsValue<T>(string key) where T: class;
+        T ReadSettingsValue<T>(string key);
         void SaveSettingsValue(string key, object value);
     }
 }
