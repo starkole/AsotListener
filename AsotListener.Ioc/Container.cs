@@ -24,7 +24,12 @@
 
         public void RegisterType<T>()
         {
-            container.RegisterType<T>(new TransientLifetimeManager());
+            container.RegisterType<T>(new TransientLifetimeManager());            
+        }
+
+        public void RegisterInstance<T>(T instance)
+        {
+            container.RegisterInstance(instance, new ContainerControlledLifetimeManager());
         }
 
         public TInterface Resolve<TInterface>() => container.Resolve<TInterface>();

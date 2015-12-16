@@ -70,6 +70,7 @@
             }
             BackgroundTaskStartedEvent.Set();
             applicationSettingsHelper.SaveSettingsValue(Constants.BackgroundTaskState, Constants.BackgroundTaskRunning);
+            logger.LogMessage($"Background Audio Task initialized.");
         }
 
         /// <summary>

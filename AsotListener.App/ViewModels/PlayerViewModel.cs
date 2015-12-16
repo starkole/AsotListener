@@ -73,10 +73,11 @@
         #region Ctor
 
         public PlayerViewModel(
-            ILogger logger, 
-            IPlayList playlist, 
+            ILogger logger,
+            IPlayList playlist,
             IApplicationSettingsHelper applicationSettingsHelper,
-            INavigationService navigationService)
+            INavigationService navigationService,
+            MediaPlayer mediaPlayer)
         {
             backgroundAudioInitializedEvent = new AutoResetEvent(false);
             this.logger = logger;
@@ -84,7 +85,7 @@
 
             Playlist = playlist;
             this.applicationSettingsHelper = applicationSettingsHelper;
-            mediaPlayer = BackgroundMediaPlayer.Current;
+            this.mediaPlayer = mediaPlayer;
 
             pauseIcon = new SymbolIcon(Symbol.Pause);
             playIcon = new SymbolIcon(Symbol.Play);
@@ -97,8 +98,6 @@
 
             updateBackgroundTaskRunningStatus();
 
-            //Adding App suspension handlers here so that we can unsubscribe handlers 
-            //that access to BackgroundMediaPlayer events
             Application.Current.Suspending += ForegroundApp_Suspending;
             Application.Current.Resuming += ForegroundApp_Resuming;
 
@@ -107,22 +106,14 @@
 
         private async void initializeAsync()
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-
-            if (isMyBackgroundTaskRunning)
-            {
-                // Playlist has been already loaded
-                navigationService.Navigate(NavigationParameter.OpenPlayer);
-                return;
-            }
-
             await Playlist.LoadPlaylistFromLocalStorage();
-            if (Playlist.CurrentTrack == null)
+            if (Playlist.CurrentTrack != null)
             {
-                return;
+                navigationService.Navigate(NavigationParameter.OpenPlayer);
+                IsNextButtonEnabled = true;
+                IsPlayButtonEnabled = true;
+                IsPreviousButtonEnabled = true;
             }
-
-            navigationService.Navigate(NavigationParameter.OpenPlayer);
 
             logger.LogMessage("Foreground audio player initialized.");
         }
@@ -140,14 +131,10 @@
             logger.LogMessage("Foreground audio player resuming...");
             applicationSettingsHelper.SaveSettingsValue(Constants.AppState, ForegroundAppStatus.Active.ToString());
 
-            // Verify if the task was running before
             updateBackgroundTaskRunningStatus();
             if (isMyBackgroundTaskRunning)
             {
-                //if yes, reconnect to media play handlers
                 AddMediaPlayerEventHandlers();
-
-                //send message to background task that app is resumed, so it can start sending notifications
                 ValueSet message = new ValueSet() { { Constants.AppResumed, DateTime.Now.ToString() } };
                 BackgroundMediaPlayer.SendMessageToBackground(message);
 
@@ -217,17 +204,17 @@
             updateBackgroundTaskRunningStatus();
             if (isMyBackgroundTaskRunning)
             {
-                if (MediaPlayerState.Playing == BackgroundMediaPlayer.Current.CurrentState)
+                if (MediaPlayerState.Playing == mediaPlayer.CurrentState)
                 {
                     var message = new ValueSet() { { Constants.PausePlayback, string.Empty } };
                     BackgroundMediaPlayer.SendMessageToBackground(message);
                 }
-                else if (MediaPlayerState.Paused == BackgroundMediaPlayer.Current.CurrentState)
+                else if (MediaPlayerState.Paused == mediaPlayer.CurrentState)
                 {
                     var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
                     BackgroundMediaPlayer.SendMessageToBackground(message);
                 }
-                else if (MediaPlayerState.Closed == BackgroundMediaPlayer.Current.CurrentState)
+                else if (MediaPlayerState.Closed == mediaPlayer.CurrentState)
                 {
                     StartBackgroundAudioTask();
                 }
@@ -304,7 +291,7 @@
         #endregion
 
         #region Helper Methods
-        
+
         private void updateBackgroundTaskRunningStatus()
         {
             string taskState = applicationSettingsHelper.ReadSettingsValue<string>(Constants.BackgroundTaskState);
@@ -316,7 +303,7 @@
         /// </summary>
         private void RemoveMediaPlayerEventHandlers()
         {
-            BackgroundMediaPlayer.Current.CurrentStateChanged -= this.MediaPlayer_CurrentStateChanged;
+            mediaPlayer.CurrentStateChanged -= this.MediaPlayer_CurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground -= this.BackgroundMediaPlayer_MessageReceivedFromBackground;
         }
 
@@ -325,7 +312,7 @@
         /// </summary>
         private void AddMediaPlayerEventHandlers()
         {
-            BackgroundMediaPlayer.Current.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
+            mediaPlayer.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground += BackgroundMediaPlayer_MessageReceivedFromBackground;
         }
 

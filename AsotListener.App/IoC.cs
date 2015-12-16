@@ -2,6 +2,7 @@
 {
     using ViewModels;
     using Ioc;
+    using Windows.Media.Playback;
 
     public static class IoC
     {
@@ -14,6 +15,7 @@
             container.RegisterType<PlayerViewModel>();
             container.RegisterType<EpisodesViewModel>();
             container.RegisterType<MainPageViewModel>();
+            container.RegisterInstance(BackgroundMediaPlayer.Current);
         }
     }
 }
