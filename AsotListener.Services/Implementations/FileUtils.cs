@@ -121,49 +121,23 @@
                 return;
             }
 
-            using (var mutex = new Mutex(true, mutexName))
+            try
             {
-                await Task.Factory.StartNew(() =>
+                MemoryStream listData = new MemoryStream();
+                DataContractSerializer serializer = new DataContractSerializer(typeof(T));
+                serializer.WriteObject(listData, objectToSave);
+                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+                using (Stream fileStream = await file.OpenStreamForWriteAsync())
                 {
-                    mutex.WaitOne();
-                    try
-                    {
-                        var fileTask = localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting).AsTask();
-                        fileTask.RunSynchronously();
-                        if (fileTask.Exception != null)
-                        {
-                            throw fileTask.Exception;
-                        }
+                    listData.Seek(0, SeekOrigin.Begin);
+                    await listData.CopyToAsync(fileStream);
+                }
 
-                        StorageFile file = fileTask.Result;
-                        MemoryStream listData = new MemoryStream();
-                        DataContractSerializer serializer = new DataContractSerializer(typeof(T));
-                        serializer.WriteObject(listData, objectToSave);
-                        var streamTask = file.OpenStreamForWriteAsync();
-                        streamTask.RunSynchronously();
-                        if (streamTask.Exception != null)
-                        {
-                            throw streamTask.Exception;
-                        }
-
-                        using (Stream fileStream = streamTask.Result)
-                        {
-                            listData.Seek(0, SeekOrigin.Begin);
-                            listData.CopyTo(fileStream);
-                        }
-
-                        logger.LogMessage("Serialization complete.");
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogMessage($"Error. Cannot serialize. {e.Message}", LoggingLevel.Error);
-                    }
-                    finally
-                    {
-                        mutex.ReleaseMutex();
-                    }
-                },
-                TaskCreationOptions.LongRunning);
+                logger.LogMessage("Serialization complete.");
+            }
+            catch (Exception e)
+            {
+                logger.LogMessage($"Error. Cannot serialize. {e.Message}", LoggingLevel.Error);
             }
         }
 
@@ -176,46 +150,21 @@
                 return null;
             }
 
-            using (var mutex = new Mutex(true, mutexName))
+            try
             {
-                return await Task.Factory.StartNew(() =>
+                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(filename);
+                using (IInputStream inStream = await file.OpenSequentialReadAsync())
                 {
-                    mutex.WaitOne();
-                    try
-                    {
-                        var fileTask = localFolder.GetFileAsync(filename).AsTask();
-                        fileTask.RunSynchronously();
-                        if (fileTask.Exception != null)
-                        {
-                            throw fileTask.Exception;
-                        }
-
-                        StorageFile file = fileTask.Result;
-                        var streamTask = file.OpenSequentialReadAsync().AsTask();
-                        streamTask.RunSynchronously();
-                        if (streamTask.Exception != null)
-                        {
-                            throw streamTask.Exception;
-                        }                        
-                        using (IInputStream inStream = streamTask.Result)
-                        {
-                            DataContractSerializer serializer = new DataContractSerializer(typeof(T));
-                            T result = serializer.ReadObject(inStream.AsStreamForRead()) as T;
-                            logger.LogMessage("Object has been successfully read from file.");
-                            return result;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogMessage($"Error reading object from file. {e.Message}", LoggingLevel.Error);
-                        return null;
-                    }
-                    finally
-                    {
-                        mutex.ReleaseMutex();
-                    }
-                }, 
-                TaskCreationOptions.LongRunning);
+                    DataContractSerializer serializer = new DataContractSerializer(typeof(T));
+                    T result = serializer.ReadObject(inStream.AsStreamForRead()) as T;
+                    logger.LogMessage("Object has been successfully read from file.");
+                    return result;
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogMessage($"Error reading object from file. {e.Message}", LoggingLevel.Error);
+                return null;
             }
         }
 
