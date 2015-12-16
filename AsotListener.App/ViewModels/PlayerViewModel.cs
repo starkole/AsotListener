@@ -14,7 +14,7 @@
     using Windows.Foundation.Diagnostics;
     using Models.Enums;
 
-    public sealed class PlayerViewModel : BaseModel
+    public sealed class PlayerViewModel : BaseModel, IDisposable
     {
         #region Fields
 
