@@ -14,16 +14,18 @@
     using Windows.ApplicationModel.Core;
     using Models.Enums;
     using Windows.UI.Popups;
+    using Windows.UI.Xaml;
+    using Windows.ApplicationModel;
+    using static Models.Enums.EpisodeStatus;
 
-    public class EpisodesViewModel : BaseModel
+    public sealed class EpisodesViewModel : BaseModel
     {
         #region Fields
 
         private const string episodeListFileName = "episodeList.xml";
         private ObservableCollection<Episode> episodes;
-        private BackgroundDownloader backgroundDownloader;
-        Dictionary<Episode, List<DownloadOperation>> activeDownloadsByEpisode;
-        Dictionary<DownloadOperation, Episode> activeDownloadsByDownload;
+        private Dictionary<Episode, List<DownloadOperation>> activeDownloadsByEpisode;
+        private Dictionary<DownloadOperation, Episode> activeDownloadsByDownload;
         private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
         private readonly IPlayList playlist;
@@ -77,35 +79,16 @@
             activeDownloadsByEpisode = new Dictionary<Episode, List<DownloadOperation>>();
             activeDownloadsByDownload = new Dictionary<DownloadOperation, Episode>();
 
+            Application.Current.Suspending += onAppResuming;
+            Application.Current.Suspending += onAppSuspending;
+            
             initializeAsync();
         }
 
         private async void initializeAsync()
         {
-            await RestoreEpisodesList();
+            await loadEpisodesList();
             await retrieveActiveDownloads();
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        public async Task RestoreEpisodesList()
-        {
-            EpisodeList = await fileUtils.ReadFromXmlFile<ObservableCollection<Episode>>(episodeListFileName);
-            if (EpisodeList == null || !EpisodeList.Any())
-            {
-                await loadEpisodeListFromServer();
-            }
-            else
-            {
-                await updateEpisodesStates();
-            }
-        }
-
-        public async Task StoreEpisodesList()
-        {
-            await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
         }
 
         #endregion
@@ -120,7 +103,7 @@
                 EpisodeList = parser.ParseEpisodeList(episodeListPage);
             }
             await updateEpisodesStates();
-            await StoreEpisodesList();
+            await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
         }
 
         private async Task downloadEpisode(object boxedEpisode)
@@ -131,18 +114,13 @@
                 return;
             }
 
-            if (backgroundDownloader == null)
-            {
-                backgroundDownloader = new BackgroundDownloader();
-            }
-
             using (ILoader loader = loaderFactory.GetLoader())
             {
                 string episodePage = await loader.FetchEpisodePageAsync(episode);
                 episode.DownloadLinks = parser.ExtractDownloadLinks(episodePage);
             }
 
-            episode.Status = EpisodeStatus.Downloading;
+            episode.Status = Downloading;
             for (var i = 0; i < episode.DownloadLinks.Length; i++)
             {
                 var downloader = new BackgroundDownloader();
@@ -168,7 +146,7 @@
         private void cancelDownload(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null && episode.Status != EpisodeStatus.Downloading)
+            if (episode == null && episode.Status != Downloading)
             {
                 return;
             }
@@ -189,13 +167,13 @@
             {
                 await fileUtils.DeleteEpisode(episode.Name);
             }
-            episode.Status = EpisodeStatus.CanBeLoaded;
+            episode.Status = CanBeLoaded;
         }
 
         private async void playEpisode(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null && episode.Status != EpisodeStatus.Loaded)
+            if (episode == null && episode.Status != Loaded)
             {
                 return;
             }
@@ -205,14 +183,14 @@
                 existingTracks.First() :
                 await addEpisodeToPlaylist(episode);
             await playlist.SavePlaylistToLocalStorage();
-            episode.Status = EpisodeStatus.Playing;
+            episode.Status = Playing;
             navigationService.Navigate(NavigationParameter.StartPlayback);
         }
 
         private async void addToPlaylistCommand(object boxedEpisode)
         {
             var episode = boxedEpisode as Episode;
-            if (episode == null && episode.Status != EpisodeStatus.Loaded)
+            if (episode == null && episode.Status != Loaded)
             {
                 return;
             }
@@ -225,13 +203,39 @@
 
             await addEpisodeToPlaylist(episode);
             await playlist.SavePlaylistToLocalStorage();
-            episode.Status = EpisodeStatus.Playing;
+            episode.Status = Playing;
         }
 
         #endregion
 
         #region Private Methods
-        
+
+        private async void onAppResuming(object sender, SuspendingEventArgs e)
+        {
+            await updateEpisodesStates();
+            await retrieveActiveDownloads();
+        }
+
+        private async void onAppSuspending(object sender, SuspendingEventArgs e)
+        {
+            var deferral = e.SuspendingOperation.GetDeferral();
+            await loadEpisodesList();
+            deferral.Complete();
+        }
+
+        private async Task loadEpisodesList()
+        {
+            EpisodeList = await fileUtils.ReadFromXmlFile<ObservableCollection<Episode>>(episodeListFileName);
+            if (EpisodeList == null || !EpisodeList.Any())
+            {
+                await loadEpisodeListFromServer();
+            }
+            else
+            {
+                await updateEpisodesStates();
+            }
+        }
+
         private async Task retrieveActiveDownloads()
         {
             logger.LogMessage("Obtaining background downloads...");
@@ -283,17 +287,17 @@
 
                 ResponseInformation response = download.GetResponseInformation();
                 logger.LogMessage($"Download of {download.ResultFile.Name} completed. Status Code: {response.StatusCode}");
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = EpisodeStatus.Loaded);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = Loaded);
             }
             catch (TaskCanceledException)
             {
                 logger.LogMessage("Download cancelled.");
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = EpisodeStatus.CanBeLoaded);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = CanBeLoaded);
             }
             catch (Exception ex)
             {
                 logger.LogMessage($"Error {ex.Message}", LoggingLevel.Error);
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = EpisodeStatus.CanBeLoaded);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = CanBeLoaded);
             }
             finally
             {
@@ -362,20 +366,20 @@
             {
                 if (existingFileNames.Contains(episode.Name))
                 {
-                    episode.Status = EpisodeStatus.Loaded;
+                    episode.Status = Loaded;
                 }
 
                 if (activeDownloadsByEpisode.ContainsKey(episode))
                 {
-                    episode.Status = EpisodeStatus.Downloading;
+                    episode.Status = Downloading;
                 }
             }
         }
 
         private bool canEpisodeBeDeleted(Episode episode) =>
             episode != null &&
-            (episode.Status == EpisodeStatus.Loaded ||
-            episode.Status == EpisodeStatus.Playing);
+            (episode.Status == Loaded ||
+            episode.Status == Playing);
 
         #endregion
     }
