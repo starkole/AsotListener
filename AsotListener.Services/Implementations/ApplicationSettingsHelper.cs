@@ -6,14 +6,13 @@
     using Windows.Foundation.Diagnostics;
     using Windows.Storage;
 
-    public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper, IDisposable
+    public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
     {
         private ILogger logger;
-        private Mutex mutex;
+        private const string mutexName = "AsotListener.ApplicationSettingsHelper.Mutex";
 
         public ApplicationSettingsHelper(ILogger logger)
         {
-            mutex = new Mutex(false, "AsotListener.ApplicationSettingsHelper.Mutex");
             this.logger = logger;
             logger.LogMessage("ApplicationSettingsHelper initialized.");
         }
@@ -23,34 +22,37 @@
         /// </summary>
         public T ReadSettingsValue<T>(string key) where T : class
         {
-            try
+            using (var mutex = new Mutex(true, mutexName))
             {
                 mutex.WaitOne();
-                logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
-                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+                try
                 {
-                    logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
+                    logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
+                    if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+                    {
+                        logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
+                        return null;
+                    }
+                    else
+                    {
+                        var value = ApplicationData.Current.LocalSettings.Values[key] as T;
+                        if (value == null)
+                        {
+                            logger.LogMessage($"Cannot cast {key} parameter to type {typeof(T)}.", LoggingLevel.Warning);
+                        }
+
+                        return value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogMessage($"Exception on reading from LoaclSettings. {ex.Message}", LoggingLevel.Error);
                     return null;
                 }
-                else
+                finally
                 {
-                    var value = ApplicationData.Current.LocalSettings.Values[key] as T;
-                    if (value == null)
-                    {
-                        logger.LogMessage($"Cannot cast {key} parameter to type {typeof(T)}.", LoggingLevel.Warning);
-                    }
-
-                    return value;
+                    mutex.ReleaseMutex();
                 }
-            }
-            catch (Exception ex)
-            {
-                logger.LogMessage($"Exception on reading from LoaclSettings. {ex.Message}", LoggingLevel.Error);
-                return null;
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
             }
         }
 
@@ -59,32 +61,30 @@
         /// </summary>
         public void SaveSettingsValue(string key, object value)
         {
-            try
+            using (var mutex = new Mutex(true, mutexName))
             {
                 mutex.WaitOne();
-                logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
-                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+                try
                 {
-                    ApplicationData.Current.LocalSettings.Values.Add(key, value);
+                    logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
+                    if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+                    {
+                        ApplicationData.Current.LocalSettings.Values.Add(key, value);
+                    }
+                    else
+                    {
+                        ApplicationData.Current.LocalSettings.Values[key] = value;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    ApplicationData.Current.LocalSettings.Values[key] = value;
+                    logger.LogMessage($"Exception on saving to LoaclSettings. {ex.Message}", LoggingLevel.Error);
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
                 }
             }
-            catch (Exception ex)
-            {
-                logger.LogMessage($"Exception on saving to LoaclSettings. {ex.Message}", LoggingLevel.Error);
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
-            }
-        }
-
-        public void Dispose()
-        {
-            mutex.Dispose();
         }
     }
 }
