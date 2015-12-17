@@ -48,7 +48,7 @@
             logger.LogMessage("Playlist initialized.");
         }
 
-        public async Task SavePlaylistToLocalStorage() // TODO implement separate saving of playlist and current track
+        public async Task SavePlaylistToLocalStorage()
         {
             logger.LogMessage("Saving playlist state to local storage...");
             await fileUtils.SaveToXmlFile(TrackList, playlistFilename);

@@ -36,6 +36,7 @@
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             logger.LogMessage($"Unhandled exception occurred. {e.Message}", LoggingLevel.Critical);
+            logger.SaveLogsToFile();
         }
 
         /// <summary>

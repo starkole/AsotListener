@@ -2,9 +2,10 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using Contracts;
     using Windows.Foundation.Diagnostics;
-
+    using Windows.Storage;
     public sealed class Logger : ILogger, IDisposable
     {
         LoggingSession loggingSession;
@@ -13,7 +14,7 @@
         public Logger()
         {
             loggingSession = new LoggingSession("ASOT Listener");
-            loggingChannel = new LoggingChannel("Common logging channel");
+            loggingChannel = new LoggingChannel($"Logging channel for task {Task.CurrentId}");
             loggingSession.AddLoggingChannel(loggingChannel);
             LogMessage("Logger initialized.");
         }
@@ -33,7 +34,10 @@
 
         public void SaveLogsToFile()
         {
-            // TODO: Implement this
+            var saveTask = loggingSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "logging.etl").AsTask();
+            saveTask.ConfigureAwait(false);
+            saveTask.Wait();
+
         }
 
         public void Dispose()
