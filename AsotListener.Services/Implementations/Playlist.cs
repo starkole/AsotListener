@@ -11,6 +11,7 @@
         private AudioTrack currentTrack;
         private const string playlistFilename = "playlist.xml";
         private const string currentTrackFilename = "current_track.xml";
+        private const string trackNamePart = " Part ";
 
         private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
@@ -70,5 +71,8 @@
                 TrackList.Add(CurrentTrack);
             }
         }
+
+        public string GetAudioTrackName(string episodeName, int partNumber) =>
+            episodeName + trackNamePart + partNumber.ToString();
     }
 }

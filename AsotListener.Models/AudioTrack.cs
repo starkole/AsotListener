@@ -8,6 +8,18 @@
         private string uri;
         private TimeSpan startPosition = TimeSpan.FromSeconds(0);
 
+        public AudioTrack(string episodeName)
+        {
+            if (string.IsNullOrEmpty(episodeName))
+            {
+                throw new ArgumentNullException(nameof(episodeName));
+            }
+
+            EpisodeName = episodeName;
+        }
+
+        public string EpisodeName { get; } //TODO: Check if this deserializes correctly
+
         public string Name
         {
             get { return name; }

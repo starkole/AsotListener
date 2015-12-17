@@ -11,5 +11,6 @@
         AudioTrack CurrentTrack { get; set; }
         Task SavePlaylistToLocalStorage();
         Task LoadPlaylistFromLocalStorage();
+        string GetAudioTrackName(string episodeName, int partNumber);
     }
 }
