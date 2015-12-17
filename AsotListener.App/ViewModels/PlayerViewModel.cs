@@ -4,7 +4,6 @@
     using System.Threading;
     using System.Windows.Input;
     using Models;
-    using System.Linq;
     using Services.Contracts;
     using Windows.Foundation.Collections;
     using Windows.Media.Playback;
@@ -106,7 +105,6 @@
             set
             {
                 value.Opacity = 1;
-                IsAudioSeekerEnabled = value == pauseIcon;
                 SetField(ref playButtonIcon, value, nameof(PlayButtonIcon));
             }
         }
@@ -262,6 +260,7 @@
                     IsPlayButtonEnabled = true;
                     IsNextButtonEnabled = true;
                     IsPreviousButtonEnabled = true;
+                    IsAudioSeekerEnabled = true;
                     PlayButtonIcon = pauseIcon;
                     startProgressUpdateTimer();
                 }
@@ -316,6 +315,7 @@
         private void startProgressUpdateTimer()
         {
             logger.LogMessage("Foreground audio player: Starting progress update timer...");
+            IsAudioSeekerEnabled = true;
             CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToString();
             CurrentTrackPlayedTime = mediaPlayer.Position.ToString();
             AudioSeekerValue = mediaPlayer.Position.TotalSeconds;
@@ -394,7 +394,7 @@
         {
             logger.LogMessage("Foreground audio player: disposing.");
             stopProgressUpdateTimer();
-            backgroundAudioInitializedEvent.Dispose();            
+            backgroundAudioInitializedEvent.Dispose();
         }
 
         #endregion
