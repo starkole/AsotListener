@@ -141,9 +141,6 @@
   <data name="EpisodeStatusPlaying" xml:space="preserve">
     <value>playing</value>
   </data>
-  <data name="NowPlayingText.Text" xml:space="preserve">
-    <value>now playing</value>
-  </data>
   <data name="Pivot.Title" xml:space="preserve">
     <value>ASOT PLAYER</value>
   </data>

@@ -4,7 +4,6 @@
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
     using ViewModels;
-    using Models;
     using Windows.UI.Xaml.Input;
     using Windows.UI.Input;
     using Windows.UI.Xaml.Controls.Primitives;
@@ -121,5 +120,15 @@
         }
 
         #endregion
+
+        private void AudioSeekSlider_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            MainPageViewModel.PlayerModel.CanUpdateAudioSeeker = false;
+        }
+
+        private void AudioSeekSlider_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            MainPageViewModel.PlayerModel.CanUpdateAudioSeeker = true;
+        }
     }
 }

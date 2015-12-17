@@ -18,6 +18,12 @@
     {
         #region Fields
 
+        private readonly DispatcherTimer progressUpdateTimer;
+        private bool isAudioSeekerEnabled;
+        private double audioSeekerValue;
+        private double audioSeekerMaximum = double.MaxValue;
+        private string currentTrackPlayedTime;
+        private string currentTrackLeftToplay;
         private readonly MediaPlayer mediaPlayer;
         private bool isPreviousButtonEnabled;
         private bool isNextButtonEnabled;
@@ -35,6 +41,46 @@
         #region Properties
 
         private bool IsBackgroundTaskRunning => applicationSettingsHelper.ReadSettingsValue<bool>(Constants.IsBackgroundTaskRunning);
+
+        public bool IsAudioSeekerEnabled
+        {
+            get { return isAudioSeekerEnabled; }
+            set { SetField(ref isAudioSeekerEnabled, value, nameof(IsAudioSeekerEnabled)); }
+        }
+
+        public double AudioSeekerValue
+        {
+            get { return audioSeekerValue; }
+            set
+            {
+                if (value != mediaPlayer.Position.TotalSeconds)
+                {
+                    mediaPlayer.Position = TimeSpan.FromSeconds(value);
+                    logger.LogMessage("Foreground audio player: Updated current player position.");
+                }
+                SetField(ref audioSeekerValue, value, nameof(AudioSeekerValue));
+            }
+        }
+
+        public double AudioSeekerMaximum
+        {
+            get { return audioSeekerMaximum; }
+            set { SetField(ref audioSeekerMaximum, value, nameof(AudioSeekerMaximum)); }
+        }
+
+        public bool CanUpdateAudioSeeker { get; set; } = true;
+
+        public string CurrentTrackPlayedTime
+        {
+            get { return currentTrackPlayedTime; }
+            set { SetField(ref currentTrackPlayedTime, value, nameof(CurrentTrackPlayedTime)); }
+        }
+
+        public string CurrentTrackLeftToplay
+        {
+            get { return currentTrackLeftToplay; }
+            set { SetField(ref currentTrackLeftToplay, value, nameof(CurrentTrackLeftToplay)); }
+        }
 
         public bool IsPreviousButtonEnabled
         {
@@ -60,6 +106,7 @@
             set
             {
                 value.Opacity = 1;
+                IsAudioSeekerEnabled = value == pauseIcon;
                 SetField(ref playButtonIcon, value, nameof(PlayButtonIcon));
             }
         }
@@ -89,6 +136,7 @@
             pauseIcon = new SymbolIcon(Symbol.Pause);
             playIcon = new SymbolIcon(Symbol.Play);
             PlayButtonIcon = playIcon;
+            progressUpdateTimer = new DispatcherTimer();
 
             // Using explicit casts here because of http://stackoverflow.com/questions/2057146/compiler-ambiguous-invocation-error-anonymous-method-and-method-group-with-fun
             PreviousTrackCommand = new RelayCommand((Action)onPreviousTrackAction);
@@ -120,6 +168,7 @@
                 IsNextButtonEnabled = true;
                 IsPlayButtonEnabled = true;
                 IsPreviousButtonEnabled = true;
+                startProgressUpdateTimer();
             }
 
             if (IsBackgroundTaskRunning)
@@ -214,12 +263,14 @@
                     IsNextButtonEnabled = true;
                     IsPreviousButtonEnabled = true;
                     PlayButtonIcon = pauseIcon;
+                    startProgressUpdateTimer();
                 }
 
                 if (sender.CurrentState == MediaPlayerState.Paused)
                 {
                     IsPlayButtonEnabled = true;
                     PlayButtonIcon = playIcon;
+                    stopProgressUpdateTimer();
                 }
             });
         }
@@ -230,6 +281,68 @@
             {
                 logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
                 backgroundAudioInitializedEvent.Set();
+            }
+        }
+
+        #endregion
+
+        #region Progress Tracking
+
+        private TimeSpan getProgressUpdateTimerInterval(TimeSpan trackDuration)
+        {
+            if (trackDuration.TotalHours >= 1)
+            {
+                return TimeSpan.FromSeconds(60);
+            }
+
+            if (trackDuration.TotalMinutes >= 30 && trackDuration.TotalMinutes < 60)
+            {
+                return TimeSpan.FromSeconds(30);
+            }
+
+            if (trackDuration.TotalMinutes >= 10 && trackDuration.TotalMinutes < 30)
+            {
+                return TimeSpan.FromSeconds(10);
+            }
+
+            if (trackDuration.TotalMinutes >= 1 && trackDuration.TotalMinutes < 10)
+            {
+                return TimeSpan.FromSeconds(1);
+            }
+
+            return TimeSpan.FromMilliseconds(300);
+        }
+
+        private void startProgressUpdateTimer()
+        {
+            logger.LogMessage("Foreground audio player: Starting progress update timer...");
+            CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToString();
+            CurrentTrackPlayedTime = mediaPlayer.Position.ToString();
+            AudioSeekerValue = mediaPlayer.Position.TotalSeconds;
+            progressUpdateTimer.Tick += onTimerTick;
+            progressUpdateTimer.Interval = getProgressUpdateTimerInterval(mediaPlayer.NaturalDuration);
+            progressUpdateTimer.Start();
+            logger.LogMessage($"Foreground audio player: Progress update timer started with interval {progressUpdateTimer.Interval}.");
+        }
+
+        private void stopProgressUpdateTimer()
+        {
+            logger.LogMessage("Foreground audio player: Stopping progress update timer...");
+            if (progressUpdateTimer.IsEnabled)
+            {
+                progressUpdateTimer.Stop();
+                progressUpdateTimer.Tick -= onTimerTick;
+                logger.LogMessage("Foreground audio player: Progress update timer stopped.");
+            }
+        }
+
+        private void onTimerTick(object sender, object e)
+        {
+            if (CanUpdateAudioSeeker)
+            {
+                AudioSeekerValue = mediaPlayer.Position.TotalSeconds;
+                CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToString();
+                CurrentTrackPlayedTime = mediaPlayer.Position.ToString();
             }
         }
 
@@ -261,6 +374,7 @@
             bool result = backgroundAudioInitializedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
             if (result == true)
             {
+                logger.LogMessage("Foreground audio player: Background Task is running. Sending play command.");
                 var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
                 BackgroundMediaPlayer.SendMessageToBackground(message);
             }
@@ -278,7 +392,9 @@
 
         public void Dispose()
         {
-            backgroundAudioInitializedEvent.Dispose();
+            logger.LogMessage("Foreground audio player: disposing.");
+            stopProgressUpdateTimer();
+            backgroundAudioInitializedEvent.Dispose();            
         }
 
         #endregion

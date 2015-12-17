@@ -15,7 +15,7 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
-    
+
     <Grid>
         <Pivot 
             x:Uid="Pivot" 
@@ -131,17 +131,37 @@
                 DataContext="{Binding PlayerModel}"
                 Header="player">
                 <Grid>
-                    <!--TitlePanel contains the name of the application and page title-->
-                    <StackPanel Margin="0,20,0,0">
-                        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,28">
+                    <StackPanel Margin="0,20,0,0" Grid.Row="0">
+                        <StackPanel 
+                            x:Name="TitlePanel" 
+                            Margin="12,17,0,28">
                             <TextBlock 
-                                x:Uid="NowPlayingText" 
-                                Text="now playing" 
+                                x:Name="CurrentTrackName" 
+                                Text="{Binding Playlist.CurrentTrack.Name}" 
+                                TextWrapping="WrapWholeWords"
                                 Style="{StaticResource SubheaderTextBlockStyle}"/>
                         </StackPanel>
-
-                        <!--ContentPanel - place additional content here-->
-                        <StackPanel Orientation="Horizontal" Width="Auto" Margin="10,40,0,0" VerticalAlignment="Top">
+                        <Slider 
+                            x:Name="AudioSeekSlider"
+                            Margin="10,0,20,0"
+                            IsEnabled="{Binding IsAudioSeekerEnabled}"
+                            Value="{Binding AudioSeekerValue}"
+                            Maximum="{Binding AudioSeekerMaximum}"/>
+                        <Grid Margin="10,0,20,0" Grid.Row="2">
+                            <TextBlock 
+                                Grid.Row="0" 
+                                HorizontalAlignment="Left" 
+                                Text="{Binding CurrentTrackPlayedTime}"
+                                Style="{StaticResource BodyTextBlockStyle}"/>
+                            <TextBlock 
+                                Grid.Row="0" 
+                                HorizontalAlignment="Right" 
+                                Text="{Binding CurrentTrackLeftToplay}"
+                                Style="{StaticResource BodyTextBlockStyle}"/>
+                        </Grid>
+                        <StackPanel 
+                            Margin="10,40,0,0" 
+                            Orientation="Horizontal">
                             <AppBarButton 
                                 x:Name="prevButton" 
                                 Icon="Previous" 
@@ -158,16 +178,6 @@
                                 IsEnabled="{Binding IsNextButtonEnabled}"
                                 Command="{Binding NextTrackCommand}"/>
                         </StackPanel>
-                        <TextBlock 
-                            x:Name="CurrentTrackName" 
-                            Height="Auto" 
-                            HorizontalAlignment="Left" 
-                            Margin="10,10,0,0" 
-                            VerticalAlignment="Top" 
-                            Width="Auto" 
-                            TextWrapping="Wrap" 
-                            Text="{Binding Playlist.CurrentTrack.Name}"
-                            Style="{StaticResource BodyTextBlockStyle}"/>
                     </StackPanel>
                 </Grid>
             </PivotItem>
