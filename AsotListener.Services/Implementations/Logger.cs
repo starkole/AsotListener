@@ -2,7 +2,6 @@
 {
     using System;
     using System.Diagnostics;
-    using System.Threading.Tasks;
     using Contracts;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage;
@@ -14,7 +13,7 @@
         public Logger()
         {
             loggingSession = new LoggingSession("ASOT Listener");
-            loggingChannel = new LoggingChannel($"Logging channel for task {Task.CurrentId}");
+            loggingChannel = new LoggingChannel($"Logging channel for task {Environment.CurrentManagedThreadId}");
             loggingSession.AddLoggingChannel(loggingChannel);
             LogMessage("Logger initialized.");
         }

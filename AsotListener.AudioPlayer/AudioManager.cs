@@ -259,7 +259,7 @@
 
         private async Task showErrorMessageToUserAsync(string message)
         {
-            logger.LogMessage(message);
+            logger.LogMessage(message, LoggingLevel.Critical);
             CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {

@@ -79,7 +79,7 @@
             activeDownloadsByEpisode = new Dictionary<Episode, List<DownloadOperation>>();
             activeDownloadsByDownload = new Dictionary<DownloadOperation, Episode>();
 
-            Application.Current.Suspending += onAppResuming;
+            Application.Current.Resuming += onAppResuming;
             Application.Current.Suspending += onAppSuspending;
 
             initializeAsync();
@@ -201,7 +201,7 @@
                 return;
             }
 
-            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name));
+            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name, StringComparison.CurrentCulture));
             playlist.CurrentTrack = existingTracks.Any() ?
                 existingTracks.First() :
                 await addEpisodeToPlaylist(episode);
@@ -244,7 +244,7 @@
 
         #region Private Methods
 
-        private async void onAppResuming(object sender, SuspendingEventArgs e)
+        private async void onAppResuming(object sender, object e)
         {
             logger.LogMessage("EpisodesViewModel: Application is resuming. Restoring state...");
             await updateEpisodesStates();
@@ -288,7 +288,7 @@
                 string filename = download.ResultFile.Name;
                 string episodeName = fileUtils.ExtractEpisodeNameFromFilename(filename);
 
-                var episode = EpisodeList.Where(e => e.Name.StartsWith(episodeName)).FirstOrDefault();
+                var episode = EpisodeList.Where(e => e.Name.StartsWith(episodeName, StringComparison.CurrentCulture)).FirstOrDefault();
                 if (episode == null)
                 {
                     logger.LogMessage($"EpisodesViewModel: Stale download detected. Stopping download from {download.RequestedUri} to {download.ResultFile.Name}", LoggingLevel.Warning);
@@ -297,6 +297,7 @@
                     break;
                 }
 
+                episode.Status = Downloading;
                 handleDownloadAsync(download, episode, DownloadState.AlreadyRunning);
             }
             logger.LogMessage("EpisodesViewModel: Background downloads processed.");
@@ -343,6 +344,9 @@
                 }
 
                 Progress<DownloadOperation> progressCallback = new Progress<DownloadOperation>(downloadProgress);
+#if DEBUG
+                download.CostPolicy = BackgroundTransferCostPolicy.Always;
+#endif
                 if (downloadState == DownloadState.NotStarted)
                 {
                     logger.LogMessage($"EpisodesViewModel: Download hasn't been started yet. Starting it.");

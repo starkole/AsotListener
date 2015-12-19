@@ -18,9 +18,10 @@
         #region Fields
 
         private readonly DispatcherTimer progressUpdateTimer;
-        private bool isAudioSeekerEnabled;
-        private double audioSeekerValue;
-        private double audioSeekerMaximum = double.MaxValue;
+        private bool isAudioSeekerEnabled = false;
+        private double audioSeekerStepFrequency = 1;
+        private double audioSeekerValue = 0;
+        private double audioSeekerMaximum = 2;
         private string currentTrackPlayedTime;
         private string currentTrackLeftToplay;
         private readonly MediaPlayer mediaPlayer;
@@ -47,18 +48,18 @@
             set { SetField(ref isAudioSeekerEnabled, value, nameof(IsAudioSeekerEnabled)); }
         }
 
+        public double AudioSeekerStepFrequency
+        {
+            get { return audioSeekerStepFrequency; }
+            set
+            { SetField(ref audioSeekerStepFrequency, value, nameof(AudioSeekerStepFrequency)); }
+        }
+
         public double AudioSeekerValue
         {
             get { return audioSeekerValue; }
             set
-            {
-                if (value != mediaPlayer.Position.TotalSeconds)
-                {
-                    mediaPlayer.Position = TimeSpan.FromSeconds(value);
-                    logger.LogMessage("Foreground audio player: Updated current player position.");
-                }
-                SetField(ref audioSeekerValue, value, nameof(AudioSeekerValue));
-            }
+            { SetField(ref audioSeekerValue, value, nameof(AudioSeekerValue)); }
         }
 
         public double AudioSeekerMaximum
@@ -99,7 +100,7 @@
             set { SetField(ref isPlayButtonEnabled, value, nameof(IsPlayButtonEnabled)); }
         }
 
-        public IconElement PlayButtonIcon // TODO: Use two separate buttons for play and pause
+        public IconElement PlayButtonIcon
         {
             get { return playButtonIcon; }
             set
@@ -166,15 +167,20 @@
                 IsNextButtonEnabled = true;
                 IsPlayButtonEnabled = true;
                 IsPreviousButtonEnabled = true;
-                startProgressUpdateTimer();
+                setupAudioProgress();
             }
 
             if (IsBackgroundTaskRunning)
             {
                 AddMediaPlayerEventHandlers();
-                PlayButtonIcon = mediaPlayer.CurrentState == MediaPlayerState.Playing ?
-                    pauseIcon :
-                    playIcon;
+                if (mediaPlayer.CurrentState == MediaPlayerState.Playing)
+                {
+                    PlayButtonIcon = pauseIcon;
+                    startProgressUpdateTimer();
+                } else
+                {
+                    PlayButtonIcon = playIcon;
+                }
             }
             else
             {
@@ -287,40 +293,53 @@
 
         #region Progress Tracking
 
-        private TimeSpan getProgressUpdateTimerInterval(TimeSpan trackDuration)
+        private int getAudioSeekerStepFrequency(TimeSpan timevalue)
         {
-            if (trackDuration.TotalHours >= 1)
+            if (timevalue.TotalHours >= 1)
             {
-                return TimeSpan.FromSeconds(60);
+                return 60;
             }
 
-            if (trackDuration.TotalMinutes >= 30 && trackDuration.TotalMinutes < 60)
+            if (timevalue.TotalMinutes >= 10 && timevalue.TotalMinutes < 30)
             {
-                return TimeSpan.FromSeconds(30);
+                return 10;
             }
 
-            if (trackDuration.TotalMinutes >= 10 && trackDuration.TotalMinutes < 30)
+            if (timevalue.TotalMinutes >= 30 && timevalue.TotalMinutes < 60)
             {
-                return TimeSpan.FromSeconds(10);
+                return 30;
             }
 
-            if (trackDuration.TotalMinutes >= 1 && trackDuration.TotalMinutes < 10)
-            {
-                return TimeSpan.FromSeconds(1);
-            }
+            return 1;
+        }
 
-            return TimeSpan.FromMilliseconds(300);
+        private void setupAudioProgress()
+        {
+            TimeSpan overallDuration;
+            try
+            {
+                overallDuration = mediaPlayer.NaturalDuration <= TimeSpan.Zero ? 
+                    TimeSpan.Zero : 
+                    mediaPlayer.NaturalDuration;
+            }
+            catch
+            {
+                overallDuration = TimeSpan.Zero;
+            }
+            AudioSeekerStepFrequency = getAudioSeekerStepFrequency(overallDuration);
+            logger.LogMessage("Foreground audio player: Starting progress update timer...");
+            
+            CurrentTrackLeftToplay = "-" + (overallDuration - mediaPlayer.Position).ToUserFriendlyString();
+            CurrentTrackPlayedTime = mediaPlayer.Position.ToUserFriendlyString();
+            AudioSeekerMaximum = Math.Round(overallDuration.TotalSeconds) + 1;
+            AudioSeekerValue = Math.Round(mediaPlayer.Position.TotalSeconds);
         }
 
         private void startProgressUpdateTimer()
         {
-            logger.LogMessage("Foreground audio player: Starting progress update timer...");
+            setupAudioProgress();
             IsAudioSeekerEnabled = true;
-            CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToString();
-            CurrentTrackPlayedTime = mediaPlayer.Position.ToString();
-            AudioSeekerValue = mediaPlayer.Position.TotalSeconds;
             progressUpdateTimer.Tick += onTimerTick;
-            progressUpdateTimer.Interval = getProgressUpdateTimerInterval(mediaPlayer.NaturalDuration);
             progressUpdateTimer.Start();
             logger.LogMessage($"Foreground audio player: Progress update timer started with interval {progressUpdateTimer.Interval}.");
         }
@@ -340,9 +359,9 @@
         {
             if (CanUpdateAudioSeeker)
             {
-                AudioSeekerValue = mediaPlayer.Position.TotalSeconds;
-                CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToString();
-                CurrentTrackPlayedTime = mediaPlayer.Position.ToString();
+                AudioSeekerValue = Math.Round(mediaPlayer.Position.TotalSeconds);
+                CurrentTrackLeftToplay = "-" + (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToUserFriendlyString();
+                CurrentTrackPlayedTime = mediaPlayer.Position.ToUserFriendlyString();
             }
         }
 

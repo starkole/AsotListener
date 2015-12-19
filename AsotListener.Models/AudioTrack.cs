@@ -1,7 +1,8 @@
 ﻿namespace AsotListener.Models
 {
     using System;
-
+    using System.Runtime.Serialization;
+    [DataContract]
     public class AudioTrack: BaseModel
     {
         private string name;
@@ -18,20 +19,24 @@
             EpisodeName = episodeName;
         }
 
-        public string EpisodeName { get; } //TODO: Check if this deserializes correctly
+        [DataMember]
+        public string EpisodeName { get; set; }
 
+        [DataMember]
         public string Name
         {
             get { return name; }
             set { SetField(ref name, value, nameof(Name)); }
         }
 
+        [DataMember]
         public string Uri
         {
             get { return uri; }
             set { SetField(ref uri, value, nameof(Uri)); }
         }
 
+        [DataMember]
         public TimeSpan StartPosition
         {
             get { return startPosition; }

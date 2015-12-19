@@ -92,6 +92,15 @@
                                             ConverterParameter=AddToPlaylist}"
                                             Command="{Binding DataContext.AddToPlaylistCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
+                                        <MenuFlyoutItem 
+                                            x:Name="RefreshAllContextMenuItem"
+                                            x:Uid="RefreshAllContextMenuItem"
+                                            Text="refresh all"
+                                            Visibility="{Binding Status,
+                                            Converter={StaticResource ContextMenuVisibilityConverter},
+                                            ConverterParameter=RefreshAll}"
+                                            Command="{Binding DataContext.RefreshCommand, ElementName=EpisodesPivotItem}"
+                                            CommandParameter="{Binding}"/>
                                     </MenuFlyout>
                                 </FlyoutBase.AttachedFlyout>
 
@@ -145,8 +154,11 @@
                             x:Name="AudioSeekSlider"
                             Margin="10,0,20,0"
                             IsEnabled="{Binding IsAudioSeekerEnabled}"
-                            Value="{Binding AudioSeekerValue}"
-                            Maximum="{Binding AudioSeekerMaximum}"/>
+                            StepFrequency="{Binding AudioSeekerStepFrequency}"
+                            Value="{Binding AudioSeekerValue, Mode=OneWay}"
+                            Maximum="{Binding AudioSeekerMaximum}"                            
+                            PointerEntered="onAudioSeekSliderPointerEntered"
+                            PointerCaptureLost="onAudioSeekSliderPointerCaptureLost"/>
                         <Grid Margin="10,0,20,0" Grid.Row="2">
                             <TextBlock 
                                 Grid.Row="0" 

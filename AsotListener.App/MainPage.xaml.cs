@@ -11,7 +11,8 @@
     using Ioc;
     using Models.Enums;
     using Windows.Phone.UI.Input;
-
+    using Windows.Media.Playback;
+    using System;
     public sealed partial class MainPage : Page
     {
         private readonly MainPageViewModel mainPageViewModel;
@@ -27,9 +28,9 @@
             logger = container.Resolve<ILogger>();
             applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
             mainPageViewModel = container.Resolve<MainPageViewModel>();
-                   
+
             NavigationCacheMode = NavigationCacheMode.Required;
-            
+
             InitializeComponent();
             Loaded += onPageLoaded;
             Unloaded += onPageUnloaded;
@@ -58,7 +59,7 @@
             logger.LogMessage($"Navigated to MainPage with parameter {e.Parameter}.");
 
             NavigationParameter navigationParameter = e.Parameter is NavigationParameter ?
-                (NavigationParameter)e.Parameter : 
+                (NavigationParameter)e.Parameter :
                 NavigationParameter.OpenMainPage;
 
             switch (navigationParameter)
@@ -76,14 +77,14 @@
                     break;
             }
         }
-        
+
         #endregion
-       
+
         #region Event Handlers
 
         private void OnEpisodeListElementHolding(object sender, HoldingRoutedEventArgs args)
         {
-            logger.LogMessage($"Holding event with HoldingState={args.HoldingState}");
+            logger.LogMessage($"MainPage: Holding event with HoldingState={args.HoldingState}");
 
             // this event is fired multiple times. We do not want to show the menu twice
             if (args.HoldingState == HoldingState.Started)
@@ -100,10 +101,10 @@
 
         private void onHardwareBackButtonPressed(object sender, BackPressedEventArgs e)
         {
-            logger.LogMessage("Hardware back button pressed.");
+            logger.LogMessage("MainPage: Hardware back button pressed.");
             if (Frame.CanGoBack)
             {
-                logger.LogMessage("Navigating back.");
+                logger.LogMessage("MainPage: Navigating back.");
                 e.Handled = true;
                 Frame.GoBack();
             }
@@ -111,24 +112,37 @@
 
         private void onPageLoaded(object sender, RoutedEventArgs e)
         {
+            logger.LogMessage("MainPage: onPageLoaded event fired.");
             HardwareButtons.BackPressed += onHardwareBackButtonPressed;
         }
 
         private void onPageUnloaded(object sender, RoutedEventArgs e)
         {
+            logger.LogMessage("MainPage: onPageUnloaded event fired.");
             HardwareButtons.BackPressed -= onHardwareBackButtonPressed;
         }
 
-        #endregion
-
-        private void AudioSeekSlider_PointerPressed(object sender, PointerRoutedEventArgs e)
+        private void onAudioSeekSliderPointerEntered(object sender, PointerRoutedEventArgs e)
         {
+            logger.LogMessage("MainPage: onAudioSeekSliderPointerEntered event fired.");
             MainPageViewModel.PlayerModel.CanUpdateAudioSeeker = false;
         }
 
-        private void AudioSeekSlider_PointerReleased(object sender, PointerRoutedEventArgs e)
+        private void onAudioSeekSliderPointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
+            logger.LogMessage("MainPage: onAudioSeekSliderPointerCaptureLost event fired.");
+            if (BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Playing)
+            {
+                var slider = sender as Slider;
+                var newPosition = slider.Value < 0 ? 0 : slider.Value;
+                var totalSeconds = Math.Round(BackgroundMediaPlayer.Current.NaturalDuration.TotalSeconds) - 1;
+                newPosition = newPosition > totalSeconds ? totalSeconds : newPosition;
+
+                BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(newPosition);
+                logger.LogMessage($"MainPage: Player position updated to {newPosition} seconds.");
+            }
             MainPageViewModel.PlayerModel.CanUpdateAudioSeeker = true;
         }
+        #endregion
     }
 }

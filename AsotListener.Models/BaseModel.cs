@@ -2,7 +2,9 @@
 {
     using System.ComponentModel;
     using System.Collections.Generic;
-    
+    using System.Runtime.Serialization;
+
+    [DataContract]
     public class BaseModel : INotifyPropertyChanged
     {
         #region INotifyPropertyChanged implementation

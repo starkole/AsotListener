@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Models
+﻿namespace AsotListener.Models.Enums
 {
     public enum ContextMenuItem
     {
@@ -6,6 +6,7 @@
         CancelDownload,
         Delete,
         Play,
-        AddToPlaylist
+        AddToPlaylist,
+        RefreshAll
     }
 }

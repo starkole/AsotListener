@@ -2,10 +2,10 @@
 {
     using System;
     using Models.Enums;
-    using Models;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Data;
     using static Models.Enums.EpisodeStatus;
+    using static Models.Enums.ContextMenuItem;
 
     public class ContextMenuVisibilityConverter : IValueConverter
     {
@@ -31,37 +31,38 @@
 
             switch (menuItem)
             {
-                case ContextMenuItem.Download:
+                case Download:
                     if (status == CanBeLoaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
-                case ContextMenuItem.CancelDownload:
+                case CancelDownload:
                     if (status == Downloading)
                     {
                         result = Visibility.Visible;
                     }
                     break;
-                case ContextMenuItem.Delete:
+                case Delete:
                     if (status == Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
-                case ContextMenuItem.Play:
+                case Play:
                     if (status == Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
-                case ContextMenuItem.AddToPlaylist:
+                case AddToPlaylist:
                     if (status == Loaded)
                     {
                         result = Visibility.Visible;
                     }
                     break;
-                default:
+                case RefreshAll:
+                    result = Visibility.Visible;
                     break;
             }
 

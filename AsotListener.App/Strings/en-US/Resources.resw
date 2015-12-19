@@ -156,4 +156,7 @@
   <data name="EpisodeStatusCanBeLoaded" xml:space="preserve">
     <value> </value>
   </data>
+  <data name="RefreshAllContextMenuItem.Text" xml:space="preserve">
+    <value>refresh all</value>
+  </data>
 </root>
