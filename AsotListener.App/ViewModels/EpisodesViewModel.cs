@@ -179,6 +179,18 @@
             var episode = boxedEpisode as Episode;
             if (canEpisodeBeDeleted(episode))
             {
+                var tracksToRemove = playlist.TrackList.Where(t => t.EpisodeName == episode.Name).ToList();
+                foreach (var track in tracksToRemove)
+                {
+                    playlist.TrackList.Remove(track);
+                }
+
+                if (playlist.CurrentTrack.EpisodeName == episode.Name)
+                {
+                    playlist.CurrentTrack = playlist.TrackList.FirstOrDefault();
+                }
+
+                await playlist.SavePlaylistToLocalStorage();
                 await fileUtils.DeleteEpisode(episode.Name);
             }
             episode.Status = CanBeLoaded;
