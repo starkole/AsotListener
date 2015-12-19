@@ -67,7 +67,7 @@
             {
                 logger.LogMessage("BackgroundAudio: Player playing.");
                 smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
-                if (playlist.CurrentTrack.StartPosition != TimeSpan.Zero)
+                if (CanUpdatePlayerPosition())
                 {
                     // Start position must be set after payback has already been started
                     sender.Position = playlist.CurrentTrack.StartPosition;
@@ -89,6 +89,11 @@
             }
         }
 
+        private bool CanUpdatePlayerPosition() =>
+            playlist.CurrentTrack != null &&
+            playlist.CurrentTrack.StartPosition > TimeSpan.Zero &&
+            playlist.CurrentTrack.StartPosition < TimeSpan.FromSeconds(mediaPlayer.NaturalDuration.TotalSeconds - 1);
+
         private async void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
             await showErrorMessageToUserAsync($"BackgroundAudio: Failed to play media file. Error {args.ExtendedErrorCode}. {args.ErrorMessage}");
@@ -101,7 +106,7 @@
             sender.Play();
             smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
-            smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack.Name;
+            smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack?.Name ?? string.Empty;
             smtc.DisplayUpdater.Update();
         }
 
@@ -247,14 +252,20 @@
         public async Task SaveCurrentState()
         {
             logger.LogMessage("BackgroundAudio: Saving current state.");
-            playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
+            if (playlist.CurrentTrack != null)
+            {
+                playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
+            }
+
             await playlist.SavePlaylistToLocalStorage();
+            logger.LogMessage("BackgroundAudio: Current state saved.");
         }
 
         public async Task LoadState()
         {
             logger.LogMessage("BackgroundAudio: Loading playlist from local storage.");
             await playlist.LoadPlaylistFromLocalStorage();
+            logger.LogMessage("BackgroundAudio: Current state loaded.");
         }
 
         private async Task showErrorMessageToUserAsync(string message)

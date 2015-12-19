@@ -194,7 +194,7 @@
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             RemoveMediaPlayerEventHandlers();
-            if (mediaPlayer.Position != TimeSpan.Zero)
+            if (Playlist.CurrentTrack != null && mediaPlayer.Position != TimeSpan.Zero)
             {
                 Playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
             }
@@ -329,7 +329,7 @@
             AudioSeekerStepFrequency = getAudioSeekerStepFrequency(overallDuration);
             logger.LogMessage("Foreground audio player: Starting progress update timer...");
             
-            CurrentTrackLeftToplay = "-" + (overallDuration - mediaPlayer.Position).ToUserFriendlyString();
+            CurrentTrackLeftToplay = (overallDuration - mediaPlayer.Position).ToUserFriendlyString();
             CurrentTrackPlayedTime = mediaPlayer.Position.ToUserFriendlyString();
             AudioSeekerMaximum = Math.Round(overallDuration.TotalSeconds) + 1;
             AudioSeekerValue = Math.Round(mediaPlayer.Position.TotalSeconds);
@@ -360,7 +360,7 @@
             if (CanUpdateAudioSeeker)
             {
                 AudioSeekerValue = Math.Round(mediaPlayer.Position.TotalSeconds);
-                CurrentTrackLeftToplay = "-" + (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToUserFriendlyString();
+                CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToUserFriendlyString();
                 CurrentTrackPlayedTime = mediaPlayer.Position.ToUserFriendlyString();
             }
         }

@@ -7,6 +7,6 @@
         Delete,
         Play,
         AddToPlaylist,
-        RefreshAll
+        ClearPlaylist
     }
 }

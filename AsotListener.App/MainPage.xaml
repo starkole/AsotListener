@@ -93,14 +93,13 @@
                                             Command="{Binding DataContext.AddToPlaylistCommand, ElementName=EpisodesPivotItem}"
                                             CommandParameter="{Binding}"/>
                                         <MenuFlyoutItem 
-                                            x:Name="RefreshAllContextMenuItem"
-                                            x:Uid="RefreshAllContextMenuItem"
-                                            Text="refresh all"
+                                            x:Name="ClearPlaylistMenuItem"
+                                            x:Uid="ClearPlaylistContextMenuItem"
+                                            Text="clear playlist"
                                             Visibility="{Binding Status,
                                             Converter={StaticResource ContextMenuVisibilityConverter},
-                                            ConverterParameter=RefreshAll}"
-                                            Command="{Binding DataContext.RefreshCommand, ElementName=EpisodesPivotItem}"
-                                            CommandParameter="{Binding}"/>
+                                            ConverterParameter=ClearPlaylist}"
+                                            Command="{Binding DataContext.ClearPlaylistCommand, ElementName=EpisodesPivotItem}"/>
                                     </MenuFlyout>
                                 </FlyoutBase.AttachedFlyout>
 
@@ -168,7 +167,8 @@
                             <TextBlock 
                                 Grid.Row="0" 
                                 HorizontalAlignment="Right" 
-                                Text="{Binding CurrentTrackLeftToplay}"
+                                Text="{Binding CurrentTrackLeftToplay}" 
+                                TextAlignment="Right"
                                 Style="{StaticResource BodyTextBlockStyle}"/>
                         </Grid>
                         <StackPanel 

@@ -61,7 +61,7 @@
                         result = Visibility.Visible;
                     }
                     break;
-                case RefreshAll:
+                case ClearPlaylist:
                     result = Visibility.Visible;
                     break;
             }

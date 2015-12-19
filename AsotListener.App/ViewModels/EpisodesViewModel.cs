@@ -49,6 +49,7 @@
         public ICommand DeleteCommand { get; }
         public ICommand PlayCommand { get; }
         public ICommand AddToPlaylistCommand { get; }
+        public ICommand ClearPlaylistCommand { get; }
 
         #endregion
 
@@ -75,6 +76,7 @@
             DeleteCommand = new RelayCommand((Action<object>)deleteEpisodeFromStorage);
             PlayCommand = new RelayCommand((Action<object>)playEpisode);
             AddToPlaylistCommand = new RelayCommand((Action<object>)addToPlaylistCommand);
+            ClearPlaylistCommand = new RelayCommand((Action)clearPlaylistCommand);
 
             activeDownloadsByEpisode = new Dictionary<Episode, List<DownloadOperation>>();
             activeDownloadsByDownload = new Dictionary<DownloadOperation, Episode>();
@@ -252,6 +254,15 @@
             logger.LogMessage("EpisodesViewModel: Add to playlist command executed.");
         }
 
+        private async void clearPlaylistCommand()
+        {
+            logger.LogMessage("EpisodesViewModel: Executing ClearPlaylist command...");
+            playlist.CurrentTrack = null;
+            playlist.TrackList.Clear();
+            await playlist.SavePlaylistToLocalStorage();
+            await updateEpisodesStates();
+            logger.LogMessage("EpisodesViewModel: ClearPlaylist command executed.");
+        }
         #endregion
 
         #region Private Methods

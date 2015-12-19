@@ -2,9 +2,10 @@
 {
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
+    using System.Linq;
     using Contracts;
     using Models;
-
+    using Windows.Foundation.Diagnostics;
     public sealed class Playlist : BaseModel, IPlayList
     {
         private ObservableCollection<AudioTrack> trackList = new ObservableCollection<AudioTrack>();
@@ -45,31 +46,40 @@
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
-            logger.LogMessage("Playlist initialized.");
+            logger.LogMessage("Playlist: Playlist initialized.");
         }
 
         public async Task SavePlaylistToLocalStorage()
         {
-            logger.LogMessage("Saving playlist state to local storage...");
+            logger.LogMessage("Playlist: Saving playlist state to local storage...");
             await fileUtils.SaveToXmlFile(TrackList, playlistFilename);
             await fileUtils.SaveToXmlFile(CurrentTrack, currentTrackFilename);
-            logger.LogMessage("Playlist state saved.");
+            logger.LogMessage("Playlist: Playlist state saved.");
         }
 
         public async Task LoadPlaylistFromLocalStorage()
         {
-            logger.LogMessage("Loading playlist state from local storage...");
+            logger.LogMessage("Playlist: Loading playlist state from local storage...");
             TrackList = await fileUtils.ReadFromXmlFile<ObservableCollection<AudioTrack>>(playlistFilename);
             CurrentTrack = await fileUtils.ReadFromXmlFile<AudioTrack>(currentTrackFilename);
-            logger.LogMessage("Playlist loaded.");
             TrackList = TrackList ?? new ObservableCollection<AudioTrack>();
-            if (CurrentTrack != null && !TrackList.Contains(currentTrack))
+            logger.LogMessage("Playlist: Playlist loaded.");
+            if (CurrentTrack == null)
             {
-                logger.LogMessage(
-                    "Current track is not present in playlist. Adding it to playlist.", 
-                    Windows.Foundation.Diagnostics.LoggingLevel.Warning);
-                TrackList.Add(CurrentTrack);
+                return;
             }
+
+            var trackListItem = TrackList.FirstOrDefault(t => t.Uri == CurrentTrack.Uri);
+            if (trackListItem == null)
+            {
+                logger.LogMessage("Playlist: Current track is not present in playlist. Adding it to playlist.", LoggingLevel.Warning);
+                TrackList.Add(CurrentTrack);
+                return;
+            }
+
+            trackListItem.StartPosition = CurrentTrack.StartPosition;
+            CurrentTrack = trackListItem;
+            logger.LogMessage("Playlist: Current track updated.");
         }
 
         public string GetAudioTrackName(string episodeName, int partNumber) =>
