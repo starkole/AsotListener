@@ -211,7 +211,7 @@
         private void onPreviousTrackAction()
         {
             logger.LogMessage("Foreground audio player 'Previous Track' command fired.");
-            var value = new ValueSet() { { Constants.SkipPrevious, string.Empty } };
+            var value = new ValueSet { { Constants.SkipPrevious, string.Empty } };
             BackgroundMediaPlayer.SendMessageToBackground(value);
 
             // Prevent the user from repeatedly pressing the button and causing 
@@ -230,7 +230,7 @@
             if (IsBackgroundTaskRunning &&
                 mediaPlayer.CurrentState == MediaPlayerState.Playing)
             {
-                var message = new ValueSet() { { Constants.PausePlayback, string.Empty } };
+                var message = new ValueSet { { Constants.PausePlayback, string.Empty } };
                 BackgroundMediaPlayer.SendMessageToBackground(message);
                 return;
             }
@@ -242,7 +242,7 @@
         {
             logger.LogMessage("Foreground audio player 'Next Track' command fired.");
 
-            var value = new ValueSet() { { Constants.SkipNext, string.Empty } };
+            var value = new ValueSet { { Constants.SkipNext, string.Empty } };
             BackgroundMediaPlayer.SendMessageToBackground(value);
 
             // Prevent the user from repeatedly pressing the button and causing 
@@ -394,7 +394,7 @@
             if (result == true)
             {
                 logger.LogMessage("Foreground audio player: Background Task is running. Sending play command.");
-                var message = new ValueSet() { { Constants.StartPlayback, string.Empty } };
+                var message = new ValueSet { { Constants.StartPlayback, string.Empty } };
                 BackgroundMediaPlayer.SendMessageToBackground(message);
             }
             else

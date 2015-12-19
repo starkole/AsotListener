@@ -227,7 +227,7 @@
                 return;
             }
 
-            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name));
+            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name, StringComparison.CurrentCulture));
             if (existingTracks.Any())
             {
                 logger.LogMessage("EpisodesViewModel: Episode is already in playlist.");
@@ -288,7 +288,7 @@
                 string filename = download.ResultFile.Name;
                 string episodeName = fileUtils.ExtractEpisodeNameFromFilename(filename);
 
-                var episode = EpisodeList.Where(e => e.Name.StartsWith(episodeName, StringComparison.CurrentCulture)).FirstOrDefault();
+                var episode = EpisodeList.FirstOrDefault(e => e.Name.StartsWith(episodeName, StringComparison.CurrentCulture));
                 if (episode == null)
                 {
                     logger.LogMessage($"EpisodesViewModel: Stale download detected. Stopping download from {download.RequestedUri} to {download.ResultFile.Name}", LoggingLevel.Warning);
@@ -340,7 +340,7 @@
                 }
                 else
                 {
-                    activeDownloadsByEpisode.Add(episode, new List<DownloadOperation>() { download });
+                    activeDownloadsByEpisode.Add(episode, new List<DownloadOperation> { download });
                 }
 
                 Progress<DownloadOperation> progressCallback = new Progress<DownloadOperation>(downloadProgress);
@@ -470,7 +470,7 @@
             {
                 if (existingFileNames.Contains(episode.Name))
                 {
-                    if (playlist.TrackList.Where(t => t.EpisodeName == episode.Name).Any())
+                    if (playlist.TrackList.Any(t => t.EpisodeName == episode.Name))
                     {
                         episode.Status = Playing;
                         break;

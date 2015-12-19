@@ -13,7 +13,7 @@
         private const string fileExtension = ".mp3";
         private const int connectionTimeoutSeconds = 30;
 
-        private HttpClient httpClient;
+        private readonly HttpClient httpClient;
         private ILogger logger;
         private IFileUtils fileUtils;
 

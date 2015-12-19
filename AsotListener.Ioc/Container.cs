@@ -5,7 +5,7 @@
 
     public class Container: IContainer
     {
-        private static UnityContainer container = new UnityContainer();
+        private static readonly UnityContainer container = new UnityContainer();
         private static Lazy<IContainer> lazy = new Lazy<IContainer>(() => new Container());
 
         public static IContainer Instance => lazy.Value;

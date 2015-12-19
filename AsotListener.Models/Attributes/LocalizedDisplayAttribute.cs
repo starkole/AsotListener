@@ -7,7 +7,7 @@
     public class LocalizedDisplayAttribute: DisplayAttribute
     {
         private static readonly ResourceLoader ResourceLoader = ResourceLoader.GetForCurrentView();
-        private string localizedValue;
+        private readonly string localizedValue;
 
         public LocalizedDisplayAttribute(string fallbackName, string resouceKey)
             :this(fallbackName)

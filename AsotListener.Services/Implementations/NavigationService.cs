@@ -17,7 +17,7 @@
         private Frame frame;
         private Type mainPageType;
         private TransitionCollection transitions;
-        private ILogger logger;
+        private readonly ILogger logger;
         private bool isInitialized = false;
         private EventHandler<object> deferredNavigationHandler;
 
@@ -44,7 +44,7 @@
             if (frame == null)
             {
                 logger.LogMessage("NavigationService: No root frame found. Creating the new one.");
-                frame = new Frame()
+                frame = new Frame
                 {
                     CacheSize = 1,
                     Language = ApplicationLanguages.Languages[0]
@@ -108,7 +108,7 @@
         {
             logger.LogMessage("NavigationService: Navigated to root frame for the first time.");
             var rootFrame = sender as Frame;
-            rootFrame.ContentTransitions = transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
+            rootFrame.ContentTransitions = transitions ?? new TransitionCollection { new NavigationThemeTransition() };
             rootFrame.Navigated -= onRootFrameFirstNavigated;
             logger.LogMessage("NavigationService: Root frame transitions restored.");
             isInitialized = true;

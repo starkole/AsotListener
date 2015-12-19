@@ -31,7 +31,9 @@
         /// <returns>The value to be passed to the source object.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
+#pragma warning disable RECS0083 // Shows NotImplementedException throws in the quick task bar
             throw new NotImplementedException();
+#pragma warning restore RECS0083 // Shows NotImplementedException throws in the quick task bar
         }
     }
 }

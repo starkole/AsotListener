@@ -7,8 +7,8 @@
     using Windows.Storage;
     public sealed class Logger : ILogger, IDisposable
     {
-        LoggingSession loggingSession;
-        LoggingChannel loggingChannel;
+        readonly LoggingSession loggingSession;
+        readonly LoggingChannel loggingChannel;
 
         public Logger()
         {

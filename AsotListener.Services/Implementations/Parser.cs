@@ -45,7 +45,7 @@
                         Url = matches[i].Groups[1].Value
                     });
                 }
-            };
+            }
 
             logger.LogMessage("Episode list parsed.");
             return result;

@@ -37,7 +37,7 @@
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             deferral = taskInstance.GetDeferral();
-            taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
+            taskInstance.Canceled += OnCanceled;
             taskInstance.Task.Completed += Taskcompleted;
 
             IContainer container = Container.Instance;
@@ -61,7 +61,7 @@
             applicationSettingsHelper.SaveSettingsValue(Constants.IsBackgroundTaskRunning, true);
 
             BackgroundTaskStartedEvent.Set();
-            ValueSet message = new ValueSet() { { Constants.IsBackgroundTaskRunning, true } };
+            ValueSet message = new ValueSet { { Constants.IsBackgroundTaskRunning, true } };
             BackgroundMediaPlayer.SendMessageToForeground(message);            
             logger.LogMessage($"BackgroundAudioTask initialized.");
         }

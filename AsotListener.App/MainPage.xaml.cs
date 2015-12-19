@@ -73,8 +73,6 @@
                     MainPivot.SelectedItem = PlayerPivotItem;
                     MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
                     break;
-                default:
-                    break;
             }
         }
 

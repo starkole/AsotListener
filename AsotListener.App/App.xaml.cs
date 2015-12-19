@@ -42,15 +42,12 @@
         /// <summary>
         /// Invoked when the application is launched normally by the end user.
         /// </summary>
-        /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        /// <param name="args">Details about the launch request and process.</param>
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             logger.LogMessage("Application launched.");
 #if DEBUG
-            if (Debugger.IsAttached)
-            {
-                DebugSettings.EnableFrameRateCounter = true;
-            }
+            DebugSettings.EnableFrameRateCounter |= Debugger.IsAttached;
 #endif            
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
             Window.Current.Activate();

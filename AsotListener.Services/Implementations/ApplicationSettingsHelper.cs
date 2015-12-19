@@ -8,7 +8,7 @@
 
     public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
     {
-        private ILogger logger;
+        private readonly ILogger logger;
         private const string mutexName = "AsotListener.ApplicationSettingsHelper.Mutex";
 
         public ApplicationSettingsHelper(ILogger logger)

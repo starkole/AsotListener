@@ -96,7 +96,7 @@
         /// Data used by the command. If the command does not require data to be passed, this object can be set to null.
         /// </param>
         /// <returns>true if this command can be executed; otherwise, false.</returns>
-        public bool CanExecute(object parameter) => canExecute == null ? true : canExecute(parameter);
+        public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
 
         /// <summary>
         /// Executes the <see cref="RelayCommand"/> on the current command target.

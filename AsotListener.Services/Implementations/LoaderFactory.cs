@@ -4,8 +4,8 @@
 
     public class LoaderFactory: ILoaderFactory
     {
-        private IFileUtils fileUtils;
-        private ILogger logger;
+        private readonly IFileUtils fileUtils;
+        private readonly ILogger logger;
 
         public LoaderFactory(ILogger logger, IFileUtils fileUtils)
         {

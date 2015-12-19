@@ -77,7 +77,7 @@
             {
                 IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
                 result = files?
-                    .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName))
+                    .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture))
                     .ToList() ?? result;
                 logger.LogMessage($"Found {result.Count} files.");
             }
