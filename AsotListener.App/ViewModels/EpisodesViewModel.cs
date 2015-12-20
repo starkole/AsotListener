@@ -496,11 +496,11 @@
                     if (playlist.TrackList.Any(t => t.EpisodeName == episode.Name))
                     {
                         episode.Status = Playing;
-                        break;
+                        continue;
                     }
 
                     episode.Status = Loaded;
-                    break;
+                    continue;
                 }
 
                 if (activeDownloadsByEpisode.ContainsKey(episode))

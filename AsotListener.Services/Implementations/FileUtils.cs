@@ -53,7 +53,6 @@
             var result = new List<string>();
             try
             {
-
                 IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
                 result = files?
                     .Where(f => f.FileType == fileExtension)
