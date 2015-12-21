@@ -279,7 +279,7 @@
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             logger.LogMessage("EpisodesViewModel: Application is suspending. Saving state...");
-            await loadEpisodesList();
+            await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
             logger.LogMessage("EpisodesViewModel: State saved on application suspending.", LoggingLevel.Information);
             deferral.Complete();
         }

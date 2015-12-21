@@ -1,7 +1,6 @@
 ﻿namespace AsotListener.AudioPlayer
 {
     using System;
-    using System.Threading;
     using Windows.ApplicationModel.Background;
     using Windows.Media;
     using Windows.Media.Playback;
@@ -22,7 +21,6 @@
         private bool isDisposed = false;
         private AudioManager audioManager;
         private BackgroundTaskDeferral deferral;
-        private AutoResetEvent BackgroundTaskStartedEvent = new AutoResetEvent(false);
         private IApplicationSettingsHelper applicationSettingsHelper;
         private ILogger logger;
 
@@ -45,25 +43,35 @@
 
             logger = container.Resolve<ILogger>();
             logger.LogMessage($"BackgroundAudioTask {taskInstance.Task.Name} starting...");
-            applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
-            IPlayList playlist = container.Resolve<IPlayList>();
-            await playlist.LoadPlaylistFromLocalStorage();
 
-            audioManager = new AudioManager(
-                logger,
-                playlist,
-                BackgroundMediaPlayer.Current,
-                SystemMediaTransportControls.GetForCurrentView(),
-                waitForTaskReinitialization);
+            try {
 
-            BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
-           
-            applicationSettingsHelper.SaveSettingsValue(Constants.IsBackgroundTaskRunning, true);
+                // Ensure that Background Audio is initialized by accessing BackgroundMediaPlayer.Current
+                var state = BackgroundMediaPlayer.Current.CurrentState;
+                logger.LogMessage($"BackgroundAudioTask BackgroundMediaPlayer state is {state}.", LoggingLevel.Information);
 
-            BackgroundTaskStartedEvent.Set();
-            ValueSet message = new ValueSet { { Constants.IsBackgroundTaskRunning, true } };
-            BackgroundMediaPlayer.SendMessageToForeground(message);            
-            logger.LogMessage($"BackgroundAudioTask initialized.", LoggingLevel.Information);
+                applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
+                IPlayList playlist = container.Resolve<IPlayList>();
+                await playlist.LoadPlaylistFromLocalStorage();
+
+                audioManager = new AudioManager(
+                    logger,
+                    playlist,
+                    SystemMediaTransportControls.GetForCurrentView());
+
+                BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
+
+                applicationSettingsHelper.SaveSettingsValue(Constants.IsBackgroundTaskRunning, true);
+
+                ValueSet message = new ValueSet { { Constants.IsBackgroundTaskRunning, true } };
+                BackgroundMediaPlayer.SendMessageToForeground(message);
+                logger.LogMessage($"BackgroundAudioTask initialized.", LoggingLevel.Information);
+            }
+            catch(Exception ex)
+            {
+                logger.LogMessage($"Unhandled exception in BackgroundAudioTask. {ex.Message}", LoggingLevel.Critical);
+                Dispose();                
+            }
         }
 
         /// <summary>
@@ -73,7 +81,6 @@
         {
             logger.LogMessage($"Background Audio Task {sender.TaskId} Completed...");
             Dispose();
-            deferral.Complete();
         }
 
         /// <summary>
@@ -86,19 +93,6 @@
         {
             logger.LogMessage($"Background Audio Task {sender.Task.TaskId} Cancel requested because of {reason}.", LoggingLevel.Information);
             Dispose();
-            deferral.Complete();
-        }
-
-        private void waitForTaskReinitialization()
-        {
-            logger.LogMessage("BackgroundAudioTask: It seems the task is not running yet. Waiting for it to start.");
-            bool result = BackgroundTaskStartedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
-            if (!result)
-            {
-                const string message = "BackgroundAudioTask: Background Task didn't initialize in time.";
-                logger.LogMessage(message, LoggingLevel.Critical);
-                throw new Exception(message);
-            }
         }
 
         #endregion
@@ -150,13 +144,17 @@
             try
             {
                 applicationSettingsHelper?.SaveSettingsValue(Constants.IsBackgroundTaskRunning, false);
-                BackgroundTaskStartedEvent.Dispose();
                 audioManager?.Dispose();
                 logger?.SaveLogsToFile();
+                BackgroundMediaPlayer.Shutdown();
             }
             catch (Exception ex)
             {
                 logger?.LogMessage($"BackgroundAudioTask: Error when disposing. {ex.Message}", LoggingLevel.Error);
+            }
+            finally
+            {
+                deferral.Complete();
             }
 
             logger?.LogMessage($"BackgroundAudioTask has been shut down correctly.");

@@ -24,7 +24,6 @@
         private double audioSeekerMaximum = 2;
         private string currentTrackPlayedTime;
         private string currentTrackLeftToplay;
-        private readonly MediaPlayer mediaPlayer;
         private bool isPreviousButtonEnabled;
         private bool isNextButtonEnabled;
         private bool isPlayButtonEnabled;
@@ -40,6 +39,7 @@
 
         #region Properties
 
+        private MediaPlayer MediaPlayer => BackgroundMediaPlayer.Current;
         private bool IsBackgroundTaskRunning => applicationSettingsHelper.ReadSettingsValue<bool>(Constants.IsBackgroundTaskRunning);
 
         public bool IsAudioSeekerEnabled
@@ -123,15 +123,13 @@
             ILogger logger,
             IPlayList playlist,
             IApplicationSettingsHelper applicationSettingsHelper,
-            INavigationService navigationService,
-            MediaPlayer mediaPlayer)
+            INavigationService navigationService)
         {
             backgroundAudioInitializedEvent = new AutoResetEvent(false);
             Playlist = playlist;
             this.logger = logger;
             this.navigationService = navigationService;
             this.applicationSettingsHelper = applicationSettingsHelper;
-            this.mediaPlayer = mediaPlayer;
             pauseIcon = new SymbolIcon(Symbol.Pause);
             playIcon = new SymbolIcon(Symbol.Play);
             PlayButtonIcon = playIcon;
@@ -144,6 +142,10 @@
 
             Application.Current.Suspending += onAppSuspending;
             Application.Current.Resuming += initializeAsync;
+
+            // Ensure that Background Audio is initialized by accessing BackgroundMediaPlayer.Current
+            var state = MediaPlayer.CurrentState;
+            logger.LogMessage($"Foreground audio: Current media player state is {state}.", LoggingLevel.Information);
 
             initializeAsync(null, null);
             logger.LogMessage("Foreground audio player initialized.", LoggingLevel.Information);
@@ -160,6 +162,7 @@
         private async void initializeAsync(object sender, object e)
         {
             logger.LogMessage("Foreground audio player updating current state...");
+
             await Playlist.LoadPlaylistFromLocalStorage();
             if (Playlist.CurrentTrack != null)
             {
@@ -173,11 +176,12 @@
             if (IsBackgroundTaskRunning)
             {
                 AddMediaPlayerEventHandlers();
-                if (mediaPlayer.CurrentState == MediaPlayerState.Playing)
+                if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
                 {
                     PlayButtonIcon = pauseIcon;
                     startProgressUpdateTimer();
-                } else
+                }
+                else
                 {
                     PlayButtonIcon = playIcon;
                 }
@@ -194,9 +198,9 @@
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             RemoveMediaPlayerEventHandlers();
-            if (Playlist.CurrentTrack != null && mediaPlayer.Position != TimeSpan.Zero)
+            if (Playlist.CurrentTrack != null && MediaPlayer.Position != TimeSpan.Zero)
             {
-                Playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
+                Playlist.CurrentTrack.StartPosition = MediaPlayer.Position;
             }
 
             await Playlist.SavePlaylistToLocalStorage();
@@ -228,7 +232,7 @@
             IsPlayButtonEnabled = false;
 
             if (IsBackgroundTaskRunning &&
-                mediaPlayer.CurrentState == MediaPlayerState.Playing)
+                MediaPlayer.CurrentState == MediaPlayerState.Playing)
             {
                 var message = new ValueSet { { Constants.PausePlayback, string.Empty } };
                 BackgroundMediaPlayer.SendMessageToBackground(message);
@@ -315,24 +319,17 @@
 
         private void setupAudioProgress()
         {
-            TimeSpan overallDuration;
-            try
-            {
-                overallDuration = mediaPlayer.NaturalDuration <= TimeSpan.Zero ? 
-                    TimeSpan.Zero : 
-                    mediaPlayer.NaturalDuration;
-            }
-            catch
-            {
-                overallDuration = TimeSpan.Zero;
-            }
+            TimeSpan overallDuration = MediaPlayer.NaturalDuration <= TimeSpan.Zero ?
+                    TimeSpan.Zero :
+                    MediaPlayer.NaturalDuration;
+            TimeSpan currentPosition = MediaPlayer.Position;
             AudioSeekerStepFrequency = getAudioSeekerStepFrequency(overallDuration);
             logger.LogMessage("Foreground audio player: Starting progress update timer...");
-            
-            CurrentTrackLeftToplay = (overallDuration - mediaPlayer.Position).ToUserFriendlyString();
-            CurrentTrackPlayedTime = mediaPlayer.Position.ToUserFriendlyString();
+
+            CurrentTrackLeftToplay = (overallDuration - currentPosition).ToUserFriendlyString();
+            CurrentTrackPlayedTime = currentPosition.ToUserFriendlyString();
             AudioSeekerMaximum = Math.Round(overallDuration.TotalSeconds) + 1;
-            AudioSeekerValue = Math.Round(mediaPlayer.Position.TotalSeconds);
+            AudioSeekerValue = Math.Round(currentPosition.TotalSeconds);
         }
 
         private void startProgressUpdateTimer()
@@ -359,9 +356,9 @@
         {
             if (CanUpdateAudioSeeker)
             {
-                AudioSeekerValue = Math.Round(mediaPlayer.Position.TotalSeconds);
-                CurrentTrackLeftToplay = (mediaPlayer.NaturalDuration - mediaPlayer.Position).ToUserFriendlyString();
-                CurrentTrackPlayedTime = mediaPlayer.Position.ToUserFriendlyString();
+                AudioSeekerValue = Math.Round(MediaPlayer.Position.TotalSeconds);
+                CurrentTrackLeftToplay = (MediaPlayer.NaturalDuration - MediaPlayer.Position).ToUserFriendlyString();
+                CurrentTrackPlayedTime = MediaPlayer.Position.ToUserFriendlyString();
             }
         }
 
@@ -371,13 +368,13 @@
 
         private void RemoveMediaPlayerEventHandlers()
         {
-            mediaPlayer.CurrentStateChanged -= onMediaPlayerCurrentStateChanged;
+            MediaPlayer.CurrentStateChanged -= onMediaPlayerCurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground -= onMessageReceivedFromBackground;
         }
 
         private void AddMediaPlayerEventHandlers()
         {
-            mediaPlayer.CurrentStateChanged += onMediaPlayerCurrentStateChanged;
+            MediaPlayer.CurrentStateChanged += onMediaPlayerCurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground += onMessageReceivedFromBackground;
         }
 

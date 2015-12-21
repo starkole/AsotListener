@@ -15,7 +15,6 @@
             container.RegisterType<PlayerViewModel>();
             container.RegisterType<EpisodesViewModel>();
             container.RegisterType<MainPageViewModel>();
-            container.RegisterInstance(BackgroundMediaPlayer.Current);
         }
     }
 }
