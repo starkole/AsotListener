@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using Contracts;
     using Models;
+    using Windows.Foundation.Diagnostics;
 
     public sealed class Loader : ILoader
     {
@@ -24,7 +25,7 @@
 
             httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(connectionTimeoutSeconds);
-            logger.LogMessage("Loader initialized.");
+            logger.LogMessage("Loader initialized.", LoggingLevel.Information);
         }
 
         public async Task<string> FetchEpisodeListAsync()

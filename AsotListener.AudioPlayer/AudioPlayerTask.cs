@@ -63,7 +63,7 @@
             BackgroundTaskStartedEvent.Set();
             ValueSet message = new ValueSet { { Constants.IsBackgroundTaskRunning, true } };
             BackgroundMediaPlayer.SendMessageToForeground(message);            
-            logger.LogMessage($"BackgroundAudioTask initialized.");
+            logger.LogMessage($"BackgroundAudioTask initialized.", LoggingLevel.Information);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@
         /// </summary>
         private void OnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            logger.LogMessage($"Background Audio Task {sender.Task.TaskId} Cancel requested because of {reason}.");
+            logger.LogMessage($"Background Audio Task {sender.Task.TaskId} Cancel requested because of {reason}.", LoggingLevel.Information);
             Dispose();
             deferral.Complete();
         }
@@ -152,7 +152,6 @@
                 applicationSettingsHelper?.SaveSettingsValue(Constants.IsBackgroundTaskRunning, false);
                 BackgroundTaskStartedEvent.Dispose();
                 audioManager?.Dispose();
-                BackgroundMediaPlayer.Shutdown();
                 logger?.SaveLogsToFile();
             }
             catch (Exception ex)

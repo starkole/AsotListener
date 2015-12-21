@@ -76,6 +76,8 @@
                 logger.LogMessage(message, LoggingLevel.Critical);
                 throw new Exception(message);
             }
+
+            logger.LogMessage("NavigationService initialized.", LoggingLevel.Information);
         }
 
         public void Navigate(NavigationParameter parameter)

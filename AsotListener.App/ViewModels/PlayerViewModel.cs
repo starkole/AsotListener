@@ -146,7 +146,7 @@
             Application.Current.Resuming += initializeAsync;
 
             initializeAsync(null, null);
-            logger.LogMessage("Foreground audio player initialized.");
+            logger.LogMessage("Foreground audio player initialized.", LoggingLevel.Information);
         }
 
         #endregion
@@ -200,7 +200,7 @@
             }
 
             await Playlist.SavePlaylistToLocalStorage();
-            logger.LogMessage("Foreground audio player suspended.");
+            logger.LogMessage("Foreground audio player suspended.", LoggingLevel.Information);
             deferral.Complete();
         }
 
@@ -341,7 +341,7 @@
             IsAudioSeekerEnabled = true;
             progressUpdateTimer.Tick += onTimerTick;
             progressUpdateTimer.Start();
-            logger.LogMessage($"Foreground audio player: Progress update timer started with interval {progressUpdateTimer.Interval}.");
+            logger.LogMessage($"Foreground audio player: Progress update timer started with interval {progressUpdateTimer.Interval}.", LoggingLevel.Information);
         }
 
         private void stopProgressUpdateTimer()

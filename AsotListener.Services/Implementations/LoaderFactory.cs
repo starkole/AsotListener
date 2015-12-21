@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.Services.Implementations
 {
     using Contracts;
+    using Windows.Foundation.Diagnostics;
 
     public class LoaderFactory: ILoaderFactory
     {
@@ -11,7 +12,7 @@
         {
             this.fileUtils = fileUtils;
             this.logger = logger;
-            logger.LogMessage("LoaderFactory initialized.");
+            logger.LogMessage("LoaderFactory initialized.", LoggingLevel.Information);
         }
 
         public ILoader GetLoader() => new Loader(logger, fileUtils);

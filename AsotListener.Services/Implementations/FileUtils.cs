@@ -25,7 +25,7 @@
         public FileUtils(ILogger logger)
         {
             this.logger = logger;
-            logger.LogMessage("FileUtils initialized.");
+            logger.LogMessage("FileUtils initialized.", LoggingLevel.Information);
         }
         #region Public Methods
 
@@ -39,7 +39,7 @@
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Exception while creating the file. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Exception while creating the file. {ex.Message}", LoggingLevel.Error);
                 return null;
             }
         }
@@ -49,7 +49,7 @@
 
         public async Task<IList<string>> GetDownloadedFileNamesList()
         {
-            logger.LogMessage("Obtaining list of downloaded files...");
+            logger.LogMessage("FileUtils: Obtaining list of downloaded files...");
             var result = new List<string>();
             try
             {
@@ -59,18 +59,18 @@
                     .Select(f => stripEndNumberFromFilename(f.DisplayName))
                     .Distinct()
                     .ToList() ?? result;
-                logger.LogMessage($"Found {result.Count} files.");
+                logger.LogMessage($"FileUtils: Found {result.Count} downloaded files.", LoggingLevel.Information);
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Exception while getting downloaded file list. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Exception while getting downloaded file list. {ex.Message}", LoggingLevel.Error);
             }
             return result;
         }
 
         public async Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName)
         {
-            logger.LogMessage($"Obtaining file list for episode {episodeName}...");
+            logger.LogMessage($"FileUtils: Obtaining file list for episode {episodeName}...");
             var result = new List<StorageFile>();
             try
             {
@@ -78,11 +78,11 @@
                 result = files?
                     .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture))
                     .ToList() ?? result;
-                logger.LogMessage($"Found {result.Count} files.");
+                logger.LogMessage($"FileUtils: Found {result.Count} files.");
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Exception while getting episode file list. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Exception while getting episode file list. {ex.Message}", LoggingLevel.Error);
             }
             return result;
         }
@@ -92,7 +92,7 @@
             var files = await GetFilesListForEpisode(episodeName);
             if (files == null)
             {
-                logger.LogMessage($"No files found to delete for episode {episodeName}.", LoggingLevel.Warning);
+                logger.LogMessage($"FileUtils: No files found to delete for episode {episodeName}.", LoggingLevel.Warning);
                 return;
             }
 
@@ -100,23 +100,23 @@
             {
                 try
                 {
-                    logger.LogMessage($"Deleting file {file.Name}...");
+                    logger.LogMessage($"FileUtils: Deleting file {file.Name}...");
                     await file.DeleteAsync();
-                    logger.LogMessage("File deleted successfully.");
+                    logger.LogMessage("FileUtils: File deleted successfully.");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogMessage($"Exception while deleting the file {file.Name}. {ex.Message}", LoggingLevel.Error);
+                    logger.LogMessage($"FileUtils: Exception while deleting the file {file.Name}. {ex.Message}", LoggingLevel.Error);
                 }
             }
         }
 
         public async Task SaveToXmlFile<T>(T objectToSave, string filename) where T : class
         {
-            logger.LogMessage($"Serializing object of type {typeof(T)} to {filename}...");
+            logger.LogMessage($"FileUtils: Serializing object of type {typeof(T)} to {filename}...");
             if (string.IsNullOrEmpty(filename))
             {
-                logger.LogMessage("File name was not specified.", LoggingLevel.Error);
+                logger.LogMessage("FileUtils: File name was not specified.", LoggingLevel.Error);
                 return;
             }
 
@@ -132,20 +132,20 @@
                     await listData.CopyToAsync(fileStream);
                 }
 
-                logger.LogMessage("Serialization complete.");
+                logger.LogMessage("FileUtils: Serialization complete.");
             }
             catch (Exception e)
             {
-                logger.LogMessage($"Error. Cannot serialize. {e.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Error. Cannot serialize. {e.Message}", LoggingLevel.Error);
             }
         }
 
         public async Task<T> ReadFromXmlFile<T>(string filename) where T : class
         {
-            logger.LogMessage($"Reading object of type {typeof(T)} from {filename}...");
+            logger.LogMessage($"FileUtils: Reading object of type {typeof(T)} from {filename}...");
             if (string.IsNullOrEmpty(filename))
             {
-                logger.LogMessage("File name was not specified.", LoggingLevel.Error);
+                logger.LogMessage("FileUtils: File name was not specified.", LoggingLevel.Error);
                 return null;
             }
 
@@ -156,35 +156,35 @@
                 {
                     DataContractSerializer serializer = new DataContractSerializer(typeof(T));
                     T result = serializer.ReadObject(inStream.AsStreamForRead()) as T;
-                    logger.LogMessage("Object has been successfully read from file.");
+                    logger.LogMessage("FileUtils: Object has been successfully read from file.");
                     return result;
                 }
             }
             catch (Exception e)
             {
-                logger.LogMessage($"Error reading object from file. {e.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Error reading object from file. {e.Message}", LoggingLevel.Error);
                 return null;
             }
         }
 
         public async Task TryDeleteFile(string filename)
         {
-            logger.LogMessage($"Trying to delete file from {filename}...");
+            logger.LogMessage($"FileUtils: Trying to delete file from {filename}...");
             try
             {
                 var file = await localFolder.GetFileAsync(filename);
                 if (file == null)
                 {
-                    logger.LogMessage("File not found.");
+                    logger.LogMessage("FileUtils: File not found.");
                     return;
                 }
 
                 await file.DeleteAsync();
-                logger.LogMessage("File deleted successfully.");
+                logger.LogMessage("FileUtils: File deleted successfully.");
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Exception while deleting the file {filename}. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Exception while deleting the file {filename}. {ex.Message}", LoggingLevel.Error);
             }
         }
 

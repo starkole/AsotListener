@@ -4,7 +4,7 @@
     using Models;
     using System.Collections.ObjectModel;
     using Contracts;
-
+    using Windows.Foundation.Diagnostics;
     /// <summary>
     /// Provides methods for parsing html pages
     /// </summary>
@@ -18,7 +18,7 @@
         public Parser(ILogger logger)
         {
             this.logger = logger;
-            logger.LogMessage("Playlist initialized.");
+            logger.LogMessage("Parser initialized.", LoggingLevel.Information);
         }
 
         /// <summary>
@@ -28,7 +28,7 @@
         /// <returns>List of Episode objects or empty list</returns>
         public ObservableCollection<Episode> ParseEpisodeList(string EpisodeListHtmlPage)
         {
-            logger.LogMessage("Parsing episode list...");
+            logger.LogMessage("Parser: Parsing episode list...");
             Regex regex = new Regex(EPISODE_REGEX);
             MatchCollection matches = regex.Matches(EpisodeListHtmlPage);
             ObservableCollection<Episode> result = new ObservableCollection<Episode>();
@@ -47,7 +47,7 @@
                 }
             }
 
-            logger.LogMessage("Episode list parsed.");
+            logger.LogMessage("Parser: Episode list parsed.");
             return result;
         }
 
@@ -58,7 +58,7 @@
         /// <returns>List of download links or empty list</returns>
         public string[] ExtractDownloadLinks(string EpisodeHtmlPage)
         {
-            logger.LogMessage("Extracting download links...");
+            logger.LogMessage("Parser: Extracting download links...");
 
             Regex regex = new Regex(DOWNLOAD_LINK_REGEX);
             MatchCollection matches = regex.Matches(EpisodeHtmlPage);
@@ -73,7 +73,7 @@
                 result[i] = matches[i].Value;
             }
 
-            logger.LogMessage("Download links extracted.");
+            logger.LogMessage($"Parser: Extracted {matches.Count} download links.", LoggingLevel.Information);
             return result;
         }
 

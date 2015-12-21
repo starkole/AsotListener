@@ -54,7 +54,7 @@
             smtc.IsNextEnabled = true;
             smtc.IsPreviousEnabled = true;
 
-            logger.LogMessage("BackgroundAudio: Background Audio Manager has been initialized.");
+            logger.LogMessage("BackgroundAudio: Background Audio Manager has been initialized.", LoggingLevel.Information);
         }
 
         #endregion
@@ -241,7 +241,7 @@
                 mediaPlayer.AutoPlay = false;
                 var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
                 mediaPlayer.SetFileSource(file);
-                logger.LogMessage($"BackgroundAudio: Set file source to {file.Name} ({file.Path}).");
+                logger.LogMessage($"BackgroundAudio: Set file source to {file.Name} ({file.Path}).", LoggingLevel.Information);
             }
             catch (Exception ex)
             {

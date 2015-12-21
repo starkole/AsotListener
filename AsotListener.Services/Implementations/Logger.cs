@@ -13,9 +13,9 @@
         public Logger()
         {
             loggingSession = new LoggingSession("ASOT Listener");
-            loggingChannel = new LoggingChannel($"Logging channel for task {Environment.CurrentManagedThreadId}");
+            loggingChannel = new LoggingChannel($"Task{Environment.CurrentManagedThreadId}Channel");
             loggingSession.AddLoggingChannel(loggingChannel);
-            LogMessage("Logger initialized.");
+            LogMessage($"Logger initialized on channel {loggingChannel.Name}.", LoggingLevel.Information);
         }
 
         public void LogMessage(string message)
@@ -33,10 +33,9 @@
 
         public void SaveLogsToFile()
         {
-            var saveTask = loggingSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "logging.etl").AsTask();
+            var saveTask = loggingSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "log_" + loggingChannel.Name + ".etl").AsTask();
             saveTask.ConfigureAwait(false);
             saveTask.Wait();
-
         }
 
         public void Dispose()

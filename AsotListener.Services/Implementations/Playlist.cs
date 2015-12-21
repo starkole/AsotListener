@@ -46,7 +46,7 @@
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
-            logger.LogMessage("Playlist: Playlist initialized.");
+            logger.LogMessage("Playlist: Playlist initialized.", LoggingLevel.Information);
         }
 
         public async Task SavePlaylistToLocalStorage()
@@ -54,7 +54,7 @@
             logger.LogMessage("Playlist: Saving playlist state to local storage...");
             await fileUtils.SaveToXmlFile(TrackList, playlistFilename);
             await fileUtils.SaveToXmlFile(CurrentTrack, currentTrackFilename);
-            logger.LogMessage("Playlist: Playlist state saved.");
+            logger.LogMessage("Playlist: Playlist state saved.", LoggingLevel.Information);
         }
 
         public async Task LoadPlaylistFromLocalStorage()
@@ -63,7 +63,7 @@
             TrackList = await fileUtils.ReadFromXmlFile<ObservableCollection<AudioTrack>>(playlistFilename);
             CurrentTrack = await fileUtils.ReadFromXmlFile<AudioTrack>(currentTrackFilename);
             TrackList = TrackList ?? new ObservableCollection<AudioTrack>();
-            logger.LogMessage("Playlist: Playlist loaded.");
+            logger.LogMessage("Playlist: Playlist loaded.", LoggingLevel.Information);
             if (CurrentTrack == null)
             {
                 return;
@@ -79,7 +79,7 @@
 
             trackListItem.StartPosition = CurrentTrack.StartPosition;
             CurrentTrack = trackListItem;
-            logger.LogMessage("Playlist: Current track updated.");
+            logger.LogMessage("Playlist: Current track updated.", LoggingLevel.Information);
         }
 
         public string GetAudioTrackName(string episodeName, int partNumber) =>

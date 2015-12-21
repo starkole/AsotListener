@@ -45,7 +45,7 @@
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            logger.LogMessage("Application launched.");
+            logger.LogMessage("Application launched.", LoggingLevel.Information);
 #if DEBUG
             DebugSettings.EnableFrameRateCounter |= Debugger.IsAttached;
 #endif            

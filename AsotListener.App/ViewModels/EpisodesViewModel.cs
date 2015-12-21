@@ -85,14 +85,14 @@
             Application.Current.Suspending += onAppSuspending;
 
             initializeAsync();
-            logger.LogMessage("EpisodesViewModel: Initialized.");
+            logger.LogMessage("EpisodesViewModel: Initialized.", LoggingLevel.Information);
         }
 
         private async void initializeAsync()
         {
             await loadEpisodesList();
             await retrieveActiveDownloads();
-            logger.LogMessage("EpisodesViewModel: State restored.");
+            logger.LogMessage("EpisodesViewModel: State restored.", LoggingLevel.Information);
         }
 
         #endregion
@@ -109,7 +109,7 @@
             }
             await updateEpisodesStates();
             await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
-            logger.LogMessage("EpisodesViewModel: Episode list loaded.");
+            logger.LogMessage("EpisodesViewModel: Episode list loaded.", LoggingLevel.Information);
         }
 
         private async Task downloadEpisode(object boxedEpisode)
@@ -272,7 +272,7 @@
             logger.LogMessage("EpisodesViewModel: Application is resuming. Restoring state...");
             await updateEpisodesStates();
             await retrieveActiveDownloads();
-            logger.LogMessage("EpisodesViewModel: State restored.");
+            logger.LogMessage("EpisodesViewModel: State restored after application resuming.", LoggingLevel.Information);
         }
 
         private async void onAppSuspending(object sender, SuspendingEventArgs e)
@@ -280,7 +280,7 @@
             var deferral = e.SuspendingOperation.GetDeferral();
             logger.LogMessage("EpisodesViewModel: Application is suspending. Saving state...");
             await loadEpisodesList();
-            logger.LogMessage("EpisodesViewModel: State saved.");
+            logger.LogMessage("EpisodesViewModel: State saved on application suspending.", LoggingLevel.Information);
             deferral.Complete();
         }
 
@@ -305,7 +305,7 @@
         {
             logger.LogMessage("EpisodesViewModel: Obtaining background downloads...");
             IReadOnlyList<DownloadOperation> downloads = await BackgroundDownloader.GetCurrentDownloadsAsync();
-            logger.LogMessage($"EpisodesViewModel: {downloads.Count} background downloads found.");
+            logger.LogMessage($"EpisodesViewModel: {downloads.Count} background downloads found.", LoggingLevel.Information);
             foreach (var download in downloads)
             {
                 string filename = download.ResultFile.Name;
@@ -355,7 +355,7 @@
         {
             try
             {
-                logger.LogMessage($"EpisodesViewModel: Registering download of file {download.ResultFile.Name}.");
+                logger.LogMessage($"EpisodesViewModel: Registering download of file {download.ResultFile.Name}.", LoggingLevel.Information);
                 activeDownloadsByDownload.Add(download, episode);
                 if (activeDownloadsByEpisode.Keys.Contains(episode))
                 {
@@ -382,7 +382,7 @@
                 }
 
                 ResponseInformation response = download.GetResponseInformation();
-                logger.LogMessage($"EpisodesViewModel: Download of {download.ResultFile.Name} completed. Status Code: {response.StatusCode}");
+                logger.LogMessage($"EpisodesViewModel: Download of {download.ResultFile.Name} completed. Status Code: {response.StatusCode}", LoggingLevel.Information);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = Loaded);
             }
             catch (TaskCanceledException)
@@ -428,20 +428,20 @@
             {
                 if (!activeDownloadsByDownload.ContainsKey(download))
                 {
-                    logger.LogMessage($"Tried to report progress for download of {download.ResultFile.Name} file. But it is not registered.", LoggingLevel.Warning);
+                    logger.LogMessage($"EpisodesViewModel: Tried to report progress for download of {download.ResultFile.Name} file. But it is not registered.", LoggingLevel.Warning);
                     return;
                 }
 
                 Episode episode = activeDownloadsByDownload[download];
                 if (!activeDownloadsByEpisode.ContainsKey(episode) || !activeDownloadsByEpisode[episode].Any())
                 {
-                    logger.LogMessage($"Tried to report progress for {episode.Name} episode download. But they are not registered.", LoggingLevel.Warning);
+                    logger.LogMessage($"EpisodesViewModel: Tried to report progress for {episode.Name} episode download. But they are not registered.", LoggingLevel.Warning);
                     return;
                 }
 
                 episode.OverallDownloadSize = activeDownloadsByEpisode[episode].Sum((Func<DownloadOperation, double>)getTotalBytesToDownload);
                 episode.DownloadedAmount = activeDownloadsByEpisode[episode].Sum(d => (double)d.Progress.BytesReceived);
-                logger.LogMessage($"Downloaded {episode.DownloadedAmount} of {episode.OverallDownloadSize} bytes.");
+                logger.LogMessage($"EpisodesViewModel: {episode.Name}: downloaded {episode.DownloadedAmount} of {episode.OverallDownloadSize} bytes.");
             });
         }
 
@@ -475,7 +475,7 @@
                 }
             }
 
-            logger.LogMessage("EpisodesViewModel: Episode added to playlist.");
+            logger.LogMessage($"EpisodesViewModel: Episode {episode.Name} added to playlist.", LoggingLevel.Information);
             return firstAddedTrack;
         }
 
