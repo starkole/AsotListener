@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Models.Attributes
+﻿namespace AsotListener.Common.Attributes
 {
     using System;
     using System.Reflection;

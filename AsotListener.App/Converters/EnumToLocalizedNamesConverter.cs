@@ -1,7 +1,7 @@
 ﻿namespace AsotListener.App.Converters
 {
     using System;
-    using Models.Attributes;
+    using Common.Attributes;
     using Windows.UI.Xaml.Data;
 
     public class EnumToLocalizedNamesConverter : IValueConverter

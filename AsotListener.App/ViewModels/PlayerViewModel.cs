@@ -12,6 +12,7 @@
     using Windows.UI.Xaml;
     using Windows.Foundation.Diagnostics;
     using Models.Enums;
+    using Common;
 
     public sealed class PlayerViewModel : BaseModel, IDisposable
     {

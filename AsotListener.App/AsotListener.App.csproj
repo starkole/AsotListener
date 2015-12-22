@@ -164,6 +164,10 @@
       <Project>{b2691f43-d755-48cc-84a1-d70c25291c1d}</Project>
       <Name>AsotListener.AudioPlayer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\AsotListener.Common\AsotListener.Common.csproj">
+      <Project>{f953b426-5cdb-48b4-90be-5bf34760447f}</Project>
+      <Name>AsotListener.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AsotListener.Ioc\AsotListener.Ioc.csproj">
       <Project>{c11befe8-3fba-43bd-b79e-adb800ff835f}</Project>
       <Name>AsotListener.Ioc</Name>

@@ -1,6 +1,6 @@
 ﻿namespace AsotListener.Models.Enums
 {
-    using Attributes;
+    using Common.Attributes;
 
     public enum EpisodeStatus
     {
