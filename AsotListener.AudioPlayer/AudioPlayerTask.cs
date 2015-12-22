@@ -77,7 +77,7 @@
         /// <summary>
         /// Indicate that the background task is completed.
         /// </summary>       
-        void Taskcompleted(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
+        private void Taskcompleted(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
             logger.LogMessage($"Background Audio Task {sender.TaskId} Completed...");
             Dispose();
@@ -134,7 +134,7 @@
 
         #region IDisposable Support
 
-        void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (isDisposed || !disposing)
             {
@@ -161,6 +161,9 @@
             isDisposed = true;
         }
 
+        /// <summary>
+        /// Releases used resources
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);

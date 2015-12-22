@@ -12,7 +12,10 @@
     using Windows.UI.Popups;
     using System.Threading.Tasks;
 
-    internal class AudioManager : IDisposable
+    /// <summary>
+    /// Contains logic to manage audio playback
+    /// </summary>
+    internal sealed class AudioManager : IDisposable
     {
         #region Private Fields
 
@@ -26,6 +29,12 @@
 
         #region Ctor
 
+        /// <summary>
+        /// Creates new instance of <see cref="AudioManager"/>
+        /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="playlist">The playlist instance</param>
+        /// <param name="smtc">Instance of <see cref="SystemMediaTransportControls"/></param>
         public AudioManager(
             ILogger logger,
             IPlayList playlist,
@@ -151,6 +160,10 @@
 
         #region Public Methods
 
+        /// <summary>
+        /// Starts playback from track from given index
+        /// </summary>
+        /// <param name="rawIndex">Track index</param>
         public void StartTrackAt(int rawIndex)
         {
             logger.LogMessage($"BackgroundAudio: Preparing to play the track #{rawIndex}.");
@@ -167,6 +180,10 @@
             StartPlayback();
         }
 
+        /// <summary>
+        /// Starts playback from given track
+        /// </summary>
+        /// <param name="audioTrack">Track to start from</param>
         public void StartTrackAt(AudioTrack audioTrack)
         {
             logger.LogMessage($"BackgroundAudio: Preparing to play the track {audioTrack.Name}.");
@@ -179,6 +196,9 @@
             StartPlayback();
         }
 
+        /// <summary>
+        /// Advances to the next track
+        /// </summary>
         public void SkipToNext()
         {
             logger.LogMessage("BackgroundAudio: Advancing to the next track.");
@@ -186,6 +206,9 @@
             StartTrackAt(playlist.CurrentTrackIndex + 1);
         }
 
+        /// <summary>
+        /// Returns to the previous track
+        /// </summary>
         public void SkipToPrevious()
         {
             logger.LogMessage("BackgroundAudio: Returning to previous track.");
@@ -193,12 +216,18 @@
             StartTrackAt(playlist.CurrentTrackIndex - 1);
         }
 
+        /// <summary>
+        /// Starts playing all tracks rfom the very first one
+        /// </summary>
         public void PlayAllTracks()
         {
             logger.LogMessage("BackgroundAudio: Playing all tracks.");
             StartTrackAt(0);
         }
 
+        /// <summary>
+        /// Pauses the playback
+        /// </summary>
         public void PausePlayback()
         {
             if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
@@ -208,6 +237,9 @@
             }
         }
 
+        /// <summary>
+        /// Starts playback
+        /// </summary>
         public async void StartPlayback()
         {
             logger.LogMessage("BackgroundAudio: Trying to start playback.");
@@ -243,6 +275,10 @@
             }
         }
 
+        /// <summary>
+        /// Saves current player position to disk
+        /// </summary>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task SaveCurrentState()
         {
             logger.LogMessage("BackgroundAudio: Saving current state.");
@@ -255,6 +291,10 @@
             logger.LogMessage("BackgroundAudio: Current state saved.");
         }
 
+        /// <summary>
+        /// Restores player state from disk
+        /// </summary>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task LoadState()
         {
             logger.LogMessage("BackgroundAudio: Loading playlist from local storage.");
@@ -262,6 +302,11 @@
             logger.LogMessage("BackgroundAudio: Current state loaded.");
         }
 
+        /// <summary>
+        /// Informs user about critical error
+        /// </summary>
+        /// <param name="message">Message to display</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         private async Task showErrorMessageToUserAsync(string message)
         {
             logger.LogMessage(message, LoggingLevel.Critical);
@@ -278,7 +323,7 @@
 
         #region IDisposable Support
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!isDisposed)
             {
@@ -299,6 +344,9 @@
             }
         }
 
+        /// <summary>
+        /// Unsubscribes event handlers
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
