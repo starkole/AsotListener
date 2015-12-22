@@ -6,11 +6,18 @@
     using Windows.Foundation.Diagnostics;
     using Windows.Storage;
 
+    /// <summary>
+    /// Helper class to read and write settings to LocalSettings
+    /// </summary>
     public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
     {
         private readonly ILogger logger;
         private const string mutexName = "AsotListener.ApplicationSettingsHelper.Mutex";
 
+        /// <summary>
+        /// Creates an instance of <see cref="ApplicationSettingsHelper"/> class
+        /// </summary>
+        /// <param name="logger">The logger instance</param>
         public ApplicationSettingsHelper(ILogger logger)
         {
             this.logger = logger;
@@ -20,6 +27,9 @@
         /// <summary>
         /// Function to read a setting value and clear it after reading it
         /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="key">The value key</param>
+        /// <returns>The value, casted to type <see cref="T"/>, which coresponds to given key</returns>
         public T ReadSettingsValue<T>(string key)
         {
             using (var mutex = new Mutex(true, mutexName))
@@ -52,7 +62,7 @@
         }
 
         /// <summary>
-        /// Save a key value pair in settings. Create if it doesn't exist
+        /// Save a key-value pair in settings. Create if it doesn't exist
         /// </summary>
         public void SaveSettingsValue(string key, object value)
         {

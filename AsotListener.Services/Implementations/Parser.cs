@@ -5,6 +5,7 @@
     using System.Collections.ObjectModel;
     using Contracts;
     using Windows.Foundation.Diagnostics;
+    
     /// <summary>
     /// Provides methods for parsing html pages
     /// </summary>
@@ -15,6 +16,10 @@
         private const string EPISODE_NAME_START = @"A State Of Trance: ";
         private ILogger logger;
 
+        /// <summary>
+        /// Creates new instance of <see cref="Parser"/>
+        /// </summary>
+        /// <param name="logger">The logger instance</param>
         public Parser(ILogger logger)
         {
             this.logger = logger;

@@ -8,7 +8,7 @@
     {
         string GetEpisodePartFilename(string name, int partNumber);
         string ExtractEpisodeNameFromFilename(string filenameWithExtension);
-        Task<IStorageFile> GetEpisodePartFile(string name, int partNumber);
+        Task<IStorageFile> CreateEpisodePartFile(string name, int partNumber);
         Task<IList<string>> GetDownloadedFileNamesList();
         Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName);
         Task<T> ReadFromXmlFile<T>(string filename) where T : class;

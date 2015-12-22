@@ -331,7 +331,7 @@
             logger.LogMessage($"EpisodesViewModel: Scheduling download part {partNumber + 1} of {episode.DownloadLinks.Length}.");
             var downloader = new BackgroundDownloader();
             var uri = new Uri(episode.DownloadLinks[partNumber]);
-            var file = await fileUtils.GetEpisodePartFile(episode.Name, partNumber);
+            var file = await fileUtils.CreateEpisodePartFile(episode.Name, partNumber);
             if (file == null)
             {
                 string message = "Cannot create file to save episode.";

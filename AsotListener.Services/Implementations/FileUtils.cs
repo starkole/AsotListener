@@ -11,25 +11,47 @@
     using System.Runtime.Serialization;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage.Streams;
-    using System.Threading;
 
+    /// <summary>
+    /// Contains helper methods to work with files in local folder
+    /// </summary>
     public sealed class FileUtils : IFileUtils
     {
-        private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
-        private ILogger logger;
+        #region Fields
 
-        private const string fileExtension = ".mp3";
+        private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+
+        private const string audioFileExtension = ".mp3";
         private const string partNumberDelimiter = "_";
         private const string mutexName = "AsotListener.FileUtils.Mutex";
 
+        private ILogger logger;
+
+        #endregion
+        
+        #region Ctor
+
+        /// <summary>
+        /// Creates instance of <see cref="FileUtils"/> class
+        /// </summary>
+        /// <param name="logger">The logger instance</param>
         public FileUtils(ILogger logger)
         {
             this.logger = logger;
             logger.LogMessage("FileUtils initialized.", LoggingLevel.Information);
         }
+
+        #endregion
+        
         #region Public Methods
 
-        public async Task<IStorageFile> GetEpisodePartFile(string name, int partNumber)
+        /// <summary>
+        /// Creates new file with name based on given name and part number
+        /// </summary>
+        /// <param name="name">Episode name</param>
+        /// <param name="partNumber">Episode part number</param>
+        /// <returns>Newly created file instance or null in case of any errror</returns>
+        public async Task<IStorageFile> CreateEpisodePartFile(string name, int partNumber)
         {
             try
             {
@@ -44,9 +66,19 @@
             }
         }
 
+        /// <summary>
+        /// Constructs filename for episode part based on given data
+        /// </summary>
+        /// <param name="name">Episode name</param>
+        /// <param name="partNumber">Episode part number</param>
+        /// <returns>Filename for episode</returns>
         public string GetEpisodePartFilename(string name, int partNumber) =>
-            name + partNumberDelimiter + partNumber.ToString() + fileExtension;
+            name + partNumberDelimiter + partNumber.ToString() + audioFileExtension;
 
+        /// <summary>
+        /// Searches for downloaded audio files in application local folder
+        /// </summary>
+        /// <returns>The distinct list of audio file names wthout extension and part number</returns>
         public async Task<IList<string>> GetDownloadedFileNamesList()
         {
             logger.LogMessage("FileUtils: Obtaining list of downloaded files...");
@@ -55,7 +87,7 @@
             {
                 IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
                 result = files?
-                    .Where(f => f.FileType == fileExtension)
+                    .Where(f => f.FileType == audioFileExtension)
                     .Select(f => stripEndNumberFromFilename(f.DisplayName))
                     .Distinct()
                     .ToList() ?? result;
@@ -68,6 +100,11 @@
             return result;
         }
 
+        /// <summary>
+        /// Searches for downloaded audio files in application local folder for given episode
+        /// </summary>
+        /// <param name="episodeName">Episode name</param>
+        /// <returns>List of files for given episode</returns>
         public async Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName)
         {
             logger.LogMessage($"FileUtils: Obtaining file list for episode {episodeName}...");
@@ -76,7 +113,7 @@
             {
                 IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
                 result = files?
-                    .Where(f => f.FileType == fileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture))
+                    .Where(f => f.FileType == audioFileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture))
                     .ToList() ?? result;
                 logger.LogMessage($"FileUtils: Found {result.Count} files.");
             }
@@ -87,6 +124,11 @@
             return result;
         }
 
+        /// <summary>
+        /// Deletes all downloaded files for given episode
+        /// </summary>
+        /// <param name="episodeName">Episode name</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task DeleteEpisode(string episodeName)
         {
             var files = await GetFilesListForEpisode(episodeName);
@@ -111,6 +153,13 @@
             }
         }
 
+        /// <summary>
+        /// Serializes given object to XML and saves it to file
+        /// </summary>
+        /// <typeparam name="T">The object type</typeparam>
+        /// <param name="objectToSave">Object to save</param>
+        /// <param name="filename">File name</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task SaveToXmlFile<T>(T objectToSave, string filename) where T : class
         {
             logger.LogMessage($"FileUtils: Serializing object of type {typeof(T)} to {filename}...");
@@ -140,6 +189,12 @@
             }
         }
 
+        /// <summary>
+        /// Reads from file and deserializes previously saved object
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="filename">File name</param>
+        /// <returns>Object of type <see cref="T"/></returns>
         public async Task<T> ReadFromXmlFile<T>(string filename) where T : class
         {
             logger.LogMessage($"FileUtils: Reading object of type {typeof(T)} from {filename}...");
@@ -167,6 +222,11 @@
             }
         }
 
+        /// <summary>
+        /// Tries to delete given file
+        /// </summary>
+        /// <param name="filename">File name</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task TryDeleteFile(string filename)
         {
             logger.LogMessage($"FileUtils: Trying to delete file from {filename}...");
@@ -188,6 +248,11 @@
             }
         }
 
+        /// <summary>
+        /// Extracts episode name from given filename 
+        /// </summary>
+        /// <param name="filenameWithExtension">File name with extension</param>
+        /// <returns>Episode name</returns>
         public string ExtractEpisodeNameFromFilename(string filenameWithExtension)
         {
             string filename = stripExtensionFromFilename(filenameWithExtension);
@@ -208,7 +273,7 @@
 
         private string stripExtensionFromFilename(string filenameWithExtension)
         {
-            Regex numberAtTheEnd = new Regex("(" + fileExtension + ")$");
+            Regex numberAtTheEnd = new Regex("(" + audioFileExtension + ")$");
             string result = numberAtTheEnd.Replace(filenameWithExtension, string.Empty);
             return result;
         }

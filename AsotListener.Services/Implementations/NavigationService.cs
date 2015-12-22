@@ -10,6 +10,9 @@
     using Windows.Foundation.Diagnostics;
     using Windows.Globalization;
 
+    /// <summary>
+    /// Provides helper mthods to navigate between application pages
+    /// </summary>
     public class NavigationService : INavigationService
     {
         #region Fileds
@@ -25,6 +28,10 @@
 
         #region Ctor
 
+        /// <summary>
+        /// Creates new instance of <see cref="NavigationService"/>
+        /// </summary>
+        /// <param name="logger">The logger instance</param>
         public NavigationService(ILogger logger)
         {
             this.logger = logger;
@@ -34,6 +41,11 @@
 
         #region Public Methods
 
+        /// <summary>
+        /// Initializes <see cref="NavigationService"/> instance
+        /// </summary>
+        /// <param name="mainPageType">The type of the main application page</param>
+        /// <param name="parameter">Initial navigation parameter</param>
         public void Initialize(Type mainPageType, NavigationParameter parameter)
         {
             this.mainPageType = mainPageType;
@@ -80,6 +92,10 @@
             logger.LogMessage("NavigationService initialized.", LoggingLevel.Information);
         }
 
+        /// <summary>
+        /// Navigates to the main application page with passing given parameter to it
+        /// </summary>
+        /// <param name="parameter">Navigation parameter to pass</param>
         public void Navigate(NavigationParameter parameter)
         {
             if (!isInitialized)
@@ -104,7 +120,7 @@
 
         #endregion
 
-        #region Prvate Methods
+        #region Private Methods
 
         private void onRootFrameFirstNavigated(object sender, NavigationEventArgs e)
         {
