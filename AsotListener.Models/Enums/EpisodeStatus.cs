@@ -2,6 +2,9 @@
 {
     using Common.Attributes;
 
+    /// <summary>
+    /// Episode statuses
+    /// </summary>
     public enum EpisodeStatus
     {
         [LocalizedDisplay("", "EpisodeStatusCanBeLoaded")]
