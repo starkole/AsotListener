@@ -355,6 +355,22 @@
 
         #region Progress Tracking
 
+        /// <summary>
+        /// Changes current player position based on audio seeker slider value changes
+        /// </summary>
+        /// <param name="slider">Slider instance</param>
+        public void UpdateProgressFromSlider(Slider slider)
+        {
+            if (BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Playing && slider != null)
+            {
+                var newPosition = slider.Value < 0 ? 0 : slider.Value;
+                var totalSeconds = Math.Round(BackgroundMediaPlayer.Current.NaturalDuration.TotalSeconds) - 1;
+                newPosition = newPosition > totalSeconds ? totalSeconds : newPosition;
+                BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(newPosition);
+                logger.LogMessage($"Foreground audio player: Player position updated to {newPosition} seconds.");
+            }
+        }
+
         private int getAudioSeekerStepFrequency(TimeSpan timevalue)
         {
             if (timevalue.TotalHours >= 1)

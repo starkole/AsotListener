@@ -1,26 +1,34 @@
 ﻿namespace AsotListener.App
 {
-    using Windows.UI.Xaml;
-    using Windows.UI.Xaml.Controls;
-    using Windows.UI.Xaml.Navigation;
-    using ViewModels;
-    using Windows.UI.Xaml.Input;
-    using Windows.UI.Input;
-    using Windows.UI.Xaml.Controls.Primitives;
-    using Services.Contracts;
     using Ioc;
     using Models.Enums;
+    using Services.Contracts;
+    using ViewModels;
     using Windows.Phone.UI.Input;
-    using Windows.Media.Playback;
-    using System;
+    using Windows.UI.Input;
+    using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Controls.Primitives;
+    using Windows.UI.Xaml.Input;
+    using Windows.UI.Xaml.Navigation;
+
+    /// <summary>
+    /// Main page view
+    /// </summary>
     public sealed partial class MainPage : Page
     {
         private readonly MainPageViewModel mainPageViewModel;
         private IApplicationSettingsHelper applicationSettingsHelper;
         private readonly ILogger logger;
 
+        /// <summary>
+        /// Main Page view model
+        /// </summary>
         public MainPageViewModel MainPageViewModel => mainPageViewModel;
 
+        /// <summary>
+        /// Creates new instance of <see cref="MainPage"/>
+        /// </summary>
         public MainPage()
         {
             IContainer container = Container.Instance;
@@ -103,6 +111,8 @@
             if (Frame.CanGoBack)
             {
                 logger.LogMessage("MainPage: Navigating back.");
+
+                // Notify system, that event was handled and it shouldn't close our application
                 e.Handled = true;
                 Frame.GoBack();
             }
@@ -129,18 +139,10 @@
         private void onAudioSeekSliderPointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
             logger.LogMessage("MainPage: onAudioSeekSliderPointerCaptureLost event fired.");
-            if (BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Playing)
-            {
-                var slider = sender as Slider;
-                var newPosition = slider.Value < 0 ? 0 : slider.Value;
-                var totalSeconds = Math.Round(BackgroundMediaPlayer.Current.NaturalDuration.TotalSeconds) - 1;
-                newPosition = newPosition > totalSeconds ? totalSeconds : newPosition;
-
-                BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(newPosition);
-                logger.LogMessage($"MainPage: Player position updated to {newPosition} seconds.");
-            }
+            MainPageViewModel.PlayerModel.UpdateProgressFromSlider(sender as Slider);
             MainPageViewModel.PlayerModel.CanUpdateAudioSeeker = true;
         }
+
         #endregion
     }
 }
