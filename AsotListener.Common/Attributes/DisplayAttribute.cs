@@ -2,11 +2,21 @@
 {
     using System;
 
+    /// <summary>
+    /// Attribute for assigning custom name to attribute target
+    /// </summary>
     [AttributeUsage(AttributeTargets.All)]
     public class DisplayAttribute: Attribute
     {
+        /// <summary>
+        /// Attribute target custom name
+        /// </summary>
         public virtual string Name { get; }
 
+        /// <summary>
+        /// Creates new instance of <see cref="DisplayAttribute"/>
+        /// </summary>
+        /// <param name="name">Custom name to be assigned to attribute target</param>
         public DisplayAttribute(string name)
         {
 #pragma warning disable RECS0021 // Warns about calls to virtual member functions occuring in the constructor
