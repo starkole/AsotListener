@@ -11,7 +11,7 @@
     /// Converter to determine if certain context menu items must be shown or hidden 
     /// depending on episode status
     /// </summary>
-    public class ContextMenuVisibilityConverter : IValueConverter
+    public sealed class ContextMenuVisibilityConverter : IValueConverter
     {
         /// <summary>
         /// Modifies the source data before passing it to the target for display in the UI.

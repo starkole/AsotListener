@@ -18,6 +18,9 @@
     using Windows.ApplicationModel;
     using static Models.Enums.EpisodeStatus;
 
+    /// <summary>
+    /// View model of episodes list
+    /// </summary>
     public sealed class EpisodesViewModel : BaseModel
     {
         #region Fields
@@ -38,24 +41,63 @@
 
         #region Properties
 
+        /// <summary>
+        /// A list of available episodes
+        /// </summary>
         public ObservableCollection<Episode> EpisodeList
         {
             get { return episodes; }
             private set { SetField(ref episodes, value, nameof(EpisodeList)); }
         }
 
+        /// <summary>
+        /// Downloads fresh episodes list from server
+        /// </summary>
         public ICommand RefreshCommand { get; }
+
+        /// <summary>
+        /// Downloads specified episode
+        /// </summary>
         public ICommand DownloadCommand { get; }
+
+        /// <summary>
+        /// Cancels episode download
+        /// </summary>
         public ICommand CancelDownloadCommand { get; }
+
+        /// <summary>
+        /// Deletes all downloaded data of given episode
+        /// </summary>
         public ICommand DeleteCommand { get; }
+
+        /// <summary>
+        /// Starts playing given episode in player
+        /// </summary>
         public ICommand PlayCommand { get; }
+
+        /// <summary>
+        /// Adds given episode to playlist
+        /// </summary>
         public ICommand AddToPlaylistCommand { get; }
+
+        /// <summary>
+        /// Clears current playlist
+        /// </summary>
         public ICommand ClearPlaylistCommand { get; }
 
         #endregion
 
         #region Ctor
 
+        /// <summary>
+        /// Creates new instance of <see cref="EpisodesViewModel"/>
+        /// </summary>
+        /// <param name="logger">Instance of <see cref="ILogger"/></param>
+        /// <param name="fileUtils">Instance of <see cref="IFileUtils"/></param>
+        /// <param name="playlist">Instance of <see cref="IPlayList"/></param>
+        /// <param name="loaderFactory">Instance of <see cref="ILoaderFactory"/></param>
+        /// <param name="parser">Instance of <see cref="IParser"/></param>
+        /// <param name="navigationService">Instance of <see cref="INavigationService"/></param>
         public EpisodesViewModel(
             ILogger logger,
             IFileUtils fileUtils,

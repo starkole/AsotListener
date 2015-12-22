@@ -14,6 +14,9 @@
     using Models.Enums;
     using Common;
 
+    /// <summary>
+    /// View model of audio player
+    /// </summary>
     public sealed class PlayerViewModel : BaseModel, IDisposable
     {
         #region Fields
@@ -44,64 +47,95 @@
         private MediaPlayer MediaPlayer => BackgroundMediaPlayer.Current;
         private bool IsBackgroundTaskRunning => applicationSettingsHelper.ReadSettingsValue<bool>(Constants.IsBackgroundTaskRunning);
 
+        /// <summary>
+        /// Determines if audio seeker slider must be enabled
+        /// </summary>
         public bool IsAudioSeekerEnabled
         {
             get { return isAudioSeekerEnabled; }
             set { SetField(ref isAudioSeekerEnabled, value, nameof(IsAudioSeekerEnabled)); }
         }
 
+        /// <summary>
+        /// Step frequency for audio seeker slider
+        /// </summary>
         public double AudioSeekerStepFrequency
         {
             get { return audioSeekerStepFrequency; }
-            set
-            { SetField(ref audioSeekerStepFrequency, value, nameof(AudioSeekerStepFrequency)); }
+            set { SetField(ref audioSeekerStepFrequency, value, nameof(AudioSeekerStepFrequency)); }
         }
 
+        /// <summary>
+        /// Current value of audio seeker slider
+        /// </summary>
         public double AudioSeekerValue
         {
             get { return audioSeekerValue; }
-            set
-            { SetField(ref audioSeekerValue, value, nameof(AudioSeekerValue)); }
+            set { SetField(ref audioSeekerValue, value, nameof(AudioSeekerValue)); }
         }
 
+        /// <summary>
+        /// Maximum value of audio seeker slider
+        /// </summary>
         public double AudioSeekerMaximum
         {
             get { return audioSeekerMaximum; }
             set { SetField(ref audioSeekerMaximum, value, nameof(AudioSeekerMaximum)); }
         }
 
+        /// <summary>
+        /// Determines if audio seeker slider value can be updated
+        /// </summary>
         public bool CanUpdateAudioSeeker { get; set; } = true;
 
+        /// <summary>
+        /// Played time of current track as formatted string
+        /// </summary>
         public string CurrentTrackPlayedTime
         {
             get { return currentTrackPlayedTime; }
             set { SetField(ref currentTrackPlayedTime, value, nameof(CurrentTrackPlayedTime)); }
         }
 
+        /// <summary>
+        /// Current track time left to play as formatted string
+        /// </summary>
         public string CurrentTrackLeftToplay
         {
             get { return currentTrackLeftToplay; }
             set { SetField(ref currentTrackLeftToplay, value, nameof(CurrentTrackLeftToplay)); }
         }
 
+        /// <summary>
+        /// Determines if "Previous" button must be enabled
+        /// </summary>
         public bool IsPreviousButtonEnabled
         {
             get { return isPreviousButtonEnabled; }
             set { SetField(ref isPreviousButtonEnabled, value, nameof(IsPreviousButtonEnabled)); }
         }
 
+        /// <summary>
+        /// Determines if "Next" button must be enabled
+        /// </summary>
         public bool IsNextButtonEnabled
         {
             get { return isNextButtonEnabled; }
             set { SetField(ref isNextButtonEnabled, value, nameof(IsNextButtonEnabled)); }
         }
 
+        /// <summary>
+        /// Determines if "Play" button must be enabled
+        /// </summary>
         public bool IsPlayButtonEnabled
         {
             get { return isPlayButtonEnabled; }
             set { SetField(ref isPlayButtonEnabled, value, nameof(IsPlayButtonEnabled)); }
         }
 
+        /// <summary>
+        /// Current "Play" button icon
+        /// </summary>
         public IconElement PlayButtonIcon
         {
             get { return playButtonIcon; }
@@ -112,15 +146,37 @@
             }
         }
 
+        /// <summary>
+        /// Returns to previous track
+        /// </summary>
         public ICommand PreviousTrackCommand { get; }
+
+        /// <summary>
+        /// Advances to the next track
+        /// </summary>
         public ICommand NextTrackCommand { get; }
+
+        /// <summary>
+        /// Starts playback or pauses player depending on its state
+        /// </summary>
         public ICommand PlayPauseCommand { get; }
+
+        /// <summary>
+        /// Current playlist
+        /// </summary>
         public IPlayList Playlist { get; }
 
         #endregion
 
         #region Ctor
 
+        /// <summary>
+        /// Creates instance of <see cref="PlayerViewModel"/>
+        /// </summary>
+        /// <param name="logger">Instance of <see cref="ILogger"/></param>
+        /// <param name="playlist">Instance of <see cref="IPlayList"/></param>
+        /// <param name="applicationSettingsHelper">Instance of <see cref="IApplicationSettingsHelper"/></param>
+        /// <param name="navigationService">Instance of <see cref="INavigationService"/></param>
         public PlayerViewModel(
             ILogger logger,
             IPlayList playlist,
@@ -286,7 +342,7 @@
             });
         }
 
-        void onMessageReceivedFromBackground(object sender, MediaPlayerDataReceivedEventArgs e)
+        private void onMessageReceivedFromBackground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
             if (e.Data.ContainsKey(Constants.IsBackgroundTaskRunning))
             {
@@ -408,6 +464,9 @@
 
         #region IDisposable
 
+        /// <summary>
+        /// Releases used resources
+        /// </summary>
         public void Dispose()
         {
             logger.LogMessage("Foreground audio player: disposing.");

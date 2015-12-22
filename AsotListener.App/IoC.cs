@@ -2,10 +2,15 @@
 {
     using ViewModels;
     using Ioc;
-    using Windows.Media.Playback;
 
+    /// <summary>
+    /// Contains methods to register current library in IoC container
+    /// </summary>
     public static class IoC
     {
+        /// <summary>
+        /// Registers current library in IoC container
+        /// </summary>
         public static void Register()
         {
             IContainer container = Container.Instance;

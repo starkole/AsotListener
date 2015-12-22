@@ -7,7 +7,7 @@
     /// <summary>
     /// Converter to convert given enum value to its localized representation
     /// </summary>
-    public class EnumToLocalizedNamesConverter : IValueConverter
+    public sealed class EnumToLocalizedNamesConverter : IValueConverter
     {
         /// <summary>
         /// Modifies the source data before passing it to the target for display in the UI.
