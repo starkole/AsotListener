@@ -4,6 +4,9 @@
     using Common.Attributes;
     using Windows.UI.Xaml.Data;
 
+    /// <summary>
+    /// Converter to convert given enum value to its localized representation
+    /// </summary>
     public class EnumToLocalizedNamesConverter : IValueConverter
     {
         /// <summary>
@@ -32,6 +35,8 @@
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
 #pragma warning disable RECS0083 // Shows NotImplementedException throws in the quick task bar
+            // This converter is not intended to use with TwoWay binding,
+            // so throwing exception is ok here.
             throw new NotImplementedException();
 #pragma warning restore RECS0083 // Shows NotImplementedException throws in the quick task bar
         }

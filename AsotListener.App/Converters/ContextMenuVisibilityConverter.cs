@@ -7,6 +7,10 @@
     using static Models.Enums.EpisodeStatus;
     using static Models.Enums.ContextMenuItem;
 
+    /// <summary>
+    /// Converter to determine if certain context menu items must be shown or hidden 
+    /// depending on episode status
+    /// </summary>
     public class ContextMenuVisibilityConverter : IValueConverter
     {
         /// <summary>
@@ -80,6 +84,8 @@
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
 #pragma warning disable RECS0083 // Shows NotImplementedException throws in the quick task bar
+            // This converter is not intended to use with TwoWay binding,
+            // so throwing exception is ok here.
             throw new NotImplementedException();
 #pragma warning restore RECS0083 // Shows NotImplementedException throws in the quick task bar
         }
