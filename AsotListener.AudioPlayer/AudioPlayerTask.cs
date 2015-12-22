@@ -5,10 +5,10 @@
     using Windows.Media;
     using Windows.Media.Playback;
     using Windows.Foundation.Collections;
-    using Models;
     using Services.Contracts;
     using Windows.Foundation.Diagnostics;
     using Ioc;
+    using Common;
 
     /// <summary>
     /// Impalements IBackgroundTask to provide an entry point for app code to be run in background. 

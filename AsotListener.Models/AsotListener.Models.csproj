@@ -95,7 +95,6 @@
   <ItemGroup>
     <Compile Include="AudioTrack.cs" />
     <Compile Include="BaseModel.cs" />
-    <Compile Include="Constants.cs" />
     <Compile Include="Enums\ContextMenuItem.cs" />
     <Compile Include="Enums\DownloadState.cs" />
     <Compile Include="Episode.cs" />

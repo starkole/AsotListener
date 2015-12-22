@@ -1,4 +1,4 @@
-﻿namespace AsotListener.Models
+﻿namespace AsotListener.Common
 {
     /// <summary>
     /// Collection of string constants used in the entire solution. This file is shared for all projects
