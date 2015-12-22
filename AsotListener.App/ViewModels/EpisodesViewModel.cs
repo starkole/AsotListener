@@ -22,6 +22,7 @@
     {
         #region Fields
 
+        private const double defaultEpisodeSize = 400 * 1024 * 1024; // 400MB
         private const string episodeListFileName = "episodeList.xml";
         private ObservableCollection<Episode> episodes;
         private Dictionary<Episode, List<DownloadOperation>> activeDownloadsByEpisode;
@@ -451,7 +452,7 @@
 
             // Some servers don't return file size to download, 
             // so we are using default approximated value in such a case.
-            return total == 0 ? Constants.DefaultEpisodeSize : total;
+            return total == 0 ? defaultEpisodeSize : total;
         }
 
         private async Task<AudioTrack> addEpisodeToPlaylist(Episode episode)

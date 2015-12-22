@@ -33,6 +33,7 @@
         private IconElement playButtonIcon;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
         private readonly AutoResetEvent backgroundAudioInitializedEvent;
+        private const int backgroundAudioWaitingTime = 2000; // 2 sec.
         private readonly ILogger logger;
         private readonly INavigationService navigationService;
 
@@ -388,7 +389,7 @@
                 backgroundAudioInitializedEvent.Set();
             }
 
-            bool result = backgroundAudioInitializedEvent.WaitOne(Constants.BackgroundAudioWaitingTime);
+            bool result = backgroundAudioInitializedEvent.WaitOne(backgroundAudioWaitingTime);
             if (result == true)
             {
                 logger.LogMessage("Foreground audio player: Background Task is running. Sending play command.");

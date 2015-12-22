@@ -73,7 +73,12 @@
             : this(_ => { execute(); }, _ => canExecute())
         {            
         }
-        
+
+        /// <summary>
+        /// Creates a new command.
+        /// </summary>
+        /// <param name="execute">The execution logic.</param>
+        /// <param name="canExecute">The execution status logic.</param>
         public RelayCommand(Action<object> execute, Func<object, bool> canExecute)
         {
             if (execute == null)

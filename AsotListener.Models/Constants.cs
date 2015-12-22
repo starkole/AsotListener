@@ -5,18 +5,32 @@
     /// </summary>
     public static class Constants
     {
-        public const string LoggingSessionName = "AsotListenerLoggingSession";
-        public const string Playlist = "Playlist";
-        public const string CurrentTrack = "CurrentTrack";
-        public const string EpisodesList = "EpisodesList";
-
+        /// <summary>
+        /// StartPlayback command key
+        /// </summary>
         public const string StartPlayback = "StartPlayback";
+
+        /// <summary>
+        /// SkipNext command key
+        /// </summary>
         public const string SkipNext = "SkipNext";
-        public const string IsBackgroundTaskRunning = "IsBackgroundTaskRunning";
+
+        /// <summary>
+        /// SkipPrevious command key
+        /// </summary>
         public const string SkipPrevious = "SkipPrevious";
+
+        /// <summary>
+        /// PausePlayback command key
+        /// </summary>
         public const string PausePlayback = "PausePlayback";
 
-        public const int BackgroundAudioWaitingTime = 2000; // 2 sec.
-        public const double DefaultEpisodeSize = 400 * 1024 * 1024; // 400MB
+        /// <summary>
+        /// IsBackgroundTaskRunning key
+        /// </summary>
+        public const string IsBackgroundTaskRunning = "IsBackgroundTaskRunning";
+
+
+        
     }
 }
