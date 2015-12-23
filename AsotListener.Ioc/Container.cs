@@ -22,7 +22,7 @@
         /// Registers type as singleton
         /// </summary>
         /// <typeparam name="TInterface">Interface type</typeparam>
-        /// <typeparam name="TImplementation">Type, that implements interfase</typeparam>
+        /// <typeparam name="TImplementation">Type, that implements interface</typeparam>
         public void RegisterSingleton<TInterface, TImplementation>() where TImplementation: TInterface
         {
             container.RegisterType<TInterface, TImplementation>(new ContainerControlledLifetimeManager());
@@ -32,14 +32,14 @@
         /// Registers type, so that container creates new type instance on every call to resolver
         /// </summary>
         /// <typeparam name="TInterface">Interface type</typeparam>
-        /// <typeparam name="TImplementation">Type, that implements interfase</typeparam>
+        /// <typeparam name="TImplementation">Type, that implements interface</typeparam>
         public void RegisterType<TInterface, TImplementation>() where TImplementation : TInterface
         {
             container.RegisterType<TInterface, TImplementation>(new TransientLifetimeManager());
         }
 
         /// <summary>
-        /// Regosters type
+        /// Registers type
         /// </summary>
         /// <typeparam name="T">Type to register</typeparam>
         public void RegisterType<T>()

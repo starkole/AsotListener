@@ -33,7 +33,7 @@
         }
 
         /// <summary>
-        /// Attribute target custom name obtained from localised resources
+        /// Attribute target custom name obtained from localized resources
         /// </summary>
         public override string Name => localizedValue ?? base.Name;
     }

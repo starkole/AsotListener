@@ -68,7 +68,7 @@
         }
 
         /// <summary>
-        /// Sacves playlist state to local storage
+        /// Saves playlist state to local storage
         /// </summary>
         /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task SavePlaylistToLocalStorage()

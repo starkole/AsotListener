@@ -11,7 +11,7 @@
     using Windows.Globalization;
 
     /// <summary>
-    /// Provides helper mthods to navigate between application pages
+    /// Provides helper methods to navigate between application pages
     /// </summary>
     public class NavigationService : INavigationService
     {

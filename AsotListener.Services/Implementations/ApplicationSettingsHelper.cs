@@ -29,7 +29,7 @@
         /// </summary>
         /// <typeparam name="T">The value type</typeparam>
         /// <param name="key">The value key</param>
-        /// <returns>The value, casted to type <see cref="T"/>, which coresponds to given key</returns>
+        /// <returns>The value, casted to type <see cref="T"/>, which corresponds to given key</returns>
         public T ReadSettingsValue<T>(string key)
         {
             using (var mutex = new Mutex(true, mutexName))

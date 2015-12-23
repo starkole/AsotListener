@@ -50,7 +50,7 @@
         /// </summary>
         /// <param name="name">Episode name</param>
         /// <param name="partNumber">Episode part number</param>
-        /// <returns>Newly created file instance or null in case of any errror</returns>
+        /// <returns>Newly created file instance or null in case of any error</returns>
         public async Task<IStorageFile> CreateEpisodePartFile(string name, int partNumber)
         {
             try

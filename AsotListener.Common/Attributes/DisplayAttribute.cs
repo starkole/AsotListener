@@ -19,10 +19,10 @@
         /// <param name="name">Custom name to be assigned to attribute target</param>
         public DisplayAttribute(string name)
         {
-#pragma warning disable RECS0021 // Warns about calls to virtual member functions occuring in the constructor
+#pragma warning disable RECS0021 // Warns about calls to virtual member functions occurring in the constructor
             // It's OK to call virtual member here
             Name = name;
-#pragma warning restore RECS0021 // Warns about calls to virtual member functions occuring in the constructor
+#pragma warning restore RECS0021 // Warns about calls to virtual member functions occurring in the constructor
         }
     }
 }
