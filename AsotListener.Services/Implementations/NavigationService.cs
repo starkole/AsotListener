@@ -26,6 +26,8 @@
 
         #endregion
 
+        //TODO: Move to App project.
+
         #region Ctor
 
         /// <summary>

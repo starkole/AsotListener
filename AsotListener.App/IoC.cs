@@ -17,6 +17,7 @@
 
             Services.IoC.Register();
 
+            // TODO: Define interfaces for view models
             container.RegisterType<PlayerViewModel>();
             container.RegisterType<EpisodesViewModel>();
             container.RegisterType<MainPageViewModel>();

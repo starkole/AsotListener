@@ -538,7 +538,7 @@
                 {
                     if (playlist.TrackList.Any(t => t.EpisodeName == episode.Name))
                     {
-                        episode.Status = Playing;
+                        episode.Status = Playing; //TODO: This state is not clear for the user
                         continue;
                     }
 

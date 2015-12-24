@@ -31,6 +31,7 @@
         /// </summary>
         public MainPage()
         {
+            // TODO: Think about using static properties
             IContainer container = Container.Instance;
 
             logger = container.Resolve<ILogger>();
@@ -88,6 +89,7 @@
 
         #region Event Handlers
 
+        // TODO: Generate context menu dynamically
         private void OnEpisodeListElementHolding(object sender, HoldingRoutedEventArgs args)
         {
             logger.LogMessage($"MainPage: Holding event with HoldingState={args.HoldingState}");
