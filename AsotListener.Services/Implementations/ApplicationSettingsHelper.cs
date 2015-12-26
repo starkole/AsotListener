@@ -2,9 +2,14 @@
 {
     using System;
     using System.Threading;
+    using System.Threading.Tasks;
+    using System.Linq;
     using Contracts;
+    using Models;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage;
+    using System.Collections.Generic;
+    using Common;
 
     /// <summary>
     /// Helper class to read and write settings to LocalSettings
@@ -12,15 +17,19 @@
     public sealed class ApplicationSettingsHelper : IApplicationSettingsHelper
     {
         private readonly ILogger logger;
+        private readonly IFileUtils fileUtils;
+
         private const string mutexName = "AsotListener.ApplicationSettingsHelper.Mutex";
+        private const string playlistFilename = "playlist.xml";
 
         /// <summary>
         /// Creates an instance of <see cref="ApplicationSettingsHelper"/> class
         /// </summary>
         /// <param name="logger">The logger instance</param>
-        public ApplicationSettingsHelper(ILogger logger)
+        public ApplicationSettingsHelper(ILogger logger, IFileUtils fileUtils)
         {
             this.logger = logger;
+            this.fileUtils = fileUtils;
             logger.LogMessage("ApplicationSettingsHelper initialized.", LoggingLevel.Information);
         }
 
@@ -90,6 +99,26 @@
                     mutex.ReleaseMutex();
                 }
             }
+        }
+
+        public async Task SavePlaylist()
+        {
+            logger.LogMessage($"Saving playlist with {Playlist.Instance.Count} tracks...", LoggingLevel.Information);
+            SaveSettingsValue(Keys.CurrentTrack, Playlist.Instance.CurrentTrackIndex);
+            await fileUtils.SaveToXmlFile(Playlist.Instance.ToList(), playlistFilename);
+            logger.LogMessage($"Playlist saved.");
+        }
+
+
+        public async Task LoadPlaylist()
+        {
+            var tracks = await fileUtils.ReadFromXmlFile<List<AudioTrack>>(playlistFilename);
+            int count = tracks?.Count ?? -1;
+            logger.LogMessage($"Loaded playlist with {count} tracks.", LoggingLevel.Information);
+            int currentTrackIndex = ReadSettingsValue<int>(Keys.CurrentTrack);
+            Playlist.Instance.Clear();
+            Playlist.Instance.AddRange(tracks);
+            Playlist.Instance.CurrentTrackIndex = currentTrackIndex;
         }
     }
 }

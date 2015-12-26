@@ -145,7 +145,7 @@
                             Margin="12,17,0,28">
                             <TextBlock 
                                 x:Name="CurrentTrackName" 
-                                Text="{Binding Playlist.CurrentTrack.Name}" 
+                                Text="{Binding CurrentTrackName}" 
                                 TextWrapping="WrapWholeWords"
                                 Style="{StaticResource SubheaderTextBlockStyle}"/>
                         </StackPanel>

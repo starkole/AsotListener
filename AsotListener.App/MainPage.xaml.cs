@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.App
 {
     using Ioc;
+    using Models;
     using Models.Enums;
     using Services.Contracts;
     using ViewModels;
@@ -80,7 +81,7 @@
                 case NavigationParameter.StartPlayback:
                     logger.LogMessage("Starting playback from MainPage navigation handler.");
                     MainPivot.SelectedItem = PlayerPivotItem;
-                    MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(MainPageViewModel.PlayerModel.Playlist.CurrentTrack);
+                    MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(Playlist.Instance.CurrentTrack);
                     break;
             }
         }

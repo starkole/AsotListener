@@ -9,7 +9,7 @@
     using Windows.Foundation.Diagnostics;
     using Ioc;
     using Common;
-
+    using Models;
     /// <summary>
     /// Impalements IBackgroundTask to provide an entry point for app code to be run in background. 
     /// Also takes care of handling UVC and communication channel with foreground
@@ -51,19 +51,17 @@
                 logger.LogMessage($"BackgroundAudioTask BackgroundMediaPlayer state is {state}.", LoggingLevel.Information);
 
                 applicationSettingsHelper = container.Resolve<IApplicationSettingsHelper>();
-                IPlayList playlist = container.Resolve<IPlayList>();
-                await playlist.LoadPlaylistFromLocalStorage();
-
+                await applicationSettingsHelper.LoadPlaylist();
                 audioManager = new AudioManager(
                     logger,
-                    playlist,
+                    applicationSettingsHelper,
                     SystemMediaTransportControls.GetForCurrentView());
 
                 BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
 
-                applicationSettingsHelper.SaveSettingsValue(Constants.IsBackgroundTaskRunning, true);
+                applicationSettingsHelper.SaveSettingsValue(Keys.IsBackgroundTaskRunning, true);
 
-                ValueSet message = new ValueSet { { Constants.IsBackgroundTaskRunning, true } };
+                ValueSet message = new ValueSet { { Keys.IsBackgroundTaskRunning, true } };
                 BackgroundMediaPlayer.SendMessageToForeground(message);
                 logger.LogMessage($"BackgroundAudioTask initialized.", LoggingLevel.Information);
             }
@@ -104,27 +102,31 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void BackgroundMediaPlayer_MessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
+        private async void BackgroundMediaPlayer_MessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
             foreach (string key in e.Data.Keys)
             {
                 switch (key)
                 {
-                    case Constants.StartPlayback:
+                    case Keys.StartPlayback:
                         logger.LogMessage("BackgroundAudioTask: Starting Playback");
-                        audioManager.StartPlayback();
+                        await audioManager.StartPlayback();
                         break;
-                    case Constants.SkipNext:
+                    case Keys.SkipToNext:
                         logger.LogMessage("BackgroundAudioTask: Skipping to next");
                         audioManager.SkipToNext();
                         break;
-                    case Constants.SkipPrevious:
+                    case Keys.SkipToPrevious:
                         logger.LogMessage("BackgroundAudioTask: Skipping to previous");
                         audioManager.SkipToPrevious();
                         break;
-                    case Constants.PausePlayback:
+                    case Keys.PausePlayback:
                         logger.LogMessage("BackgroundAudioTask: Trying to pause playback");
                         audioManager.PausePlayback();
+                        break;
+                    case Keys.PlaylistUpdated:
+                        logger.LogMessage("BackgroundAudioTask: Playlist  updated");
+                        await audioManager.LoadState();
                         break;
                 }
             }
@@ -143,7 +145,7 @@
 
             try
             {
-                applicationSettingsHelper?.SaveSettingsValue(Constants.IsBackgroundTaskRunning, false);
+                applicationSettingsHelper?.SaveSettingsValue(Keys.IsBackgroundTaskRunning, false);
                 audioManager?.Dispose();
                 logger?.SaveLogsToFile();
                 BackgroundMediaPlayer.Shutdown();

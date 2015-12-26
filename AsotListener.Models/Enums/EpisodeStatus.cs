@@ -16,7 +16,7 @@
         [LocalizedDisplay("Loaded", "EpisodeStatusLoaded")]
         Loaded,
 
-        [LocalizedDisplay("Playing", "EpisodeStatusPlaying")]
-        Playing
+        [LocalizedDisplay("In Playlist", "EpisodeStatusInPlaylist")]
+        InPlaylist
     }
 }

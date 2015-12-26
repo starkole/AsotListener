@@ -19,7 +19,6 @@
             container.RegisterSingleton<ILogger, Logger>();
             container.RegisterSingleton<IParser, Parser>();
             container.RegisterSingleton<IFileUtils, FileUtils>();
-            container.RegisterSingleton<IPlayList, Playlist>();
             container.RegisterSingleton<ILoaderFactory, LoaderFactory>();
             container.RegisterSingleton<IApplicationSettingsHelper, ApplicationSettingsHelper>();
             container.RegisterSingleton<INavigationService, NavigationService>();

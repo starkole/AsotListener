@@ -17,6 +17,9 @@
     using Windows.UI.Xaml;
     using Windows.ApplicationModel;
     using static Models.Enums.EpisodeStatus;
+    using Windows.Foundation.Collections;
+    using Common;
+    using Windows.Media.Playback;
 
     /// <summary>
     /// View model of episodes list
@@ -32,10 +35,10 @@
         private Dictionary<DownloadOperation, Episode> activeDownloadsByDownload;
         private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
-        private readonly IPlayList playlist;
         private readonly ILoaderFactory loaderFactory;
         private readonly IParser parser;
         private readonly INavigationService navigationService;
+        private readonly IApplicationSettingsHelper applicationSettingsHelper;
 
         #endregion
 
@@ -101,17 +104,17 @@
         public EpisodesViewModel(
             ILogger logger,
             IFileUtils fileUtils,
-            IPlayList playlist,
             ILoaderFactory loaderFactory,
             IParser parser,
-            INavigationService navigationService)
+            INavigationService navigationService,
+            IApplicationSettingsHelper applicationSettingsHelper)
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
-            this.playlist = playlist;
             this.loaderFactory = loaderFactory;
             this.parser = parser;
             this.navigationService = navigationService;
+            this.applicationSettingsHelper = applicationSettingsHelper;
 
             RefreshCommand = new RelayCommand(loadEpisodeListFromServer);
             DownloadCommand = new RelayCommand(downloadEpisode);
@@ -224,18 +227,16 @@
             var episode = boxedEpisode as Episode;
             if (canEpisodeBeDeleted(episode))
             {
-                var tracksToRemove = playlist.TrackList.Where(t => t.EpisodeName == episode.Name).ToList();
+                var tracksToRemove = Playlist.Instance.Where(t => t.EpisodeName == episode.Name).ToList();
+                bool isPlaylistAffected = tracksToRemove.Any();
                 foreach (var track in tracksToRemove)
                 {
-                    playlist.TrackList.Remove(track);
+                    Playlist.Instance.Remove(track);
                 }
-
-                if (playlist.CurrentTrack.EpisodeName == episode.Name)
+                if (isPlaylistAffected)
                 {
-                    playlist.CurrentTrack = playlist.TrackList.FirstOrDefault();
+                    await savePlaylistWithNotification();
                 }
-
-                await playlist.SavePlaylistToLocalStorage();
                 await fileUtils.DeleteEpisode(episode.Name);
             }
             episode.Status = CanBeLoaded;
@@ -252,18 +253,16 @@
                 return;
             }
 
-            if (!(episode.Status == Loaded || episode.Status == Playing))
+            if (!(episode.Status == Loaded || episode.Status == InPlaylist))
             {
                 logger.LogMessage($"EpisodesViewModel: Cannot play episode. It has invalid status.", LoggingLevel.Warning);
                 return;
             }
 
-            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name, StringComparison.CurrentCulture));
-            playlist.CurrentTrack = existingTracks.Any() ?
-                existingTracks.First() :
-                await addEpisodeToPlaylist(episode);
-            await playlist.SavePlaylistToLocalStorage();
-            episode.Status = Playing;
+            Playlist.Instance.CurrentTrack = Playlist.Instance.AddEpisodeFiles(episode.Name, await fileUtils.GetFilesListForEpisode(episode.Name));
+            await savePlaylistWithNotification();
+
+            episode.Status = InPlaylist;
             navigationService.Navigate(NavigationParameter.StartPlayback);
             logger.LogMessage("EpisodesViewModel: Episode scheduled to play.");
         }
@@ -284,25 +283,17 @@
                 return;
             }
 
-            var existingTracks = playlist.TrackList.Where(t => t.Name.StartsWith(episode.Name, StringComparison.CurrentCulture));
-            if (existingTracks.Any())
-            {
-                logger.LogMessage("EpisodesViewModel: Episode is already in playlist.");
-                return;
-            }
-
-            await addEpisodeToPlaylist(episode);
-            await playlist.SavePlaylistToLocalStorage();
-            episode.Status = Playing;
+            Playlist.Instance.AddEpisodeFiles(episode.Name, await fileUtils.GetFilesListForEpisode(episode.Name));
+            await savePlaylistWithNotification();
+            episode.Status = InPlaylist;
             logger.LogMessage("EpisodesViewModel: Add to playlist command executed.");
         }
 
         private async void clearPlaylistCommand()
         {
             logger.LogMessage("EpisodesViewModel: Executing ClearPlaylist command...");
-            playlist.CurrentTrack = null;
-            playlist.TrackList.Clear();
-            await playlist.SavePlaylistToLocalStorage();
+            Playlist.Instance.Clear();
+            await savePlaylistWithNotification();
             await updateEpisodesStates();
             logger.LogMessage("EpisodesViewModel: ClearPlaylist command executed.");
         }
@@ -497,31 +488,6 @@
             return total == 0 ? defaultEpisodeSize : total;
         }
 
-        private async Task<AudioTrack> addEpisodeToPlaylist(Episode episode)
-        {
-            logger.LogMessage("EpisodesViewModel: Adding episode to playlist...");
-            var fileNames = await fileUtils.GetFilesListForEpisode(episode.Name);
-            int counter = 0;
-            AudioTrack firstAddedTrack = null;
-            foreach (var file in fileNames)
-            {
-                counter++;
-                var track = new AudioTrack(episode.Name)
-                {
-                    Name = playlist.GetAudioTrackName(episode.Name, counter),
-                    Uri = file.Path
-                };
-
-                if (counter == 1)
-                {
-                    firstAddedTrack = track;
-                }
-            }
-
-            logger.LogMessage($"EpisodesViewModel: Episode {episode.Name} added to playlist.", LoggingLevel.Information);
-            return firstAddedTrack;
-        }
-
         private async Task updateEpisodesStates()
         {
             logger.LogMessage("EpisodesViewModel: Updating episode states...");
@@ -536,9 +502,9 @@
             {
                 if (existingFileNames.Contains(episode.Name))
                 {
-                    if (playlist.TrackList.Any(t => t.EpisodeName == episode.Name))
+                    if (Playlist.Instance.Contains(episode))
                     {
-                        episode.Status = Playing; //TODO: This state is not clear for the user
+                        episode.Status = InPlaylist;
                         continue;
                     }
 
@@ -554,10 +520,17 @@
             logger.LogMessage("EpisodesViewModel: Episode states has been updated successfully.");
         }
 
-        private bool canEpisodeBeDeleted(Episode episode) =>
+        private static bool canEpisodeBeDeleted(Episode episode) =>
             episode != null &&
             (episode.Status == Loaded ||
-            episode.Status == Playing);
+            episode.Status == InPlaylist);
+
+        private async Task savePlaylistWithNotification()
+        {
+            await applicationSettingsHelper.SavePlaylist();
+            var message = new ValueSet { { Keys.PlaylistUpdated, string.Empty } };
+            BackgroundMediaPlayer.SendMessageToBackground(message);
+        }
 
         #endregion
     }

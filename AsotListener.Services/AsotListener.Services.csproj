@@ -91,6 +91,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <ProjectReference Include="..\AsotListener.Common\AsotListener.Common.csproj">
+      <Project>{f953b426-5cdb-48b4-90be-5bf34760447f}</Project>
+      <Name>AsotListener.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AsotListener.Ioc\AsotListener.Ioc.csproj">
       <Project>{c11befe8-3fba-43bd-b79e-adb800ff835f}</Project>
       <Name>AsotListener.Ioc</Name>
@@ -109,7 +113,6 @@
     <Compile Include="Contracts\ILoader.cs" />
     <Compile Include="Contracts\ILogger.cs" />
     <Compile Include="Contracts\IParser.cs" />
-    <Compile Include="Contracts\IPlayList.cs" />
     <Compile Include="Contracts\INavigationService.cs" />
     <Compile Include="Implementations\Loader.cs" />
     <Compile Include="Implementations\LoaderFactory.cs" />
@@ -117,7 +120,6 @@
     <Compile Include="Implementations\NavigationService.cs" />
     <Compile Include="IoC.cs" />
     <Compile Include="Implementations\Parser.cs" />
-    <Compile Include="Implementations\Playlist.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">

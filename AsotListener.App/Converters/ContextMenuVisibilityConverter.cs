@@ -48,13 +48,13 @@
                     }
                     break;
                 case Delete:
-                    if (status == Loaded)
+                    if (status == Loaded || status == InPlaylist)
                     {
                         result = Visibility.Visible;
                     }
                     break;
                 case Play:
-                    if (status == Loaded)
+                    if (status == Loaded || status == InPlaylist)
                     {
                         result = Visibility.Visible;
                     }

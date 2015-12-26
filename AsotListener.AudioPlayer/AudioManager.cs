@@ -11,7 +11,7 @@
     using Windows.UI.Core;
     using Windows.UI.Popups;
     using System.Threading.Tasks;
-
+    using Common;
     /// <summary>
     /// Contains logic to manage audio playback
     /// </summary>
@@ -21,7 +21,7 @@
 
         private bool isDisposed = false;
         private readonly ILogger logger;
-        private IPlayList playlist;
+        private readonly IApplicationSettingsHelper applicationSettingsHelper;
         private MediaPlayer MediaPlayer => BackgroundMediaPlayer.Current;
         private SystemMediaTransportControls smtc;
 
@@ -33,16 +33,16 @@
         /// Creates new instance of <see cref="AudioManager"/>
         /// </summary>
         /// <param name="logger">The logger instance</param>
-        /// <param name="playlist">The playlist instance</param>
+        /// <param name="applicationSettingsHelper">The application settings helper instance</param>
         /// <param name="smtc">Instance of <see cref="SystemMediaTransportControls"/></param>
         public AudioManager(
             ILogger logger,
-            IPlayList playlist,
+            IApplicationSettingsHelper applicationSettingsHelper,
             SystemMediaTransportControls smtc)
         {
             this.logger = logger;
+            this.applicationSettingsHelper = applicationSettingsHelper;
             logger.LogMessage("Initializing Background Audio Manager...");
-            this.playlist = playlist;
 
             MediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
             MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
@@ -74,7 +74,7 @@
                 if (CanUpdatePlayerPosition())
                 {
                     // Start position must be set after payback has already been started
-                    sender.Position = playlist.CurrentTrack.StartPosition;
+                    sender.Position = Playlist.Instance.CurrentTrack?.StartPosition ?? TimeSpan.Zero;
                 }
 
                 // Set volume to 100%
@@ -94,9 +94,9 @@
         }
 
         private bool CanUpdatePlayerPosition() =>
-            playlist.CurrentTrack != null &&
-            playlist.CurrentTrack.StartPosition > TimeSpan.Zero &&
-            playlist.CurrentTrack.StartPosition < TimeSpan.FromSeconds(MediaPlayer.NaturalDuration.TotalSeconds - 1);
+            Playlist.Instance.CurrentTrack != null &&
+            Playlist.Instance.CurrentTrack.StartPosition > TimeSpan.Zero &&
+            Playlist.Instance.CurrentTrack.StartPosition < TimeSpan.FromSeconds(MediaPlayer.NaturalDuration.TotalSeconds - 1);
 
         private async void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
@@ -110,7 +110,7 @@
             sender.Play();
             smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
-            smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack?.Name ?? string.Empty;
+            smtc.DisplayUpdater.MusicProperties.Title = Playlist.Instance.CurrentTrack?.Name ?? string.Empty;
             smtc.DisplayUpdater.Update();
         }
 
@@ -133,13 +133,13 @@
             }
         }
 
-        private void Smtc_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
+        private async void Smtc_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
         {
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.Play:
                     logger.LogMessage("BackgroundAudio: UVC play button pressed");
-                    StartPlayback();
+                    await StartPlayback();
                     break;
                 case SystemMediaTransportControlsButton.Pause:
                     logger.LogMessage("BackgroundAudio: UVC pause button pressed");
@@ -163,37 +163,33 @@
         /// <summary>
         /// Starts playback from track from given index
         /// </summary>
-        /// <param name="rawIndex">Track index</param>
-        public void StartTrackAt(int rawIndex)
+        /// <param name="index">Track index</param>
+        public async void StartTrackAt(int index)
         {
-            logger.LogMessage($"BackgroundAudio: Preparing to play the track #{rawIndex}.");
-            if (!playlist.TrackList.Any())
+            logger.LogMessage($"BackgroundAudio: Preparing to play the track #{index}.");
+            if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
             {
-                return;
+                await SaveCurrentState();
             }
-
-            int tracksCount = playlist.TrackList.Count;
-            int index = rawIndex < 0 ?
-                (tracksCount - rawIndex) % tracksCount :
-                rawIndex % tracksCount;
-            playlist.CurrentTrack = playlist.TrackList[index];
-            StartPlayback();
+            Playlist.Instance.CurrentTrackIndex = index;
+            applicationSettingsHelper.SaveSettingsValue(Keys.CurrentTrack, index);
+            await StartPlayback();
         }
 
         /// <summary>
         /// Starts playback from given track
         /// </summary>
         /// <param name="audioTrack">Track to start from</param>
-        public void StartTrackAt(AudioTrack audioTrack)
+        public async void StartTrackAt(AudioTrack audioTrack)
         {
             logger.LogMessage($"BackgroundAudio: Preparing to play the track {audioTrack.Name}.");
-            if (!playlist.TrackList.Contains(audioTrack))
+            if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
             {
-                playlist.TrackList.Add(audioTrack);
+                await SaveCurrentState();
             }
-
-            playlist.CurrentTrack = audioTrack;
-            StartPlayback();
+            Playlist.Instance.CurrentTrack = audioTrack;
+            applicationSettingsHelper.SaveSettingsValue(Keys.CurrentTrack, Playlist.Instance.CurrentTrackIndex);
+            await StartPlayback();
         }
 
         /// <summary>
@@ -203,7 +199,7 @@
         {
             logger.LogMessage("BackgroundAudio: Advancing to the next track.");
             smtc.PlaybackStatus = MediaPlaybackStatus.Changing;
-            StartTrackAt(playlist.CurrentTrackIndex + 1);
+            StartTrackAt(Playlist.Instance.CurrentTrackIndex + 1);
         }
 
         /// <summary>
@@ -213,11 +209,11 @@
         {
             logger.LogMessage("BackgroundAudio: Returning to previous track.");
             smtc.PlaybackStatus = MediaPlaybackStatus.Changing;
-            StartTrackAt(playlist.CurrentTrackIndex - 1);
+            StartTrackAt(Playlist.Instance.CurrentTrackIndex - 1);
         }
 
         /// <summary>
-        /// Starts playing all tracks rfom the very first one
+        /// Starts playing all tracks from the very first one
         /// </summary>
         public void PlayAllTracks()
         {
@@ -240,18 +236,18 @@
         /// <summary>
         /// Starts playback
         /// </summary>
-        public async void StartPlayback()
+        public async Task StartPlayback()
         {
             logger.LogMessage("BackgroundAudio: Trying to start playback.");
-            if (playlist.CurrentTrack == null)
+            if (Playlist.Instance.CurrentTrack == null)
             {
                 //If the task was cancelled we would have saved the current track and its position. We will try playback from there
-                await playlist.LoadPlaylistFromLocalStorage();
-                if (playlist.CurrentTrack == null)
+                await applicationSettingsHelper.LoadPlaylist();
+                if (Playlist.Instance.CurrentTrack == null)
                 {
-                    if (playlist.TrackList.Any())
+                    if (Playlist.Instance.Any())
                     {
-                        playlist.CurrentTrack = playlist.TrackList[0];
+                        Playlist.Instance.CurrentTrack = Playlist.Instance[0];
                     }
                     else
                     {
@@ -265,7 +261,7 @@
             {
                 // Set AutoPlay to false because we set MediaPlayer_MediaOpened event handler to start playback
                 MediaPlayer.AutoPlay = false;
-                var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
+                var file = await StorageFile.GetFileFromPathAsync(Playlist.Instance.CurrentTrack.Uri);
                 MediaPlayer.SetFileSource(file);
                 logger.LogMessage($"BackgroundAudio: Set file source to {file.Name} ({file.Path}).", LoggingLevel.Information);
             }
@@ -282,12 +278,12 @@
         public async Task SaveCurrentState()
         {
             logger.LogMessage("BackgroundAudio: Saving current state.");
-            if (playlist.CurrentTrack != null)
+            if (Playlist.Instance.CurrentTrack != null)
             {
-                playlist.CurrentTrack.StartPosition = MediaPlayer.Position;
+                Playlist.Instance.CurrentTrack.StartPosition = MediaPlayer.Position;
             }
 
-            await playlist.SavePlaylistToLocalStorage();
+            await applicationSettingsHelper.SavePlaylist();
             logger.LogMessage("BackgroundAudio: Current state saved.");
         }
 
@@ -298,7 +294,9 @@
         public async Task LoadState()
         {
             logger.LogMessage("BackgroundAudio: Loading playlist from local storage.");
-            await playlist.LoadPlaylistFromLocalStorage();
+            TimeSpan currentTrackPosition = Playlist.Instance.CurrentTrack.StartPosition; //TODO: Add integrity checks here
+            await applicationSettingsHelper.LoadPlaylist();
+            Playlist.Instance.CurrentTrack.StartPosition = currentTrackPosition;
             logger.LogMessage("BackgroundAudio: Current state loaded.");
         }
 
