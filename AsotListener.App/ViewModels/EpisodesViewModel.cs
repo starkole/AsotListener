@@ -213,10 +213,15 @@
             // Making shallow copy of the list here because on cancelling episode, 
             // handleDownloadAsync method will delete if from original list.
             var episodeDownloads = activeDownloadsByEpisode[episode].ToList();
+            var filesToClear = episodeDownloads.Select(d => d.ResultFile.Name).ToList();
             foreach (var download in episodeDownloads)
             {
                 logger.LogMessage($"EpisodesViewModel: Stopping download from {download.RequestedUri} to {download.ResultFile.Name}", LoggingLevel.Warning);
                 download.AttachAsync().Cancel();
+            }
+            foreach (var file in filesToClear)
+            {
+                fileUtils.TryDeleteFile(file);
             }
             logger.LogMessage($"EpisodesViewModel: All downloads for episode {episode.Name} have been cancelled successfully.");
         }
@@ -344,7 +349,6 @@
             {
                 string filename = download.ResultFile.Name;
                 string episodeName = fileUtils.ExtractEpisodeNameFromFilename(filename);
-
                 var episode = EpisodeList.FirstOrDefault(e => e.Name.StartsWith(episodeName, StringComparison.CurrentCulture));
                 if (episode == null)
                 {
@@ -423,11 +427,13 @@
             {
                 logger.LogMessage("Download cancelled.");
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = CanBeLoaded);
+                await fileUtils.TryDeleteFile(download.ResultFile.Name);
             }
             catch (Exception ex)
             {
                 logger.LogMessage($"EpisodesViewModel: Download error. {ex.Message}", LoggingLevel.Error);
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => episode.Status = CanBeLoaded);
+                await fileUtils.TryDeleteFile(download.ResultFile.Name);
             }
             finally
             {
