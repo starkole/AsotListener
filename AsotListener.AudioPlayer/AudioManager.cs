@@ -12,9 +12,9 @@
     using Windows.UI.Popups;
     using System.Threading.Tasks;
     using Common;
-    /// <summary>
-    /// Contains logic to manage audio playback
-    /// </summary>
+    using Windows.Foundation.Collections;    /// <summary>
+                                             /// Contains logic to manage audio playback
+                                             /// </summary>
     internal sealed class AudioManager : IDisposable
     {
         #region Private Fields
@@ -172,23 +172,9 @@
                 await SaveCurrentState();
             }
             Playlist.Instance.CurrentTrackIndex = index;
-            applicationSettingsHelper.SaveSettingsValue(Keys.CurrentTrack, index);
-            await StartPlayback();
-        }
-
-        /// <summary>
-        /// Starts playback from given track
-        /// </summary>
-        /// <param name="audioTrack">Track to start from</param>
-        public async void StartTrackAt(AudioTrack audioTrack)
-        {
-            logger.LogMessage($"BackgroundAudio: Preparing to play the track {audioTrack.Name}.");
-            if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
-            {
-                await SaveCurrentState();
-            }
-            Playlist.Instance.CurrentTrack = audioTrack;
-            applicationSettingsHelper.SaveSettingsValue(Keys.CurrentTrack, Playlist.Instance.CurrentTrackIndex);
+         
+            BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentTrack, index } });
+            BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentPositionSeconds, Playlist.Instance.CurrentTrack.StartPosition.TotalSeconds } });
             await StartPlayback();
         }
 

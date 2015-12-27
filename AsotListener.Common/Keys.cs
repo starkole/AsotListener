@@ -39,5 +39,10 @@
         /// CurrentTrack key
         /// </summary>
         public const string CurrentTrack = "CurrentTrack";
+
+        /// <summary>
+        /// CurrentPosition in seconds key
+        /// </summary>
+        public const string CurrentPositionSeconds = "CurrentPositionSeconds";
     }
 }

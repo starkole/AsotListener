@@ -154,7 +154,7 @@
                             Margin="10,0,20,0"
                             IsEnabled="{Binding IsAudioSeekerEnabled}"
                             StepFrequency="{Binding AudioSeekerStepFrequency}"
-                            Value="{Binding AudioSeekerValue, Mode=OneWay}"
+                            Value="{Binding AudioSeekerValue, Mode=TwoWay}"
                             Maximum="{Binding AudioSeekerMaximum}"                            
                             PointerEntered="onAudioSeekSliderPointerEntered"
                             PointerCaptureLost="onAudioSeekSliderPointerCaptureLost"/>
