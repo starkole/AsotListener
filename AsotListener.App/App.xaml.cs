@@ -1,20 +1,26 @@
 ﻿namespace AsotListener.App
 {
-    using Windows.ApplicationModel.Activation;
-    using Windows.UI.Xaml;
+    using System;
     using System.Diagnostics;
-    using Services.Contracts;
+    using System.Threading.Tasks;
+    using HockeyApp;
     using Ioc;
-    using Windows.Foundation.Diagnostics;
     using Models.Enums;
+    using Services.Contracts;
+    using Windows.ApplicationModel;
+    using Windows.ApplicationModel.Activation;
+    using Windows.Foundation.Diagnostics;
+    using Windows.Storage;
+    using Windows.UI.Xaml;
 
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
     public sealed partial class App : Application
     {
-        private INavigationService navigationService;
-        private ILogger logger;
+        private readonly INavigationService navigationService;
+        private readonly ILogger logger;
+        private readonly IFileUtils fileUtils;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -22,15 +28,39 @@
         /// </summary>
         public App()
         {
-            AsotListener.App.IoC.Register();
+            IoC.Register();
             IContainer container = Container.Instance;
 
             InitializeComponent();
             UnhandledException += OnUnhandledException;
 
             navigationService = container.Resolve<INavigationService>();
+            fileUtils = container.Resolve<IFileUtils>();
             logger = container.Resolve<ILogger>();
             logger.LogMessage("Application initialized.");
+        }
+
+        private async Task<bool> setupHockeyAppAsync()
+        {
+            string appId = null;
+            try
+            {
+                var file = await Package.Current.InstalledLocation.GetFileAsync("hockeyapp.id").AsTask();
+                appId = await FileIO.ReadTextAsync(file);
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error reading Hockey configuration. {ex.Message}", LoggingLevel.Error);
+            }
+
+            if (string.IsNullOrWhiteSpace(appId))
+            {
+                return false;
+            }
+
+            HockeyClient.Current.Configure(appId);
+            logger.LogMessage("Hockey configured.", LoggingLevel.Information);
+            return true;
         }
 
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -43,7 +73,7 @@
         /// Invoked when the application is launched normally by the end user.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             logger.LogMessage("Application launched.", LoggingLevel.Information);
 #if DEBUG
@@ -51,6 +81,11 @@
 #endif            
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
             Window.Current.Activate();
+            if (await setupHockeyAppAsync())
+            {
+                await HockeyClient.Current.SendCrashesAsync(true);
+                await HockeyClient.Current.CheckForAppUpdateAsync();
+            }
         }
     }
 }
