@@ -164,6 +164,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AsotListener.ruleset" />
+    <Content Include="hockeyapp.id">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
