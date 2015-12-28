@@ -234,6 +234,7 @@
                 return;
             }
 
+            CurrentTrackName = Playlist.Instance.CurrentTrack.Name;
             PlayButtonIcon = MediaPlayer.CurrentState == Playing ? pauseIcon : playIcon;
             IsNextButtonEnabled = true;
             IsPlayButtonEnabled = true;
