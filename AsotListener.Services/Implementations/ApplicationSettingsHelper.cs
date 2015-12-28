@@ -21,6 +21,7 @@
 
         private const string mutexName = "AsotListener.ApplicationSettingsHelper.Mutex";
         private const string playlistFilename = "playlist.xml";
+        private const int mutexTimeout = 2000;
 
         /// <summary>
         /// Creates an instance of <see cref="ApplicationSettingsHelper"/> class
@@ -41,32 +42,29 @@
         /// <returns>The value, casted to type <see cref="T"/>, which corresponds to given key</returns>
         public T ReadSettingsValue<T>(string key)
         {
-            using (var mutex = new Mutex(true, mutexName))
+            logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
+            var mutex = new Mutex(false, mutexName);
+            try
             {
-                mutex.WaitOne();
-                try
+                mutex.WaitOne(mutexTimeout);
+                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
                 {
-                    logger.LogMessage($"Reading {key} parameter from LoaclSettings.");
-                    if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
-                    {
-                        logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
-                        return default(T);
-                    }
-                    else
-                    {
-                        var value = (T)ApplicationData.Current.LocalSettings.Values[key];
-                        return value;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogMessage($"Exception on reading from LoaclSettings. {ex.Message}", LoggingLevel.Error);
+                    logger.LogMessage($"No {key} parameter found in LoaclSettings.", LoggingLevel.Warning);
                     return default(T);
                 }
-                finally
-                {
-                    mutex.ReleaseMutex();
-                }
+
+                var value = (T)ApplicationData.Current.LocalSettings.Values[key];
+                return value;
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception on reading from LoaclSettings. {ex.Message}", LoggingLevel.Error);
+                return default(T);
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+                mutex.Dispose();
             }
         }
 
@@ -75,30 +73,30 @@
         /// </summary>
         public void SaveSettingsValue(string key, object value)
         {
-            using (var mutex = new Mutex(true, mutexName))
+            logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
+            var mutex = new Mutex(false, mutexName);
+            try
             {
-                mutex.WaitOne();
-                try
+                mutex.WaitOne(mutexTimeout);
+                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
                 {
-                    logger.LogMessage($"Saving {key} parameter to LoaclSettings.");
-                    if (!ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
-                    {
-                        ApplicationData.Current.LocalSettings.Values.Add(key, value);
-                    }
-                    else
-                    {
-                        ApplicationData.Current.LocalSettings.Values[key] = value;
-                    }
+                    ApplicationData.Current.LocalSettings.Values.Add(key, value);
                 }
-                catch (Exception ex)
+                else
                 {
-                    logger.LogMessage($"Exception on saving to LoaclSettings. {ex.Message}", LoggingLevel.Error);
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
+                    ApplicationData.Current.LocalSettings.Values[key] = value;
                 }
             }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Exception on saving to LoaclSettings. {ex.Message}", LoggingLevel.Error);
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+                mutex.Dispose();
+            }
+
         }
 
         public async Task SavePlaylist()
