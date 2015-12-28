@@ -142,12 +142,12 @@
                     <StackPanel Margin="0,20,0,0" Grid.Row="0">
                         <StackPanel 
                             x:Name="TitlePanel" 
-                            Margin="12,17,0,28">
+                            Margin="15,0,0,15">
                             <TextBlock 
                                 x:Name="CurrentTrackName" 
                                 Text="{Binding CurrentTrackName}" 
                                 TextWrapping="WrapWholeWords"
-                                Style="{StaticResource SubheaderTextBlockStyle}"/>
+                                Style="{StaticResource BaseTextBlockStyle}"/>
                         </StackPanel>
                         <Slider 
                             x:Name="AudioSeekSlider"
@@ -172,8 +172,9 @@
                                 Style="{StaticResource BodyTextBlockStyle}"/>
                         </Grid>
                         <StackPanel 
-                            Margin="10,40,0,0" 
-                            Orientation="Horizontal">
+                            Margin="10,0,20,0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center">
                             <AppBarButton 
                                 x:Name="prevButton" 
                                 Icon="Previous" 
