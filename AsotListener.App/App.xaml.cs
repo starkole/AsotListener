@@ -106,6 +106,18 @@
         {
             logger.LogMessage("Application launched.", LoggingLevel.Information);
 #if DEBUG
+            try
+            {
+                var displayRequest = new Windows.System.Display.DisplayRequest();
+                displayRequest.RequestActive();
+                Suspending += (_, __) => displayRequest.RequestRelease();
+                UnhandledException += (_, __) => displayRequest.RequestRelease();
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error setting up display request for debugging. {ex.Message}", LoggingLevel.Error);
+            }
+            DebugSettings.BindingFailed += (o, a) => logger.LogMessage($"BindingFailed. {a.Message}", LoggingLevel.Error);
             DebugSettings.EnableFrameRateCounter |= Debugger.IsAttached;
 #endif            
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
