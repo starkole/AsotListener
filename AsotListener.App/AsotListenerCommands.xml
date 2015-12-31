@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- Be sure to use the new v1.1 namespace to utilize the new PhraseTopic feature -->
+<VoiceCommands xmlns="http://schemas.microsoft.com/voicecommands/1.1">
+    <!-- The CommandSet Name is used to programmatically access the CommandSet -->
+    <CommandSet xml:lang="en-us" Name="AsotListenerCommandSet_en-us">
+        <!-- The CommandPrefix provides an alternative to your full app name for invocation -->
+        <CommandPrefix> Listener </CommandPrefix>
+        <!-- The CommandSet Example appears in the global help alongside your app name -->
+        <Example> play the last episode </Example>
+
+        <Command Name="playTheLastEpisode">
+            <!-- The Command example appears in the drill-down help page for your app -->
+            <Example> play the last episode </Example>
+            <!-- ListenFor elements provide ways to say the command, including references to 
+            {PhraseLists} and {PhraseTopics} as well as [optional] words -->
+            <ListenFor> play [the] last episode </ListenFor>
+            <Feedback> Playing you the last downloaded episode </Feedback>
+            <Navigate/>
+        </Command>
+        <!-- 
+        TODO: Add the following commands:
+        start playback
+        pause playback
+        what episodes do I have (with answer)
+        play episode by number
+        check for updates (with option to download new episodes?)
+        navigation forward and backward by time
+        navigation forward and backward by episode
+        -->
+    </CommandSet>
+</VoiceCommands>

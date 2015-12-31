@@ -5,11 +5,15 @@
     using System.Threading.Tasks;
     using HockeyApp;
     using Ioc;
+    using Models;
     using Models.Enums;
     using Services.Contracts;
+    using ViewModels;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
     using Windows.Foundation.Diagnostics;
+    using Windows.Media.Playback;
+    using Windows.Media.SpeechRecognition;
     using Windows.Storage;
     using Windows.UI.Xaml;
 
@@ -57,16 +61,41 @@
             {
                 return false;
             }
-
+                        
             HockeyClient.Current.Configure(appId);
             logger.LogMessage("Hockey configured.", LoggingLevel.Information);
             return true;
+        }
+
+        private async Task setupVoiceCommandsAsync()
+        {
+            try
+            {
+                var storageFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///AsotListenerCommands.xml"));
+                await VoiceCommandManager.InstallCommandSetsFromStorageFileAsync(storageFile);
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error installing voice commands set. {ex.Message}", LoggingLevel.Error);
+            }
+            logger.LogMessage("Voice commands installed.", LoggingLevel.Information);
         }
 
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             logger.LogMessage($"Unhandled exception occurred. {e.Message}", LoggingLevel.Critical);
             logger.SaveLogsToFile();
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            base.OnActivated(args);
+            if (args.Kind == ActivationKind.VoiceCommand)
+            {
+                //var commandArgs = args as VoiceCommandActivatedEventArgs;
+                navigationService.Initialize(typeof(MainPage), NavigationParameter.StartPlayback);
+                Window.Current.Activate();
+            }
         }
 
         /// <summary>
@@ -81,6 +110,7 @@
 #endif            
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
             Window.Current.Activate();
+            await setupVoiceCommandsAsync();
             if (await setupHockeyAppAsync())
             {
                 await HockeyClient.Current.SendCrashesAsync(true);
