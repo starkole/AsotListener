@@ -9,5 +9,7 @@
         void SaveSettingsValue(string key, object value);
         Task SavePlaylist();
         Task LoadPlaylist();
+        Task SaveEpisodeList();
+        Task LoadEpisodeList();
     }
 }

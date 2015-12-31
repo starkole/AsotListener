@@ -1,25 +1,26 @@
 ﻿namespace AsotListener.App.ViewModels
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
-    using Services.Contracts;
-    using Models;
     using System.Windows.Input;
-    using Windows.Foundation.Diagnostics;
-    using Windows.Networking.BackgroundTransfer;
-    using System.Collections.Generic;
-    using Windows.UI.Core;
-    using Windows.ApplicationModel.Core;
+    using Common;
+    using Models;
     using Models.Enums;
+    using Services.Contracts;
+    using Windows.ApplicationModel;
+    using Windows.ApplicationModel.Core;
+    using Windows.Foundation.Collections;
+    using Windows.Foundation.Diagnostics;
+    using Windows.Media.Playback;
+    using Windows.Networking.BackgroundTransfer;
+    using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml;
-    using Windows.ApplicationModel;
+
     using static Models.Enums.EpisodeStatus;
-    using Windows.Foundation.Collections;
-    using Common;
-    using Windows.Media.Playback;
 
     /// <summary>
     /// View model of episodes list
