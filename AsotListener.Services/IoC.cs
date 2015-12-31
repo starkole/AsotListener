@@ -22,6 +22,7 @@
             container.RegisterSingleton<ILoaderFactory, LoaderFactory>();
             container.RegisterSingleton<IApplicationSettingsHelper, ApplicationSettingsHelper>();
             container.RegisterSingleton<INavigationService, NavigationService>();
+            container.RegisterSingleton<IPlaybackManager, PlaybackManager>();
         }
     }
 }

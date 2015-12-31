@@ -39,10 +39,10 @@
         private IconElement playButtonIcon;
         private string currentTrackName;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
-        private readonly AutoResetEvent backgroundAudioInitializedEvent;
         private const int backgroundAudioWaitingTime = 2000; // 2 sec.
         private readonly ILogger logger;
         private readonly INavigationService navigationService;
+        private readonly IPlaybackManager playbackManager;
 
         #endregion
 
@@ -188,12 +188,13 @@
         public PlayerViewModel(
             ILogger logger,
             IApplicationSettingsHelper applicationSettingsHelper,
-            INavigationService navigationService)
+            INavigationService navigationService,
+            IPlaybackManager playbackManager)
         {
-            backgroundAudioInitializedEvent = new AutoResetEvent(false);
             this.logger = logger;
             this.navigationService = navigationService;
             this.applicationSettingsHelper = applicationSettingsHelper;
+            this.playbackManager = playbackManager;
             pauseIcon = new SymbolIcon(Symbol.Pause);
             playIcon = new SymbolIcon(Symbol.Play);
             PlayButtonIcon = playIcon;
@@ -206,10 +207,6 @@
 
             Application.Current.Suspending += onAppSuspending;
             Application.Current.Resuming += initializeAsync;
-
-            // Ensure that Background Audio is initialized by accessing BackgroundMediaPlayer.Current
-            var state = MediaPlayer.CurrentState;
-            logger.LogMessage($"Foreground audio: Current media player state is {state}.", LoggingLevel.Information);
 
             initializeAsync(null, null);
             logger.LogMessage("Foreground audio player initialized.", LoggingLevel.Information);
@@ -269,8 +266,7 @@
 
         private void onPreviousTrackAction()
         {
-            logger.LogMessage("Foreground audio player 'Previous Track' command fired.");
-            BackgroundMediaPlayer.SendMessageToBackground(new ValueSet { { Keys.SkipToPrevious, null } });
+            playbackManager.GoToPreviousTrack();
 
             // Prevent the user from repeatedly pressing the button and causing 
             // a back-long of button presses to be handled. This button is re-enabled 
@@ -280,23 +276,20 @@
 
         private void onPlayPauseAction()
         {
-            logger.LogMessage("Foreground audio player 'Play/Pause' command fired.");
-
             // Play button will be enabled when media player will be ready
             IsPlayButtonEnabled = false;
-            if (IsBackgroundTaskRunning && MediaPlayer.CurrentState == Playing)
+            if (MediaPlayer.CurrentState == Playing)
             {
-                BackgroundMediaPlayer.SendMessageToBackground(new ValueSet { { Keys.PausePlayback, null } });
-                return;
+                playbackManager.Pause();
+            } else
+            {
+                playbackManager.Play();
             }
-
-            WaitForBackgroundAudioTask();
         }
 
         private void onNextTrackAction()
         {
-            logger.LogMessage("Foreground audio player 'Next Track' command fired.");
-            BackgroundMediaPlayer.SendMessageToBackground(new ValueSet { { Keys.SkipToNext, null } });
+            playbackManager.GoToNextTrack();
 
             // Prevent the user from repeatedly pressing the button and causing 
             // a back-long of button presses to be handled. This button is re-enabled 
@@ -349,10 +342,6 @@
             {
                 switch (key)
                 {
-                    case Keys.IsBackgroundTaskRunning:
-                        logger.LogMessage("Foreground audio player MessageReceivedFromBackground: Background Task started.");
-                        backgroundAudioInitializedEvent.Set();
-                        break;
                     case Keys.CurrentTrack:
                         int index = (int)e.Data[Keys.CurrentTrack];
                         logger.LogMessage($"Foreground audio player MessageReceivedFromBackground: Current track changed to {index}.");
@@ -370,17 +359,7 @@
         /// Changes current player position based on audio seeker slider value changes
         /// </summary>
         /// <param name="slider">Slider instance</param>
-        public void UpdateProgressFromSlider(Slider slider)
-        {
-            if (MediaPlayer.CurrentState == Playing && slider != null)
-            {
-                var newPosition = slider.Value < 0 ? 0 : slider.Value;
-                var totalSeconds = Math.Round(MediaPlayer.NaturalDuration.TotalSeconds) - 1;
-                newPosition = newPosition > totalSeconds ? totalSeconds : newPosition;
-                MediaPlayer.Position = TimeSpan.FromSeconds(newPosition);
-                logger.LogMessage($"Foreground audio player: Player position updated to {newPosition} seconds.");
-            }
-        }
+        public void UpdateProgressFromSlider(Slider slider) => playbackManager.UpdateProgressFromSlider(slider);
 
         private int getAudioSeekerStepFrequency(TimeSpan timevalue)
         {
@@ -461,37 +440,13 @@
 
         private void addMediaPlayerEventHandlers()
         {
-            // Ensure we subscribe only once
+            // Ensure we subscribe handlers only once
             MediaPlayer.CurrentStateChanged -= onMediaPlayerCurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground -= onMessageReceivedFromBackground;
 
             MediaPlayer.CurrentStateChanged += onMediaPlayerCurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground += onMessageReceivedFromBackground;
-        }
-
-        private void WaitForBackgroundAudioTask()
-        {
-            logger.LogMessage("Foreground audio player: waiting for Background Task...");
-            addMediaPlayerEventHandlers();
-            if (IsBackgroundTaskRunning)
-            {
-                backgroundAudioInitializedEvent.Set();
-            }
-
-            bool result = backgroundAudioInitializedEvent.WaitOne(backgroundAudioWaitingTime);
-            if (result == true)
-            {
-                logger.LogMessage("Foreground audio player: Background Task is running. Sending play command.");
-                var message = new ValueSet { { Keys.StartPlayback, string.Empty } };
-                BackgroundMediaPlayer.SendMessageToBackground(message);
-            }
-            else
-            {
-                var message = "Foreground audio player: Background Audio Task didn't start in expected time";
-                logger.LogMessage(message, LoggingLevel.Error);
-                throw new Exception(message);
-            }
-        }
+        }        
 
         #endregion
 
@@ -505,7 +460,6 @@
             logger.LogMessage("Foreground audio player: disposing.");
             removeMediaPlayerEventHandlers();
             stopProgressUpdateTimer();
-            backgroundAudioInitializedEvent.Dispose();
         }
 
         #endregion
