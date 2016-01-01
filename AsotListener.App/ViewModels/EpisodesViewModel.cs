@@ -30,8 +30,6 @@
         #region Fields
 
         private const double defaultEpisodeSize = 400 * 1024 * 1024; // 400MB
-        private const string episodeListFileName = "episodeList.xml";
-        private ObservableCollection<Episode> episodes;
         private Dictionary<Episode, List<DownloadOperation>> activeDownloadsByEpisode;
         private Dictionary<DownloadOperation, Episode> activeDownloadsByDownload;
         private readonly ILogger logger;
@@ -48,11 +46,7 @@
         /// <summary>
         /// A list of available episodes
         /// </summary>
-        public ObservableCollection<Episode> EpisodeList
-        {
-            get { return episodes; }
-            private set { SetField(ref episodes, value, nameof(EpisodeList)); }
-        }
+        public EpisodeList EpisodeList => EpisodeList.Instance;
 
         /// <summary>
         /// Downloads fresh episodes list from server
@@ -152,10 +146,12 @@
             using (ILoader loader = loaderFactory.GetLoader())
             {
                 string episodeListPage = await loader.FetchEpisodeListAsync();
-                EpisodeList = parser.ParseEpisodeList(episodeListPage);
+                var episodes = parser.ParseEpisodeList(episodeListPage);
+                EpisodeList.Clear();
+                EpisodeList.AddRange(episodes);
             }
             await updateEpisodesStates();
-            await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
+            await applicationSettingsHelper.SaveEpisodeList();
             logger.LogMessage("EpisodesViewModel: Episode list loaded.", LoggingLevel.Information);
         }
 
@@ -319,15 +315,14 @@
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             logger.LogMessage("EpisodesViewModel: Application is suspending. Saving state...");
-            await fileUtils.SaveToXmlFile(EpisodeList, episodeListFileName);
+            await applicationSettingsHelper.SaveEpisodeList();
             logger.LogMessage("EpisodesViewModel: State saved on application suspending.", LoggingLevel.Information);
             deferral.Complete();
         }
 
         private async Task loadEpisodesList()
         {
-            logger.LogMessage("EpisodesViewModel: Loading episodes list...");
-            EpisodeList = await fileUtils.ReadFromXmlFile<ObservableCollection<Episode>>(episodeListFileName);
+            await applicationSettingsHelper.LoadEpisodeList();
             if (EpisodeList == null || !EpisodeList.Any())
             {
                 logger.LogMessage("EpisodesViewModel: Saved list hasn't been found. Loading list from server.");
