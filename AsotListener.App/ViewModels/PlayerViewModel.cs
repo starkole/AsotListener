@@ -2,6 +2,7 @@
 {
     using System;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Input;
     using Common;
     using Models;
@@ -20,7 +21,7 @@
     /// <summary>
     /// View model of audio player
     /// </summary>
-    public sealed class PlayerViewModel : BaseModel, IDisposable
+    public sealed class PlayerViewModel : BaseModel, IDisposable, IAsyncInitialization
     {
         #region Fields
 
@@ -174,6 +175,8 @@
             set { SetField(ref currentTrackName, value, nameof(CurrentTrackName)); }
         }
 
+        public Task Initialization { get; }
+
         #endregion
 
         #region Ctor
@@ -206,9 +209,9 @@
             PlayPauseCommand = new RelayCommand((Action)onPlayPauseAction);
 
             Application.Current.Suspending += onAppSuspending;
-            Application.Current.Resuming += initializeAsync;
+            Application.Current.Resuming += onAppResuming;
 
-            initializeAsync(null, null);
+            Initialization = initializeAsync();
             logger.LogMessage("Foreground audio player initialized.", LoggingLevel.Information);
         }
 
@@ -220,7 +223,7 @@
         /// Sends message to background informing app has resumed
         /// Subscribe to MediaPlayer events
         /// </summary>
-        private async void initializeAsync(object sender, object e)
+        private async Task initializeAsync()
         {
             logger.LogMessage("Foreground audio player updating current state...");
 
@@ -231,7 +234,8 @@
                 return;
             }
 
-            CurrentTrackName = Playlist.Instance.CurrentTrack.Name;
+            CurrentTrackName = Playlist.Instance.CurrentTrack.Name; 
+            // TODO: How do I know if it is my track playing now?
             PlayButtonIcon = MediaPlayer.CurrentState == Playing ? pauseIcon : playIcon;
             IsNextButtonEnabled = true;
             IsPlayButtonEnabled = true;
@@ -258,6 +262,11 @@
             removeMediaPlayerEventHandlers();
             logger.LogMessage("Foreground audio player suspended.", LoggingLevel.Information);
             deferral.Complete();
+        }
+
+        private async void onAppResuming(object sender, object e)
+        {
+            await initializeAsync();
         }
 
         #endregion
