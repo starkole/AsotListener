@@ -1,13 +1,14 @@
 ﻿namespace AsotListener.Services.Contracts
 {
     using System.Threading.Tasks;
-    using AsotListener.Models;
+    using Common;
 
-    public interface IApplicationSettingsHelper
+    public interface IApplicationSettingsHelper: IAsyncInitialization
     {
         T ReadSettingsValue<T>(string key);
         void SaveSettingsValue(string key, object value);
         Task SavePlaylist();
+        Task SavePlaylistWithNotification();
         Task LoadPlaylist();
         Task SaveEpisodeList();
         Task LoadEpisodeList();

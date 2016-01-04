@@ -6,7 +6,7 @@
 
     public interface ILoader: IDisposable
     {
-        Task<string> FetchEpisodeListAsync();
+        Task FetchEpisodeListAsync();
         Task<string> FetchEpisodePageAsync(Episode episode);
     }
 }

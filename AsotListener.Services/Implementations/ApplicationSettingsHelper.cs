@@ -10,6 +10,8 @@
     using Windows.Storage;
     using System.Collections.Generic;
     using Common;
+    using Windows.Media.Playback;
+    using Windows.Foundation.Collections;
 
     /// <summary>
     /// Helper class to read and write settings to LocalSettings
@@ -25,6 +27,11 @@
         private const int mutexTimeout = 2000;
 
         /// <summary>
+        /// The result of the asynchronous initialization.
+        /// </summary>
+        public Task Initialization { get; }
+
+        /// <summary>
         /// Creates an instance of <see cref="ApplicationSettingsHelper"/> class
         /// </summary>
         /// <param name="logger">The logger instance</param>
@@ -32,7 +39,14 @@
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
+            Initialization = initializeAsync();
             logger.LogMessage("ApplicationSettingsHelper initialized.", LoggingLevel.Information);
+        }
+
+        private async Task initializeAsync()
+        {
+            await LoadPlaylist();
+            await LoadEpisodeList();
         }
 
         /// <summary>
@@ -103,13 +117,23 @@
         /// <summary>
         /// Saves current playlist to file
         /// </summary>
-        /// <returns>Task which completes after playlist has been saved </returns>
+        /// <returns>Task which completes after playlist has been saved</returns>
         public async Task SavePlaylist()
         {
             logger.LogMessage($"Saving playlist with {Playlist.Instance.Count} tracks...", LoggingLevel.Information);
             SaveSettingsValue(Keys.CurrentTrack, Playlist.Instance.CurrentTrackIndex);
             await fileUtils.SaveToXmlFile(Playlist.Instance.ToList(), playlistFilename);
             logger.LogMessage($"Playlist saved.");
+        }
+
+        /// <summary>
+        /// Saves current playlist to file and notifies BackgroundAudio task about it.
+        /// </summary>
+        /// <returns>Task which completes after playlist has been saved</returns>
+        public async Task SavePlaylistWithNotification()
+        {
+            await SavePlaylist();
+            BackgroundMediaPlayer.SendMessageToBackground(new ValueSet { { Keys.PlaylistUpdated, null } });
         }
 
         /// <summary>

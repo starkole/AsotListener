@@ -28,12 +28,16 @@
         {
             if (newItems != null && newItems.Any())
             {
+                int lastItemIndex = Items.Count - 1;
+                lastItemIndex = lastItemIndex < 0 ? 0 : lastItemIndex;
                 foreach (var item in newItems)
                 {
                     Items.Add(item);
                 }
 
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems.ToList()));
+                IList<Episode> itemsList = newItems.ToList();
+                var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemsList, lastItemIndex);
+                OnCollectionChanged(args);
             }
         }
     }

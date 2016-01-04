@@ -105,8 +105,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contracts\IEpisodeListManager.cs" />
     <Compile Include="Contracts\ILoaderFactory.cs" />
     <Compile Include="Implementations\ApplicationSettingsHelper.cs" />
+    <Compile Include="Implementations\DownloadManager.cs" />
+    <Compile Include="Implementations\EpisodeListManager.cs" />
     <Compile Include="Implementations\FileUtils.cs" />
     <Compile Include="Contracts\IApplicationSettingsHelper.cs" />
     <Compile Include="Contracts\IFileUtils.cs" />
@@ -115,6 +118,7 @@
     <Compile Include="Contracts\IParser.cs" />
     <Compile Include="Contracts\INavigationService.cs" />
     <Compile Include="Contracts\IPlaybackManager.cs" />
+    <Compile Include="Contracts\IDownloadManager.cs" />
     <Compile Include="Implementations\Loader.cs" />
     <Compile Include="Implementations\LoaderFactory.cs" />
     <Compile Include="Implementations\Logger.cs" />
