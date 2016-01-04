@@ -179,7 +179,7 @@
         /// <returns>
         /// true if <see cref="Episode"/> is found in the <see cref="Playlist"/>; otherwise, false
         /// </returns>
-        public bool Contains(Episode episode) => this.Any(t => t.Name == episode?.Name);
+        public bool Contains(Episode episode) => this.Any(t => t.EpisodeName == episode?.Name);
 
         #endregion
     }
