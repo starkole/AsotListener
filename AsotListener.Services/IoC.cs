@@ -25,6 +25,7 @@
             container.RegisterSingleton<IPlaybackManager, PlaybackManager>();
             container.RegisterSingleton<IDownloadManager, DownloadManager>();
             container.RegisterSingleton<IEpisodeListManager, EpisodeListManager>();
+            container.RegisterSingleton<IVoiceCommandsHandler, VoiceCommandsHandler>();
         }
     }
 }

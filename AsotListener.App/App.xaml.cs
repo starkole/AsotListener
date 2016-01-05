@@ -5,14 +5,11 @@
     using System.Threading.Tasks;
     using HockeyApp;
     using Ioc;
-    using Models;
     using Models.Enums;
     using Services.Contracts;
-    using ViewModels;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
     using Windows.Foundation.Diagnostics;
-    using Windows.Media.Playback;
     using Windows.Media.SpeechRecognition;
     using Windows.Storage;
     using Windows.UI.Xaml;
@@ -22,9 +19,14 @@
     /// </summary>
     public sealed partial class App : Application
     {
-        private readonly INavigationService navigationService;
+        #region Declarations
+
         private readonly ILogger logger;
-        private readonly IFileUtils fileUtils;
+        private IContainer container => Container.Instance; 
+        
+        #endregion
+
+        #region Ctor
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -33,16 +35,75 @@
         public App()
         {
             IoC.Register();
-            IContainer container = Container.Instance;
-
             InitializeComponent();
-            UnhandledException += OnUnhandledException;
-
-            navigationService = container.Resolve<INavigationService>();
-            fileUtils = container.Resolve<IFileUtils>();
+            UnhandledException += onUnhandledException;
             logger = container.Resolve<ILogger>();
             logger.LogMessage("Application initialized.");
+        } 
+
+        #endregion
+
+        #region Overrides
+
+        protected override async void OnActivated(IActivatedEventArgs args)
+        {
+            base.OnActivated(args);
+            if (args.Kind == ActivationKind.VoiceCommand)
+            {
+                var voiceCommandsHandler = container.Resolve<IVoiceCommandsHandler>();
+                await voiceCommandsHandler.Initialization;
+                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);
+                Exit();
+            }
         }
+
+        /// <summary>
+        /// Invoked when the application is launched normally by the end user.
+        /// </summary>
+        /// <param name="args">Details about the launch request and process.</param>
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
+        {
+            logger.LogMessage("Application launched.", LoggingLevel.Information);
+#if DEBUG
+            try
+            {
+                // Prevent display to turn off while debugging.
+                var displayRequest = new Windows.System.Display.DisplayRequest();
+                displayRequest.RequestActive();
+                Suspending += (_, __) => displayRequest.RequestRelease();
+                UnhandledException += (_, __) => displayRequest.RequestRelease();
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error setting up display request for debugging. {ex.Message}", LoggingLevel.Error);
+            }
+            DebugSettings.BindingFailed += (o, a) => logger.LogMessage($"BindingFailed. {a.Message}", LoggingLevel.Error);
+            DebugSettings.EnableFrameRateCounter |= Debugger.IsAttached;
+#endif            
+            var navigationService = container.Resolve<INavigationService>();
+            navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
+            Window.Current.Activate();
+            await setupVoiceCommandsAsync();
+            if (await setupHockeyAppAsync())
+            {
+                await HockeyClient.Current.SendCrashesAsync(true);
+                await HockeyClient.Current.CheckForAppUpdateAsync();
+            }
+        }
+
+        #endregion
+
+        #region Handlers
+
+        private void onUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            logger.LogMessage($"Unhandled exception occurred. {e.Message}", LoggingLevel.Critical);
+            logger.SaveLogsToFile();
+        }
+
+        #endregion
+
+        #region Helpers
 
         private async Task<bool> setupHockeyAppAsync()
         {
@@ -61,7 +122,7 @@
             {
                 return false;
             }
-                        
+
             HockeyClient.Current.Configure(appId);
             logger.LogMessage("Hockey configured.", LoggingLevel.Information);
             return true;
@@ -81,53 +142,6 @@
             logger.LogMessage("Voice commands installed.", LoggingLevel.Information);
         }
 
-        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            logger.LogMessage($"Unhandled exception occurred. {e.Message}", LoggingLevel.Critical);
-            logger.SaveLogsToFile();
-        }
-
-        protected override void OnActivated(IActivatedEventArgs args)
-        {
-            base.OnActivated(args);
-            if (args.Kind == ActivationKind.VoiceCommand)
-            {
-                //var commandArgs = args as VoiceCommandActivatedEventArgs;
-                navigationService.Initialize(typeof(MainPage), NavigationParameter.StartPlayback);
-                Window.Current.Activate();
-            }
-        }
-
-        /// <summary>
-        /// Invoked when the application is launched normally by the end user.
-        /// </summary>
-        /// <param name="args">Details about the launch request and process.</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs args)
-        {
-            logger.LogMessage("Application launched.", LoggingLevel.Information);
-#if DEBUG
-            try
-            {
-                var displayRequest = new Windows.System.Display.DisplayRequest();
-                displayRequest.RequestActive();
-                Suspending += (_, __) => displayRequest.RequestRelease();
-                UnhandledException += (_, __) => displayRequest.RequestRelease();
-            }
-            catch (Exception ex)
-            {
-                logger.LogMessage($"Error setting up display request for debugging. {ex.Message}", LoggingLevel.Error);
-            }
-            DebugSettings.BindingFailed += (o, a) => logger.LogMessage($"BindingFailed. {a.Message}", LoggingLevel.Error);
-            DebugSettings.EnableFrameRateCounter |= Debugger.IsAttached;
-#endif            
-            navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
-            Window.Current.Activate();
-            await setupVoiceCommandsAsync();
-            if (await setupHockeyAppAsync())
-            {
-                await HockeyClient.Current.SendCrashesAsync(true);
-                await HockeyClient.Current.CheckForAppUpdateAsync();
-            }
-        }
+        #endregion
     }
 }

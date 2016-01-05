@@ -17,15 +17,67 @@
             <Feedback> Playing you the last downloaded episode </Feedback>
             <Navigate/>
         </Command>
-        <!-- 
-        TODO: Add the following commands:
-        start playback
-        pause playback
-        what episodes do I have (with answer)
-        play episode by number
-        check for updates (with option to download new episodes?)
-        navigation forward and backward by time
-        navigation forward and backward by episode
-        -->
+
+        <Command Name="playEpisodeByNumber">
+            <Example> play episode 745 </Example>
+            <ListenFor> play episode {number} </ListenFor>
+            <Feedback> Opening episode {number} </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="startPlayback">
+            <Example> play </Example>
+            <ListenFor> play </ListenFor>
+            <ListenFor> [start] [resume] playback </ListenFor>
+            <ListenFor> [start] [resume] playing </ListenFor>
+            <Feedback> Playing </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="pausePlayback">
+            <Example> pause </Example>
+            <ListenFor> pause [playback] [playing] </ListenFor>
+            <Feedback> Pausing </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="goForward">
+            <Example> forward 5 minutes </Example>
+            <ListenFor> [*] {number} {interval} forward </ListenFor>
+            <ListenFor> [*] forward {number} {interval} </ListenFor>
+            <Feedback> Going {number} {interval} forward </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="goBack">
+            <Example> back 3 minutes </Example>
+            <ListenFor> [*] {number} {interval} back </ListenFor>
+            <ListenFor> [*] back {number} {interval} </ListenFor>
+            <Feedback> Going {number} {interval} back </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="checkForUpdates">
+            <Example> check for updates </Example>
+            <ListenFor> check for updates </ListenFor>
+            <Feedback> Checking for updates </Feedback>
+            <Navigate/>
+        </Command>
+
+        <PhraseList Label="interval">
+            <Item> seconds </Item>
+            <Item> minute </Item>
+            <Item> minutes </Item>
+            <Item> hour </Item>
+            <Item> hours </Item>
+            <Item> track </Item>
+            <Item> tracks </Item>
+            <Item> episode </Item>
+            <Item> episodes </Item>
+        </PhraseList>
+
+        <PhraseTopic Label="number" Scenario="Commands">
+            <Subject>Phone Number</Subject>
+        </PhraseTopic>
     </CommandSet>
 </VoiceCommands>

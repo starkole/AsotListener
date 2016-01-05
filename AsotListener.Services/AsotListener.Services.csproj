@@ -107,6 +107,7 @@
   <ItemGroup>
     <Compile Include="Contracts\IEpisodeListManager.cs" />
     <Compile Include="Contracts\ILoaderFactory.cs" />
+    <Compile Include="Contracts\IVoiceCommandsHandler.cs" />
     <Compile Include="Implementations\ApplicationSettingsHelper.cs" />
     <Compile Include="Implementations\DownloadManager.cs" />
     <Compile Include="Implementations\EpisodeListManager.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Implementations\Logger.cs" />
     <Compile Include="Implementations\NavigationService.cs" />
     <Compile Include="Implementations\PlaybackManager.cs" />
+    <Compile Include="Implementations\VoiceCommandsHandler.cs" />
     <Compile Include="IoC.cs" />
     <Compile Include="Implementations\Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
