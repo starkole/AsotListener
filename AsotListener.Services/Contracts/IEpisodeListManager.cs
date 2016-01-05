@@ -10,5 +10,6 @@
         Task PlayEpisode(Episode episode);
         Task AddEpisodeToPLaylist(Episode episode);
         Task UpdateEpisodeStates();
+        Task LoadEpisodeListFromServer();
     }
 }

@@ -9,19 +9,36 @@
 
     using static Models.Enums.EpisodeStatus;
 
+    // TODO: Documentation
     public sealed class EpisodeListManager : IEpisodeListManager
     {
+        #region Fields
+
         private readonly ILogger logger;
         private readonly IFileUtils fileUtils;
-        readonly IApplicationSettingsHelper applicationSettingsHelper;
+        private readonly IApplicationSettingsHelper applicationSettingsHelper;
+        private readonly ILoaderFactory loaderFactory;
+
+        #endregion
+
+        #region Properties
 
         private EpisodeList episodeList => EpisodeList.Instance;
         private Playlist playlist => Playlist.Instance;
 
         public Task Initialization { get; }
 
-        public EpisodeListManager(ILogger logger, IFileUtils fileUtils, IApplicationSettingsHelper applicationSettingsHelper)
+        #endregion
+
+        #region Ctor
+
+        public EpisodeListManager(
+           ILogger logger,
+           IFileUtils fileUtils,
+           IApplicationSettingsHelper applicationSettingsHelper,
+           ILoaderFactory loaderFactory)
         {
+            this.loaderFactory = loaderFactory;
             this.applicationSettingsHelper = applicationSettingsHelper;
             this.fileUtils = fileUtils;
             this.logger = logger;
@@ -32,6 +49,10 @@
         {
             await applicationSettingsHelper.Initialization;
         }
+
+        #endregion
+
+        #region Public Methods
 
         public async Task AddEpisodeToPLaylist(Episode episode)
         {
@@ -129,9 +150,27 @@
             logger.LogMessage("EpisodeListManager: Episode states has been updated successfully.");
         }
 
+        public async Task LoadEpisodeListFromServer()
+        {
+            logger.LogMessage("EpisodeListManager: Loading episode list from server...");
+            using (ILoader loader = loaderFactory.GetLoader())
+            {
+                await loader.FetchEpisodeListAsync();
+            }
+            await applicationSettingsHelper.SaveEpisodeList();
+            await UpdateEpisodeStates();
+            logger.LogMessage("EpisodeListManager: Episode list loaded.", LoggingLevel.Information);
+        }
+
+        #endregion
+        
+        #region Private Methods
+
         private static bool canEpisodeBeDeleted(Episode episode) =>
             episode != null &&
             (episode.Status == Loaded ||
-            episode.Status == InPlaylist);
+            episode.Status == InPlaylist); 
+
+        #endregion
     }
 }

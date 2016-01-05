@@ -8,7 +8,6 @@
     using Models;
     using Models.Enums;
     using Services.Contracts;
-    using Windows.ApplicationModel;
     using Windows.Foundation.Diagnostics;
     using Windows.UI.Xaml;
 
@@ -20,7 +19,6 @@
         #region Fields
 
         private readonly ILogger logger;
-        private readonly ILoaderFactory loaderFactory;
         private readonly INavigationService navigationService;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
         private readonly IDownloadManager downloadManager;
@@ -90,14 +88,12 @@
         /// <param name="downloadManager">Instance of <see cref="IDownloadManager"/></param>
         public EpisodesViewModel(
             ILogger logger,
-            ILoaderFactory loaderFactory,
             INavigationService navigationService,
             IApplicationSettingsHelper applicationSettingsHelper,
             IDownloadManager downloadManager,
             IEpisodeListManager episodeListManager)
         {
             this.logger = logger;
-            this.loaderFactory = loaderFactory;
             this.navigationService = navigationService;
             this.applicationSettingsHelper = applicationSettingsHelper;
             this.downloadManager = downloadManager;
@@ -112,8 +108,6 @@
             ClearPlaylistCommand = new RelayCommand((Action)clearPlaylistCommand);
 
             Application.Current.Resuming += onAppResuming;
-            Application.Current.Suspending += onAppSuspending;
-
             Initialization = initializeAsync();
             logger.LogMessage("EpisodesViewModel: Initialized.", LoggingLevel.Information);
         }
@@ -121,7 +115,17 @@
         private async Task initializeAsync()
         {
             await episodeListManager.Initialization;
-            await loadEpisodesList();
+            if (EpisodeList == null || !EpisodeList.Any())
+            {
+                logger.LogMessage("EpisodesViewModel: Saved list hasn't been found. Loading list from server.");
+                await episodeListManager.LoadEpisodeListFromServer();
+            }
+            else
+            {
+                logger.LogMessage("EpisodesViewModel: Loaded saved list from local storage. Updating episode states.");
+                await episodeListManager.UpdateEpisodeStates();
+            }
+
             await downloadManager.Initialization;
             logger.LogMessage("EpisodesViewModel: State restored.", LoggingLevel.Information);
         }
@@ -130,32 +134,18 @@
 
         #region Commands
 
-        private async Task loadEpisodeListFromServer()
-        {
-            logger.LogMessage("EpisodesViewModel: Loading episode list from server...");
-            using (ILoader loader = loaderFactory.GetLoader())
-            {
-                await loader.FetchEpisodeListAsync();
-            }
-            await applicationSettingsHelper.SaveEpisodeList();
-            await episodeListManager.UpdateEpisodeStates();
-            logger.LogMessage("EpisodesViewModel: Episode list loaded.", LoggingLevel.Information);
-        }
-
+        private async Task loadEpisodeListFromServer() => await episodeListManager.LoadEpisodeListFromServer();
         private async Task downloadEpisode(object boxedEpisode) => await downloadManager.DownloadEpisode(boxedEpisode as Episode);
-
         private void cancelDownload(object boxedEpisode) => downloadManager.CancelDownload(boxedEpisode as Episode);
-
         private async void deleteEpisodeFromStorage(object boxedEpisode) => await episodeListManager.DeleteEpisodeData(boxedEpisode as Episode);
+        private async void addToPlaylistCommand(object boxedEpisode) => await episodeListManager.AddEpisodeToPLaylist(boxedEpisode as Episode);
 
         private async void playEpisode(object boxedEpisode)
         {
             await episodeListManager.PlayEpisode(boxedEpisode as Episode);
             navigationService.Navigate(NavigationParameter.StartPlayback);
         }
-
-        private async void addToPlaylistCommand(object boxedEpisode) => await episodeListManager.AddEpisodeToPLaylist(boxedEpisode as Episode);
-
+        
         private async void clearPlaylistCommand()
         {
             logger.LogMessage("EpisodesViewModel: Executing ClearPlaylist command...");
@@ -164,6 +154,7 @@
             await episodeListManager.UpdateEpisodeStates();
             logger.LogMessage("EpisodesViewModel: ClearPlaylist command executed.");
         }
+
         #endregion
 
         #region Private Methods
@@ -175,30 +166,6 @@
             await episodeListManager.UpdateEpisodeStates();
             await downloadManager.RetrieveActiveDownloads();
             logger.LogMessage("EpisodesViewModel: State restored after application resuming.", LoggingLevel.Information);
-        }
-
-        private async void onAppSuspending(object sender, SuspendingEventArgs e)
-        {
-            var deferral = e.SuspendingOperation.GetDeferral();
-            logger.LogMessage("EpisodesViewModel: Application is suspending. Saving state...");
-            await applicationSettingsHelper.SaveEpisodeList();
-            logger.LogMessage("EpisodesViewModel: State saved on application suspending.", LoggingLevel.Information);
-            deferral.Complete();
-        }
-
-        private async Task loadEpisodesList()
-        {
-            if (EpisodeList == null || !EpisodeList.Any())
-            {
-                logger.LogMessage("EpisodesViewModel: Saved list hasn't been found. Loading list from server.");
-                await loadEpisodeListFromServer();
-            }
-            else
-            {
-                logger.LogMessage("EpisodesViewModel: Loaded saved list from local storage. Updating episode states.");
-                await episodeListManager.UpdateEpisodeStates();
-            }
-            logger.LogMessage("EpisodesViewModel: Episodes list loaded.");
         }
 
         #endregion
