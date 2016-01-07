@@ -26,6 +26,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AsotListener.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -111,6 +112,11 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AsotListenerCommands.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Assets\ASOT_Logo_150x150.scale-100.png" />
     <Content Include="Assets\ASOT_Logo_24x24.scale-100.png" />
     <Content Include="Assets\ASOT_Logo_24x24.scale-140.png" />
     <Content Include="Assets\ASOT_Logo_24x24.scale-240.png" />

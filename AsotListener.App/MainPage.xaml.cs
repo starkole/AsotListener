@@ -5,6 +5,7 @@
     using Models.Enums;
     using Services.Contracts;
     using ViewModels;
+    using Windows.ApplicationModel.Activation;
     using Windows.Phone.UI.Input;
     using Windows.UI.Input;
     using Windows.UI.Xaml;
@@ -68,6 +69,20 @@
             base.OnNavigatedTo(e);
             logger.LogMessage($"Navigated to MainPage with parameter {e.Parameter}.");
 
+            // Consume Voice command arguments which were passed down to this page on activation.
+            VoiceCommandActivatedEventArgs vcArgs = e.Parameter as VoiceCommandActivatedEventArgs;
+            if (vcArgs != null)
+            {
+                //if (vcArgs.Result.SemanticInterpretation.Properties.ContainsKey("number"))
+                //{
+                //    return;
+                //}
+                logger.LogMessage("Starting playback by voice command.", Windows.Foundation.Diagnostics.LoggingLevel.Information);
+                MainPivot.SelectedItem = PlayerPivotItem;
+                MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(Playlist.Instance.CurrentTrack);
+                return;
+            }
+
             NavigationParameter navigationParameter = e.Parameter is NavigationParameter ?
                 (NavigationParameter)e.Parameter :
                 NavigationParameter.OpenMainPage;
@@ -84,6 +99,8 @@
                     MainPageViewModel.PlayerModel.PlayPauseCommand.Execute(Playlist.Instance.CurrentTrack);
                     break;
             }
+
+            
         }
 
         #endregion

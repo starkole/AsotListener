@@ -10,6 +10,8 @@
     using Windows.Storage;
     using System.Collections.Generic;
     using Common;
+    using Windows.Media.Playback;
+    using Windows.Foundation.Collections;
 
     /// <summary>
     /// Helper class to read and write settings to LocalSettings
@@ -21,7 +23,13 @@
 
         private const string mutexName = "AsotListener.ApplicationSettingsHelper.Mutex";
         private const string playlistFilename = "playlist.xml";
+        private const string episodeListFileName = "episodeList.xml";
         private const int mutexTimeout = 2000;
+
+        /// <summary>
+        /// The result of the asynchronous initialization.
+        /// </summary>
+        public Task Initialization { get; }
 
         /// <summary>
         /// Creates an instance of <see cref="ApplicationSettingsHelper"/> class
@@ -31,7 +39,14 @@
         {
             this.logger = logger;
             this.fileUtils = fileUtils;
+            Initialization = initializeAsync();
             logger.LogMessage("ApplicationSettingsHelper initialized.", LoggingLevel.Information);
+        }
+
+        private async Task initializeAsync()
+        {
+            await LoadPlaylist();
+            await LoadEpisodeList();
         }
 
         /// <summary>
@@ -99,6 +114,10 @@
 
         }
 
+        /// <summary>
+        /// Saves current playlist to file
+        /// </summary>
+        /// <returns>Task which completes after playlist has been saved</returns>
         public async Task SavePlaylist()
         {
             logger.LogMessage($"Saving playlist with {Playlist.Instance.Count} tracks...", LoggingLevel.Information);
@@ -107,7 +126,20 @@
             logger.LogMessage($"Playlist saved.");
         }
 
+        /// <summary>
+        /// Saves current playlist to file and notifies BackgroundAudio task about it.
+        /// </summary>
+        /// <returns>Task which completes after playlist has been saved</returns>
+        public async Task SavePlaylistWithNotification()
+        {
+            await SavePlaylist();
+            BackgroundMediaPlayer.SendMessageToBackground(new ValueSet { { Keys.PlaylistUpdated, null } });
+        }
 
+        /// <summary>
+        /// Loads current playlist from file
+        /// </summary>
+        /// <returns>Task which completes after playlist has been loaded </returns>
         public async Task LoadPlaylist()
         {
             var tracks = await fileUtils.ReadFromXmlFile<List<AudioTrack>>(playlistFilename);
@@ -117,6 +149,30 @@
             Playlist.Instance.Clear();
             Playlist.Instance.AddRange(tracks);
             Playlist.Instance.CurrentTrackIndex = currentTrackIndex;
+        }
+
+        /// <summary>
+        /// Saves current episode list to file
+        /// </summary>
+        /// <returns>Task which completes after episode list has been saved </returns>
+        public async Task SaveEpisodeList()
+        {
+            logger.LogMessage($"Saving episode list with {EpisodeList.Instance.Count} episodes...", LoggingLevel.Information);
+            await fileUtils.SaveToXmlFile(EpisodeList.Instance.ToList(), episodeListFileName);
+            logger.LogMessage($"Episode list saved.");
+        }
+
+        /// <summary>
+        /// Loads current episode list from file
+        /// </summary>
+        /// <returns>Task which completes after episode list has been loaded </returns>
+        public async Task LoadEpisodeList()
+        {
+            var episodes = await fileUtils.ReadFromXmlFile<List<Episode>>(episodeListFileName);
+            int count = episodes?.Count ?? -1;
+            logger.LogMessage($"Loaded episode list with {count} episodes.", LoggingLevel.Information);
+            EpisodeList.Instance.Clear();
+            EpisodeList.Instance.AddRange(episodes);
         }
     }
 }

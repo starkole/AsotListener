@@ -2,23 +2,28 @@
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
+    using Common;
     using Models;
+    using Models.Enums;
+    using Services.Contracts;
+    using Windows.Foundation.Collections;
+    using Windows.Foundation.Diagnostics;
     using Windows.Media;
     using Windows.Media.Playback;
     using Windows.Storage;
-    using Services.Contracts;
-    using Windows.Foundation.Diagnostics;
     using Windows.UI.Core;
     using Windows.UI.Popups;
-    using System.Threading.Tasks;
-    using Common;
-    using Windows.Foundation.Collections;    /// <summary>
-                                             /// Contains logic to manage audio playback
-                                             /// </summary>
+    using static Windows.Media.Playback.MediaPlayerState;
+
+    /// <summary>
+    /// Contains logic to manage audio playback
+    /// </summary>
     internal sealed class AudioManager : IDisposable
     {
         #region Private Fields
 
+        private bool isPauseScheduled = false;
         private bool isDisposed = false;
         private readonly ILogger logger;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
@@ -67,7 +72,7 @@
 
         private async void MediaPlayer_CurrentStateChanged(MediaPlayer sender, object args)
         {
-            if (sender.CurrentState == MediaPlayerState.Playing)
+            if (sender.CurrentState == Playing)
             {
                 logger.LogMessage("BackgroundAudio: Player playing.");
                 smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
@@ -77,11 +82,17 @@
                     sender.Position = Playlist.Instance.CurrentTrack?.StartPosition ?? TimeSpan.Zero;
                 }
 
+                if (isPauseScheduled)
+                {
+                    isPauseScheduled = false;
+                    sender.Pause();
+                }
+
                 // Set volume to 100%
                 sender.Volume = 1;
             }
 
-            if (sender.CurrentState == MediaPlayerState.Paused)
+            if (sender.CurrentState == Paused)
             {
                 logger.LogMessage("BackgroundAudio: Player paused.");
                 smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
@@ -167,12 +178,12 @@
         public async void StartTrackAt(int index)
         {
             logger.LogMessage($"BackgroundAudio: Preparing to play the track #{index}.");
-            if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
+            if (MediaPlayer.CurrentState == Playing)
             {
                 await SaveCurrentState();
             }
             Playlist.Instance.CurrentTrackIndex = index;
-         
+
             BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentTrack, index } });
             BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentPositionSeconds, Playlist.Instance.CurrentTrack.StartPosition.TotalSeconds } });
             await StartPlayback();
@@ -212,11 +223,28 @@
         /// </summary>
         public void PausePlayback()
         {
-            if (MediaPlayer.CurrentState == MediaPlayerState.Playing)
+            if (MediaPlayer.CurrentState == Playing)
             {
                 logger.LogMessage("BackgroundAudio: Pausing playback manually.");
                 MediaPlayer.Pause();
             }
+        }
+
+        /// <summary>
+        /// Pauses the playback immediately or schedules pause on next playback resume
+        /// </summary>
+        public void SchedulePause()
+        {
+            if (MediaPlayer.CurrentState != Playing)
+            {
+                isPauseScheduled = true;
+                logger.LogMessage("BackgroundAudio: Scheduling pause.");
+                return;
+            }
+
+            logger.LogMessage("BackgroundAudio: No need to schedule pause. Pausing playback now.");
+            MediaPlayer.Pause();
+            return;
         }
 
         /// <summary>
@@ -302,6 +330,53 @@
             });
         }
 
+        private void updatePosition(int seconds)
+        {
+            if (!(MediaPlayer.CurrentState == Playing || MediaPlayer.CurrentState == Paused) || seconds == 0)
+            {
+                return;
+            }
+
+            double newPositionSeconds = Playlist.Instance.CurrentTrack.StartPosition.TotalSeconds + seconds;
+            if (newPositionSeconds < 0)
+            {
+                newPositionSeconds = 0;
+            }
+            else if (newPositionSeconds >= MediaPlayer.NaturalDuration.TotalSeconds)
+            {
+                newPositionSeconds = MediaPlayer.NaturalDuration.TotalSeconds - 1;
+            }
+
+            var newPosition = TimeSpan.FromSeconds(newPositionSeconds);
+            Playlist.Instance.CurrentTrack.StartPosition = newPosition;
+            MediaPlayer.Position = newPosition;
+            BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentPositionSeconds, newPositionSeconds } });
+        }
+
+        public void Navigate(int howMany, NavigationInterval interval)
+        {
+            if (!(MediaPlayer.CurrentState == Playing || MediaPlayer.CurrentState == Paused))
+            {
+                return;
+            }
+
+            switch (interval)
+            {
+                case NavigationInterval.Second:
+                    updatePosition(howMany);
+                    break;
+                case NavigationInterval.Minute:
+                    updatePosition(howMany * 60);
+                    break;
+                case NavigationInterval.Hour:
+                    updatePosition(howMany * 60 * 60);
+                    break;
+                case NavigationInterval.Track:
+                case NavigationInterval.Episode:
+                    StartTrackAt(Playlist.Instance.CurrentTrackIndex + howMany);
+                    break;
+            }
+        }
 
         #endregion
 

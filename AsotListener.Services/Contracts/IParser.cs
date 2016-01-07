@@ -1,11 +1,11 @@
 ﻿namespace AsotListener.Services.Contracts
 {
-    using System.Collections.ObjectModel;
+    using System.Collections.Generic;
     using Models;
 
     public interface IParser
     {
         string[] ExtractDownloadLinks(string EpisodeHtmlPage);
-        ObservableCollection<Episode> ParseEpisodeList(string EpisodeListHtmlPage);
+        IList<Episode> ParseEpisodeList(string EpisodeListHtmlPage);
     }
 }

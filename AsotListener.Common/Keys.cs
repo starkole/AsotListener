@@ -26,6 +26,11 @@
         public const string PausePlayback = "PausePlayback";
 
         /// <summary>
+        /// SchedulePause command key
+        /// </summary>
+        public const string SchedulePause = "SchedulePause";
+
+        /// <summary>
         /// PlaylistUpdated command key
         /// </summary>
         public const string PlaylistUpdated = "PlaylistUpdated";
@@ -44,5 +49,15 @@
         /// CurrentPosition in seconds key
         /// </summary>
         public const string CurrentPositionSeconds = "CurrentPositionSeconds";
+
+        /// <summary>
+        /// Navigation amount
+        /// </summary>
+        public const string NavigationAmount = "NavigationAmount";
+
+        /// <summary>
+        /// Navigation interval
+        /// </summary>
+        public const string NavigationInterval = "NavigationInterval";
     }
 }

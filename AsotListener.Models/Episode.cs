@@ -1,12 +1,13 @@
 ﻿namespace AsotListener.Models
 {
-    using Enums;
     using Windows.UI.Xaml;
+    using Enums;
+    using static Enums.EpisodeStatus;
 
     /// <summary>
     /// Episode model
     /// </summary>
-    public class Episode: BaseModel
+    public class Episode : BaseModel
     {
         private string name;
         private string url;
@@ -41,18 +42,17 @@
             get { return status; }
             set
             {
-                if (value == EpisodeStatus.Downloading)
-                {
-                    DownloadProgressbarVisibility = Visibility.Visible;
-                }
-                else
-                {
+                DownloadProgressbarVisibility = value == Downloading ?
+                    DownloadProgressbarVisibility = Visibility.Visible :
                     DownloadProgressbarVisibility = Visibility.Collapsed;
-                }
-
                 SetField(ref status, value, nameof(Status));
             }
         }
+
+        /// <summary>
+        /// Determines if episode can be played
+        /// </summary>
+        public bool CanBePlayed => Status == InPlaylist || Status == Loaded;
 
         /// <summary>
         /// Overall amount of bytes to download

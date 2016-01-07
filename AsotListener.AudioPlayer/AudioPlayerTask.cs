@@ -9,7 +9,7 @@
     using Windows.Foundation.Diagnostics;
     using Ioc;
     using Common;
-    using Models;
+    using Models.Enums;
 
     /// <summary>
     /// Impalements IBackgroundTask to provide an entry point for app code to be run in background. 
@@ -45,7 +45,8 @@
             logger = container.Resolve<ILogger>();
             logger.LogMessage($"BackgroundAudioTask {taskInstance.Task.Name} starting...");
 
-            try {
+            try
+            {
 
                 // Ensure that Background Audio is initialized by accessing BackgroundMediaPlayer.Current
                 var state = BackgroundMediaPlayer.Current.CurrentState;
@@ -66,10 +67,10 @@
                 BackgroundMediaPlayer.SendMessageToForeground(message);
                 logger.LogMessage($"BackgroundAudioTask initialized.", LoggingLevel.Information);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogMessage($"Unhandled exception in BackgroundAudioTask. {ex.Message}", LoggingLevel.Critical);
-                Dispose();                
+                Dispose();
             }
         }
 
@@ -105,6 +106,9 @@
         /// <param name="e"></param>
         private async void BackgroundMediaPlayer_MessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
+            int navigationAmount = 0;
+            NavigationInterval navigationInterval = NavigationInterval.Unspecified;
+
             foreach (string key in e.Data.Keys)
             {
                 switch (key)
@@ -125,11 +129,28 @@
                         logger.LogMessage("BackgroundAudioTask: Trying to pause playback");
                         audioManager.PausePlayback();
                         break;
+                    case Keys.SchedulePause:
+                        logger.LogMessage("BackgroundAudioTask: Scheduling the pause");
+                        audioManager.SchedulePause();
+                        break;
                     case Keys.PlaylistUpdated:
-                        logger.LogMessage("BackgroundAudioTask: Playlist  updated");
+                        logger.LogMessage("BackgroundAudioTask: Playlist updated");
                         await audioManager.LoadState();
                         break;
+                    case Keys.NavigationAmount:
+                        navigationAmount = (int)e.Data[Keys.NavigationAmount];
+                        logger.LogMessage($"BackgroundAudioTask: Obtained navigation amount {navigationAmount}");
+                        break;
+                    case Keys.NavigationInterval:
+                        navigationInterval = (NavigationInterval)e.Data[Keys.NavigationInterval];
+                        logger.LogMessage($"BackgroundAudioTask: Obtained navigation interval {navigationInterval}");
+                        break;
                 }
+            }
+
+            if (navigationAmount != 0 && navigationInterval != NavigationInterval.Unspecified)
+            {
+                audioManager.Navigate(navigationAmount, navigationInterval);
             }
         }
 

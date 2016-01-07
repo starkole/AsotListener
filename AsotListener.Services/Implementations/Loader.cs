@@ -17,13 +17,18 @@
 
         private readonly HttpClient httpClient;
         private readonly ILogger logger;
+        private readonly IParser parser;
+
+        private EpisodeList EpisodeList => EpisodeList.Instance;
 
         /// <summary>
         /// Creates instance of <see cref="Loader"/>
         /// </summary>
         /// <param name="logger">The logger instance</param>
-        public Loader(ILogger logger)
+        /// <param name="parser">The <see cref="IParser"/> instance</param>
+        public Loader(ILogger logger, IParser parser)
         {
+            this.parser = parser;
             this.logger = logger;
 
             httpClient = new HttpClient();
@@ -34,18 +39,20 @@
         /// <summary>
         /// Loads episode list page
         /// </summary>
-        /// <returns>Episode list page</returns>
-        public async Task<string> FetchEpisodeListAsync()
+        /// <returns>Task, completed when episode list has been loaded</returns>
+        public async Task FetchEpisodeListAsync()
         {
             try
             {
                 logger.LogMessage("Loader: Fetching episode list.");
-                return await httpClient.GetStringAsync(mainUrl);
+                var episodeListPage = await httpClient.GetStringAsync(mainUrl);
+                var episodes = parser.ParseEpisodeList(episodeListPage);
+                EpisodeList.Clear();
+                EpisodeList.AddRange(episodes);
             }
             catch (Exception ex)
             {
                 logger.LogMessage($"Loader: Error loading episode list. {ex.Message}", LoggingLevel.Error);
-                return string.Empty;
             }
         }
 

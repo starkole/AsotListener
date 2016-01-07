@@ -5,7 +5,7 @@
     using System.Collections.ObjectModel;
     using Contracts;
     using Windows.Foundation.Diagnostics;
-    
+    using System.Collections.Generic;
     /// <summary>
     /// Provides methods for parsing html pages
     /// </summary>
@@ -31,15 +31,14 @@
         /// </summary>
         /// <param name="EpisodeListHtmlPage">Html page</param>
         /// <returns>List of Episode objects or empty list</returns>
-        public ObservableCollection<Episode> ParseEpisodeList(string EpisodeListHtmlPage)
+        public IList<Episode> ParseEpisodeList(string EpisodeListHtmlPage)
         {
             logger.LogMessage("Parser: Parsing episode list...");
             Regex regex = new Regex(EPISODE_REGEX);
             MatchCollection matches = regex.Matches(EpisodeListHtmlPage);
-            ObservableCollection<Episode> result = new ObservableCollection<Episode>();
+            var result = new List<Episode>();
             for (var i = 0; i < matches.Count; i++)
             {
-
                 // Regex puts episode relative url into the first group
                 // and episode name into the second one
                 if (matches[i].Groups.Count == 3)

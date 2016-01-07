@@ -22,6 +22,11 @@
             container.RegisterSingleton<ILoaderFactory, LoaderFactory>();
             container.RegisterSingleton<IApplicationSettingsHelper, ApplicationSettingsHelper>();
             container.RegisterSingleton<INavigationService, NavigationService>();
+            container.RegisterSingleton<IPlaybackManager, PlaybackManager>();
+            container.RegisterSingleton<IDownloadManager, DownloadManager>();
+            container.RegisterSingleton<IEpisodeListManager, EpisodeListManager>();
+            container.RegisterSingleton<IVoiceCommandsHandler, VoiceCommandsHandler>();
+            container.RegisterSingleton<ITextSpeaker, TextSpeaker>();
         }
     }
 }
