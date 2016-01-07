@@ -41,18 +41,46 @@
             <Navigate/>
         </Command>
 
+        <Command Name="nextTrack">
+            <Example> next track </Example>
+            <ListenFor> [go] [to] [the] next track </ListenFor>
+            <Feedback> Going to the next track </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="previousTrack">
+            <Example> previous track </Example>
+            <ListenFor> [go] [to] [the] previous track </ListenFor>
+            <Feedback> Going to the previous track </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="nextEpisode">
+            <Example> next episode </Example>
+            <ListenFor> [go] [to] [the] next episode </ListenFor>
+            <Feedback> Going to the next episode </Feedback>
+            <Navigate/>
+        </Command>
+
+        <Command Name="previousEpisode">
+            <Example> previous episode </Example>
+            <ListenFor> [go] [to] [the] previous episode </ListenFor>
+            <Feedback> Going to the previous episode </Feedback>
+            <Navigate/>
+        </Command>
+
         <Command Name="goForward">
             <Example> forward 5 minutes </Example>
-            <ListenFor> [*] {number} {interval} forward </ListenFor>
-            <ListenFor> [*] forward {number} {interval} </ListenFor>
+            <ListenFor> [go] [advance] {number} {interval} forward </ListenFor>
+            <ListenFor> [go] [advance] forward {number} {interval} </ListenFor>
             <Feedback> Going {number} {interval} forward </Feedback>
             <Navigate/>
         </Command>
 
         <Command Name="goBack">
             <Example> back 3 minutes </Example>
-            <ListenFor> [*] {number} {interval} back </ListenFor>
-            <ListenFor> [*] back {number} {interval} </ListenFor>
+            <ListenFor> [go] [advance] {number} {interval} back </ListenFor>
+            <ListenFor> [go] [advance] back {number} {interval} </ListenFor>
             <Feedback> Going {number} {interval} back </Feedback>
             <Navigate/>
         </Command>

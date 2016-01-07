@@ -4,6 +4,7 @@
     using System.Threading;
     using Common;
     using Contracts;
+    using Models.Enums;
     using Windows.Foundation.Collections;
     using Windows.Foundation.Diagnostics;
     using Windows.Media.Playback;
@@ -90,6 +91,18 @@
         }
 
         /// <summary>
+        /// Pauses playback or schedules pause on next resume
+        /// </summary>
+        public void SchedulePause()
+        {
+            logger.LogMessage("Foreground playback manager: 'SchedulePause' command fired.");
+            if (IsBackgroundTaskRunning)
+            {
+                BackgroundMediaPlayer.SendMessageToBackground(new ValueSet { { Keys.SchedulePause, null } });
+            }
+        }
+
+        /// <summary>
         /// Switches player to the next track
         /// </summary>
         public void GoToNextTrack()
@@ -111,6 +124,22 @@
                 newPosition = newPosition > totalSeconds ? totalSeconds : newPosition;
                 MediaPlayer.Position = TimeSpan.FromSeconds(newPosition);
                 logger.LogMessage($"Foreground playback manager: Player position updated to {newPosition} seconds.");
+            }
+        }
+
+        /// <summary>
+        /// Changes current player position based on given amount and interval
+        /// </summary>
+        /// <param name="howMany">Amount of navigation intervals. Can be negative value.</param>
+        /// <param name="interval">Navigation interval</param>
+        public void Navigate(int howMany, NavigationInterval interval)
+        {
+            if (IsBackgroundTaskRunning && (MediaPlayer.CurrentState == Playing || MediaPlayer.CurrentState == Paused))
+            {
+                BackgroundMediaPlayer.SendMessageToBackground(new ValueSet {
+                    { Keys.NavigationAmount, howMany },
+                    { Keys.NavigationInterval, (int)interval }
+                });
             }
         }
 

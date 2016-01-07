@@ -120,11 +120,13 @@
     <Compile Include="Contracts\INavigationService.cs" />
     <Compile Include="Contracts\IPlaybackManager.cs" />
     <Compile Include="Contracts\IDownloadManager.cs" />
+    <Compile Include="Contracts\ITextSpeaker.cs" />
     <Compile Include="Implementations\Loader.cs" />
     <Compile Include="Implementations\LoaderFactory.cs" />
     <Compile Include="Implementations\Logger.cs" />
     <Compile Include="Implementations\NavigationService.cs" />
     <Compile Include="Implementations\PlaybackManager.cs" />
+    <Compile Include="Implementations\TextSpeaker.cs" />
     <Compile Include="Implementations\VoiceCommandsHandler.cs" />
     <Compile Include="IoC.cs" />
     <Compile Include="Implementations\Parser.cs" />

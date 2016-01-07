@@ -97,6 +97,7 @@
     <Compile Include="BaseModel.cs" />
     <Compile Include="Enums\ContextMenuItem.cs" />
     <Compile Include="Enums\DownloadState.cs" />
+    <Compile Include="Enums\NavigationInterval.cs" />
     <Compile Include="Episode.cs" />
     <Compile Include="Enums\EpisodeStatus.cs" />
     <Compile Include="Enums\NavigationParameter.cs" />

@@ -85,13 +85,21 @@
             }
             set
             {
+                var count = Count - 1;
+                int newIndex;
                 if (Count == 0)
                 {
-                    currentTrackIndex = -1;
-                    return;
+                    newIndex = -1;
+                }
+                else if (count == 0)
+                {
+                    newIndex = 0;
+                }
+                else
+                {
+                    newIndex = value < 0 ? (count - value) % count : value % count;
                 }
 
-                int newIndex = value < 0 ? (Count - value) % Count : value % Count;
                 if (newIndex != currentTrackIndex)
                 {
                     currentTrackIndex = newIndex;
@@ -101,6 +109,11 @@
         }
 
         #endregion
+
+        private Playlist()
+        {
+            CollectionChanged += (_, __) => CurrentTrackIndex = CurrentTrackIndex;
+        }
 
         #region Public Methods
 

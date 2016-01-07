@@ -235,17 +235,17 @@
                 return;
             }
 
-            CurrentTrackName = playlist.CurrentTrack.Name; 
+            CurrentTrackName = playlist.CurrentTrack.Name;
             // TODO: How do I know if it is my track playing now?
             PlayButtonIcon = mediaPlayer.CurrentState == Playing ? pauseIcon : playIcon;
             IsNextButtonEnabled = true;
             IsPlayButtonEnabled = true;
             IsPreviousButtonEnabled = true;
             setupAudioProgress();
+            addMediaPlayerEventHandlers();
             navigationService.Navigate(NavigationParameter.OpenPlayer);
             if (isBackgroundTaskRunning)
             {
-                addMediaPlayerEventHandlers();
                 if (mediaPlayer.CurrentState == Playing ||
                     mediaPlayer.CurrentState == Paused)
                 {
@@ -291,7 +291,8 @@
             if (mediaPlayer.CurrentState == Playing)
             {
                 playbackManager.Pause();
-            } else
+            }
+            else
             {
                 playbackManager.Play();
             }
@@ -452,7 +453,7 @@
 
             mediaPlayer.CurrentStateChanged += onMediaPlayerCurrentStateChanged;
             BackgroundMediaPlayer.MessageReceivedFromBackground += onMessageReceivedFromBackground;
-        }        
+        }
 
         #endregion
 

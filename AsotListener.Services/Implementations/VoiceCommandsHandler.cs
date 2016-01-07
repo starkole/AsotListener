@@ -1,48 +1,51 @@
 ﻿namespace AsotListener.Services.Implementations
 {
     using System;
-    using System.IO;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using Models;
     using Models.Enums;
     using Services.Contracts;
     using Windows.ApplicationModel.Activation;
-    using Windows.ApplicationModel.Core;
     using Windows.Foundation.Diagnostics;
     using Windows.Media.Playback;
     using Windows.Media.SpeechRecognition;
-    using Windows.Media.SpeechSynthesis;
-    using Windows.Storage.Streams;
-    using Windows.UI.Xaml;
-    using Windows.UI.Xaml.Controls;
-    using Common;
+
     public sealed class VoiceCommandsHandler : IVoiceCommandsHandler
     {
+        private enum Direction
+        {
+            Forward,
+            Backward
+        }
+
+        const string intervalKey = "interval";
+        const string numberKey = "number";
+
         private readonly ILogger logger;
-        private readonly INavigationService navigationService;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
         private readonly IEpisodeListManager episodeListManager;
         private readonly IPlaybackManager playbackManager;
+        private readonly ITextSpeaker textSpeaker;
 
         private EpisodeList episodeList => EpisodeList.Instance;
         private Playlist playlist => Playlist.Instance;
         private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
-        private MediaElement mediaElement;
-        
+
+        // TODO: Update documentation.
+        // TODO: Add logging
         public VoiceCommandsHandler(
             ILogger logger,
-            INavigationService navigationService,
             IApplicationSettingsHelper applicationSettingsHelper,
             IEpisodeListManager episodeListManager,
-            IPlaybackManager playbackManager)
+            IPlaybackManager playbackManager,
+            ITextSpeaker textSpeaker)
         {
+            this.textSpeaker = textSpeaker;
             this.playbackManager = playbackManager;
             this.episodeListManager = episodeListManager;
             this.applicationSettingsHelper = applicationSettingsHelper;
-            this.navigationService = navigationService;
             this.logger = logger;
 
             Initialization = initializeAsync();
@@ -55,16 +58,20 @@
             string commandName = args?.Result.RulePath.FirstOrDefault();
             switch (commandName)
             {
-                case "playTheLastEpisode":                   
-                        var ep = episodeList.LastOrDefault(e => e.Status== EpisodeStatus.Loaded );
-                        if (ep == null)
-                        {
-                            // TODO: Speak error
-                            return;
-                        }
+                case "playTheLastEpisode":
+                    // TODO: Move the latter logic to episode list manager
+                    var ep = episodeList.FirstOrDefault(e => e.CanBePlayed);
+                    if (ep == null)
+                    {
+                        // TODO: Speak error
+                        logger.LogMessage("VoiceCommandHandler: Cannot play the last downloaded episode. No episodes found.", LoggingLevel.Error);
+                        return;
+                    }
 
-                        playlist.Clear();
-                        await episodeListManager.PlayEpisode(ep);
+                    playlist.Clear();
+                    await episodeListManager.PlayEpisode(ep);
+                    playbackManager.Play();
+                    await episodeListManager.UpdateEpisodeStates();
                     break;
                 case "playEpisodeByNumber":
                     if (isVoiceCommand(args.Result))
@@ -73,23 +80,29 @@
                         var spokenNumber = args.Result.SemanticInterpretation.Properties["number"].FirstOrDefault();
                         int.TryParse(spokenNumber, out episodeNumber);
 
+                        // TODO: Move the latter logic to episode list manager
                         // TODO: Use constants here
                         if (episodeNumber < 1 || episodeNumber > 745)
                         {
-                            await SpeakText($"Cannot play episode with number {episodeNumber}");
+                            // TODO: Speak error
+                            logger.LogMessage("VoiceCommandHandler: Cannot play episode by number. The number is out of range.", LoggingLevel.Error);
+
                             return;
                         }
 
                         // TODO: Use better search algorithm here
-                        var episodeToPlay = episodeList.FirstOrDefault(e => e.Name.Contains(episodeNumber.ToString()));
+                        var episodeToPlay = episodeList.FirstOrDefault(e => e.Name.Contains(episodeNumber.ToString()) && e.CanBePlayed);
                         if (episodeToPlay == null)
                         {
-                            await SpeakText($"Cannot find episode with number {episodeNumber}");
+                            // TODO: Speak error
+                            logger.LogMessage($"VoiceCommandHandler: Cannot play episode with number {episodeNumber}.", LoggingLevel.Error);
                             return;
                         }
 
                         playlist.Clear();
                         await episodeListManager.PlayEpisode(episodeToPlay);
+                        playbackManager.Play();
+                        await episodeListManager.UpdateEpisodeStates();
                     }
                     break;
                 case "startPlayback":
@@ -99,104 +112,109 @@
                     }
                     break;
                 case "pausePlayback":
-                    if (mediaPlayer.CanPause)
-                    {
-                        mediaPlayer.Pause();
-                    }
+                    playbackManager.SchedulePause();
                     break;
                 case "goForward":
-                    string interval = args?.Result.SemanticInterpretation.Properties["interval"].FirstOrDefault();
-                    string howMany = args?.Result.SemanticInterpretation.Properties["number"].FirstOrDefault();
-                    if (string.IsNullOrEmpty(interval))
-                    {
-                        // TODO: Speak about some error.
-                        return;
-                    }
-                    // TODO: Add logic here
+                    changePosition(args?.Result.SemanticInterpretation.Properties, Direction.Forward);
                     break;
                 case "goBack":
-                    // TODO: Add logic here
+                    changePosition(args?.Result.SemanticInterpretation.Properties, Direction.Backward);
+                    break;
+                case "nextTrack":
+                case "nextEpisode":
+                    playbackManager.GoToNextTrack();
+                    break;
+                case "previousTrack":
+                case "previousEpisode":
+                    playbackManager.GoToPreviousTrack();
                     break;
                 case "checkForUpdates":
-                    /*int oldEpisodesCount = episodeList.Count;
+                    int oldEpisodesCount = episodeList.Count;
                     await episodeListManager.LoadEpisodeListFromServer();
                     int delta = episodeList.Count - oldEpisodesCount;
                     string message = "Update complete! ";
                     if (delta == 1)
                     {
                         message += "There is one new episode.";
-                    } else if (delta > 1)
+                    }
+                    else if (delta > 1)
                     {
                         message += $"There are {delta} new episodes.";
-                    } else
+                    }
+                    else
                     {
                         message += "There are no new episodes yet!";
                     }
-                    await SpeakText(message);*/
-                    await SpeakText("Update complete!");
+                    // TODO: Speak result
+                    // await textSpeaker.SpeakText(message);
                     break;
             }
         }
 
         private async Task initializeAsync()
         {
-            attachMediElement();
             await applicationSettingsHelper.Initialization;
         }
 
         private static bool isVoiceCommand(SpeechRecognitionResult commandResult) =>
             commandResult?.SemanticInterpretation?.Properties["commandMode"]?.FirstOrDefault() == "voice";
 
-        private void attachMediElement()
+        private void changePosition(IReadOnlyDictionary<string, IReadOnlyList<string>> properties, Direction direction)
         {
-            mediaElement = new MediaElement { Visibility = Visibility.Collapsed, AudioCategory = Windows.UI.Xaml.Media.AudioCategory.ForegroundOnlyMedia };
-            Frame frame = Window.Current.Content as Frame;
-            if (frame == null)
-            {                
-                Window.Current.Content = new Page { Content = mediaElement };
-                return;
-            }
-
-            Page page = frame.Content as Page;
-            if (page == null)
+            if (properties == null || !properties.ContainsKey(intervalKey) || !properties.ContainsKey(numberKey))
             {
-                frame.Content = new Page { Content = mediaElement };
+                // TODO: Speak error
+                logger.LogMessage("VoiceCommandHandler: No parameters specified for changing position.", LoggingLevel.Error);
                 return;
             }
 
-            Panel panel = page.Content as Panel;
-            if (panel == null)
+            var interval = convertStringToNavigationInterval(properties[intervalKey].FirstOrDefault());
+            if (interval == NavigationInterval.Unspecified)
             {
-                page.Content = mediaElement;
+                // TODO: Speak error
+                logger.LogMessage("VoiceCommandHandler: Invalid interval specified for changing position.", LoggingLevel.Error);
                 return;
             }
 
-            panel.Children.Add(mediaElement);
+            int count = 0;
+            int.TryParse(properties[numberKey].FirstOrDefault(), out count);
+            if (count <= 0)
+            {
+                // TODO: Speak error
+                logger.LogMessage("VoiceCommandHandler: Invalid number specified for changing position.", LoggingLevel.Error);
+                return;
+            }
+            if (direction == Direction.Backward)
+            {
+                count = -count;
+            }
+
+            logger.LogMessage($"VoiceCommandHandler: Sending command to navigate {count} {interval} {direction}.", LoggingLevel.Information);
+            playbackManager.Navigate(count, interval);
         }
 
-        private TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-        private bool isBackgroundTaskRunning => applicationSettingsHelper.ReadSettingsValue<bool>(Keys.IsBackgroundTaskRunning);
-
-        private async Task SpeakText(string text)
+        private NavigationInterval convertStringToNavigationInterval(string stringToConvert)
         {
-            using (var synthesizer = new SpeechSynthesizer())
-            using (SpeechSynthesisStream stream = await synthesizer.SynthesizeTextToStreamAsync(text))
+            switch (stringToConvert)
             {
-                bool haveToResumePlayback = isBackgroundTaskRunning;
-                mediaElement.MediaEnded += onSpeechEnded;
-                mediaElement.SetSource(stream, stream.ContentType);                
-                await tcs.Task;    
-                if (haveToResumePlayback)
-                {
-                    playbackManager.Play();
-                }            
+                case "second":
+                case "seconds":
+                    return NavigationInterval.Second;
+                case "minute":
+                case "minutes":
+                    return NavigationInterval.Minute;
+                case "hour":
+                case "hours":
+                    return NavigationInterval.Hour;
+                case "track":
+                case "tracks":
+                    return NavigationInterval.Track;
+                case "episode":
+                case "episodes":
+                    return NavigationInterval.Episode;
             }
-        }
 
-        private void onSpeechEnded(object sender, object args)
-        {
-            mediaPlayer.MediaEnded -= onSpeechEnded;
-            tcs.SetResult(true);
+            return NavigationInterval.Unspecified;
         }
     }
 }
