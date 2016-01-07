@@ -52,9 +52,16 @@
             {
                 var voiceCommandsHandler = container.Resolve<IVoiceCommandsHandler>();
                 await voiceCommandsHandler.Initialization;
-                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);
-                Exit();
+                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);                
             }
+
+            if (args.PreviousExecutionState == ApplicationExecutionState.Running ||
+                args.PreviousExecutionState == ApplicationExecutionState.Suspended)
+            {
+                return;
+            }
+
+            Exit();
         }
 
         /// <summary>
@@ -78,7 +85,7 @@
                 logger.LogMessage($"Error setting up display request for debugging. {ex.Message}", LoggingLevel.Error);
             }
             DebugSettings.BindingFailed += (o, a) => logger.LogMessage($"BindingFailed. {a.Message}", LoggingLevel.Error);
-            DebugSettings.EnableFrameRateCounter |= Debugger.IsAttached;
+            DebugSettings.EnableFrameRateCounter = Debugger.IsAttached;
 #endif            
             var navigationService = container.Resolve<INavigationService>();
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
