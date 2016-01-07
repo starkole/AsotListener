@@ -1,6 +1,7 @@
 ﻿namespace AsotListener.Services.Implementations
 {
     using System;
+    using System.IO;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -9,10 +10,15 @@
     using Models.Enums;
     using Services.Contracts;
     using Windows.ApplicationModel.Activation;
+    using Windows.ApplicationModel.Core;
+    using Windows.Foundation.Diagnostics;
     using Windows.Media.Playback;
     using Windows.Media.SpeechRecognition;
     using Windows.Media.SpeechSynthesis;
+    using Windows.Storage.Streams;
     using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Common;
     public sealed class VoiceCommandsHandler : IVoiceCommandsHandler
     {
         private readonly ILogger logger;
@@ -24,6 +30,7 @@
         private EpisodeList episodeList => EpisodeList.Instance;
         private Playlist playlist => Playlist.Instance;
         private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
+        private MediaElement mediaElement;
         
         public VoiceCommandsHandler(
             ILogger logger,
@@ -111,10 +118,10 @@
                     // TODO: Add logic here
                     break;
                 case "checkForUpdates":
-                    int oldEpisodesCount = episodeList.Count;
+                    /*int oldEpisodesCount = episodeList.Count;
                     await episodeListManager.LoadEpisodeListFromServer();
                     int delta = episodeList.Count - oldEpisodesCount;
-                    string message = "Update complete. ";
+                    string message = "Update complete! ";
                     if (delta == 1)
                     {
                         message += "There is one new episode.";
@@ -123,44 +130,70 @@
                         message += $"There are {delta} new episodes.";
                     } else
                     {
-                        message += "There are no new episodes yet.";
+                        message += "There are no new episodes yet!";
                     }
-                    await SpeakText(message);
+                    await SpeakText(message);*/
+                    await SpeakText("Update complete!");
                     break;
             }
         }
 
         private async Task initializeAsync()
         {
+            attachMediElement();
             await applicationSettingsHelper.Initialization;
         }
 
         private static bool isVoiceCommand(SpeechRecognitionResult commandResult) =>
             commandResult?.SemanticInterpretation?.Properties["commandMode"]?.FirstOrDefault() == "voice";
 
+        private void attachMediElement()
+        {
+            mediaElement = new MediaElement { Visibility = Visibility.Collapsed, AudioCategory = Windows.UI.Xaml.Media.AudioCategory.ForegroundOnlyMedia };
+            Frame frame = Window.Current.Content as Frame;
+            if (frame == null)
+            {                
+                Window.Current.Content = new Page { Content = mediaElement };
+                return;
+            }
 
+            Page page = frame.Content as Page;
+            if (page == null)
+            {
+                frame.Content = new Page { Content = mediaElement };
+                return;
+            }
 
-        // TODO: Test if this works
+            Panel panel = page.Content as Panel;
+            if (panel == null)
+            {
+                page.Content = mediaElement;
+                return;
+            }
+
+            panel.Children.Add(mediaElement);
+        }
+
         private TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+        private bool isBackgroundTaskRunning => applicationSettingsHelper.ReadSettingsValue<bool>(Keys.IsBackgroundTaskRunning);
 
         private async Task SpeakText(string text)
         {
             using (var synthesizer = new SpeechSynthesizer())
-            using (var stream = await synthesizer.SynthesizeTextToStreamAsync(text))
+            using (SpeechSynthesisStream stream = await synthesizer.SynthesizeTextToStreamAsync(text))
             {
-                if (mediaPlayer.CanPause)
+                bool haveToResumePlayback = isBackgroundTaskRunning;
+                mediaElement.MediaEnded += onSpeechEnded;
+                mediaElement.SetSource(stream, stream.ContentType);                
+                await tcs.Task;    
+                if (haveToResumePlayback)
                 {
-                    mediaPlayer.Pause();
-                }
-                mediaPlayer.AutoPlay = true;
-                mediaPlayer.SetStreamSource(stream);
-                mediaPlayer.MediaEnded -= onSpeechEnded;
-                mediaPlayer.MediaEnded += onSpeechEnded;
-                await tcs.Task;
+                    playbackManager.Play();
+                }            
             }
         }
 
-        private void onSpeechEnded(MediaPlayer sender, object args)
+        private void onSpeechEnded(object sender, object args)
         {
             mediaPlayer.MediaEnded -= onSpeechEnded;
             tcs.SetResult(true);
