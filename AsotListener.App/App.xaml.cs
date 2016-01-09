@@ -2,6 +2,7 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Threading.Tasks;
     using HockeyApp;
     using Ioc;
@@ -9,6 +10,7 @@
     using Services.Contracts;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
+    using Windows.ApplicationModel.Background;
     using Windows.Foundation.Diagnostics;
     using Windows.Media.SpeechRecognition;
     using Windows.Storage;
@@ -22,8 +24,8 @@
         #region Declarations
 
         private readonly ILogger logger;
-        private IContainer container => Container.Instance; 
-        
+        private IContainer container => Container.Instance;
+
         #endregion
 
         #region Ctor
@@ -39,7 +41,7 @@
             UnhandledException += onUnhandledException;
             logger = container.Resolve<ILogger>();
             logger.LogMessage("Application initialized.");
-        } 
+        }
 
         #endregion
 
@@ -52,7 +54,7 @@
             {
                 var voiceCommandsHandler = container.Resolve<IVoiceCommandsHandler>();
                 await voiceCommandsHandler.Initialization;
-                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);                
+                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);
             }
 
             if (args.PreviousExecutionState == ApplicationExecutionState.Running ||
@@ -91,6 +93,7 @@
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
             Window.Current.Activate();
             await setupVoiceCommandsAsync();
+            await RegisterBackgroundUpdaterTask();
             if (await setupHockeyAppAsync())
             {
                 await HockeyClient.Current.SendCrashesAsync(true);
@@ -147,6 +150,45 @@
                 logger.LogMessage($"Error installing voice commands set. {ex.Message}", LoggingLevel.Error);
             }
             logger.LogMessage("Voice commands installed.", LoggingLevel.Information);
+        }
+
+        private async Task RegisterBackgroundUpdaterTask()
+        {
+            const string taskName = "AsotListener.BackgroundUpdater";
+            const int taskIntervalHours = 25;
+
+            if (BackgroundTaskRegistration.AllTasks.Any(t => t.Value.Name == taskName))
+            {
+                // Task already registered
+                return;
+            }
+
+            var accessStatus = await BackgroundExecutionManager.RequestAccessAsync();
+            if (accessStatus != BackgroundAccessStatus.AllowedMayUseActiveRealTimeConnectivity)
+            {
+                logger.LogMessage($"Attempted to register {taskName} task, but system hasn't allowed it.", LoggingLevel.Warning);
+                return;
+            }
+
+            var builder = new BackgroundTaskBuilder
+            {
+                Name = taskName,
+                TaskEntryPoint = taskName + ".BackgroundUpdaterTask"
+            };
+
+            TimeTrigger trigger = new TimeTrigger(60 * taskIntervalHours, false);
+            builder.SetTrigger(trigger);
+
+            try
+            {
+                BackgroundTaskRegistration task = builder.Register();
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error registering {taskName} task. {ex.Message}", LoggingLevel.Error);
+            }
+
+            logger.LogMessage($"Registered {taskName} task to run every {taskIntervalHours} hours.", LoggingLevel.Information);
         }
 
         #endregion
