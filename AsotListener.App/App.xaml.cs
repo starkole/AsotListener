@@ -2,13 +2,16 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Threading.Tasks;
+    using Common;
     using HockeyApp;
     using Ioc;
     using Models.Enums;
     using Services.Contracts;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Activation;
+    using Windows.ApplicationModel.Background;
     using Windows.Foundation.Diagnostics;
     using Windows.Media.SpeechRecognition;
     using Windows.Storage;
@@ -22,8 +25,8 @@
         #region Declarations
 
         private readonly ILogger logger;
-        private IContainer container => Container.Instance; 
-        
+        private IContainer container => Container.Instance;
+
         #endregion
 
         #region Ctor
@@ -39,12 +42,16 @@
             UnhandledException += onUnhandledException;
             logger = container.Resolve<ILogger>();
             logger.LogMessage("Application initialized.");
-        } 
+        }
 
         #endregion
 
         #region Overrides
 
+        /// <summary>
+        /// Invoked when application is activated by system, for example via voice command
+        /// </summary>
+        /// <param name="args">Activation arguments</param>
         protected override async void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
@@ -52,7 +59,7 @@
             {
                 var voiceCommandsHandler = container.Resolve<IVoiceCommandsHandler>();
                 await voiceCommandsHandler.Initialization;
-                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);                
+                await voiceCommandsHandler.HandleVoiceCommnadAsync(args as VoiceCommandActivatedEventArgs);
             }
 
             if (args.PreviousExecutionState == ApplicationExecutionState.Running ||
@@ -91,6 +98,7 @@
             navigationService.Initialize(typeof(MainPage), NavigationParameter.OpenMainPage);
             Window.Current.Activate();
             await setupVoiceCommandsAsync();
+            await RegisterBackgroundUpdaterTask();
             if (await setupHockeyAppAsync())
             {
                 await HockeyClient.Current.SendCrashesAsync(true);
@@ -147,6 +155,44 @@
                 logger.LogMessage($"Error installing voice commands set. {ex.Message}", LoggingLevel.Error);
             }
             logger.LogMessage("Voice commands installed.", LoggingLevel.Information);
+        }
+
+        private async Task RegisterBackgroundUpdaterTask()
+        {
+            const int taskIntervalHours = 25;
+
+            if (BackgroundTaskRegistration.AllTasks.Any(t => t.Value.Name == Constants.BackgroundUpdaterTaskName))
+            {
+                // Task already registered
+                return;
+            }
+
+            var accessStatus = await BackgroundExecutionManager.RequestAccessAsync();
+            if (accessStatus != BackgroundAccessStatus.AllowedMayUseActiveRealTimeConnectivity)
+            {
+                logger.LogMessage($"Attempted to register {Constants.BackgroundUpdaterTaskName} task, but system hasn't allowed it.", LoggingLevel.Warning);
+                return;
+            }
+
+            var builder = new BackgroundTaskBuilder
+            {
+                Name = Constants.BackgroundUpdaterTaskName,
+                TaskEntryPoint = Constants.BackgroundUpdaterTaskName + ".BackgroundUpdaterTask"
+            };
+
+            TimeTrigger trigger = new TimeTrigger(60 * taskIntervalHours, false);
+            builder.SetTrigger(trigger);
+
+            try
+            {
+                BackgroundTaskRegistration task = builder.Register();
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"Error registering {Constants.BackgroundUpdaterTaskName} task. {ex.Message}", LoggingLevel.Error);
+            }
+
+            logger.LogMessage($"Registered {Constants.BackgroundUpdaterTaskName} task to run every {taskIntervalHours} hours.", LoggingLevel.Information);
         }
 
         #endregion

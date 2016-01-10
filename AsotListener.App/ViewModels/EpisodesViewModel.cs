@@ -8,6 +8,7 @@
     using Models;
     using Models.Enums;
     using Services.Contracts;
+    using Windows.ApplicationModel.Background;
     using Windows.Foundation.Diagnostics;
     using Windows.UI.Xaml;
 
@@ -18,6 +19,7 @@
     {
         #region Fields
 
+        private readonly IBackgroundTaskRegistration backgroundUpdaterTask;
         private readonly ILogger logger;
         private readonly INavigationService navigationService;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
@@ -108,6 +110,12 @@
             ClearPlaylistCommand = new RelayCommand((Action)clearPlaylistCommand);
 
             Application.Current.Resuming += onAppResuming;
+            Application.Current.Suspending += (_, __) => unregisterUpdaterCompletionHandler();
+            Application.Current.UnhandledException += (_, __) => unregisterUpdaterCompletionHandler();
+            backgroundUpdaterTask = BackgroundTaskRegistration.AllTasks
+                .Where(t => t.Value.Name == Constants.BackgroundUpdaterTaskName)
+                .Select(t => t.Value)
+                .FirstOrDefault();
             Initialization = initializeAsync();
             logger.LogMessage("EpisodesViewModel: Initialized.", LoggingLevel.Information);
         }
@@ -127,6 +135,7 @@
             }
 
             await downloadManager.Initialization;
+            registerUpdaterCompletionHandler();
             logger.LogMessage("EpisodesViewModel: State restored.", LoggingLevel.Information);
         }
 
@@ -145,7 +154,7 @@
             await episodeListManager.PlayEpisode(boxedEpisode as Episode);
             navigationService.Navigate(NavigationParameter.StartPlayback);
         }
-        
+
         private async void clearPlaylistCommand()
         {
             logger.LogMessage("EpisodesViewModel: Executing ClearPlaylist command...");
@@ -165,7 +174,36 @@
             await applicationSettingsHelper.LoadPlaylist();
             await episodeListManager.UpdateEpisodeStates();
             await downloadManager.RetrieveActiveDownloads();
+            registerUpdaterCompletionHandler();
             logger.LogMessage("EpisodesViewModel: State restored after application resuming.", LoggingLevel.Information);
+        }
+
+        private async void backgroundUpdaterCompletionHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
+        {
+            await applicationSettingsHelper.LoadEpisodeList();
+            await downloadManager.RetrieveActiveDownloads();
+        }
+
+        private void unregisterUpdaterCompletionHandler()
+        {
+            if (backgroundUpdaterTask != null)
+            {
+                backgroundUpdaterTask.Completed -= backgroundUpdaterCompletionHandler;
+                logger.LogMessage("EpisodesViewModel: Completion handler for background updater task unregistered.");
+            }
+        }
+
+        private void registerUpdaterCompletionHandler()
+        {
+            if (backgroundUpdaterTask != null)
+            {
+                backgroundUpdaterTask.Completed -= backgroundUpdaterCompletionHandler;
+                backgroundUpdaterTask.Completed += backgroundUpdaterCompletionHandler;
+            }
+            else
+            {
+                logger.LogMessage("EpisodesViewModel: Tried to register completion handler for background updater task, but no task was found.", LoggingLevel.Warning);
+            }
         }
 
         #endregion

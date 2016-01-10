@@ -91,5 +91,22 @@
         /// </summary>
         /// <returns></returns>
         public override string ToString() => Name;
+
+        /// <summary>
+        /// Compares two <see cref="Episode"/> objects
+        /// </summary>
+        /// <param name="obj">Episode to compare to</param>
+        /// <returns>True when Episodes has the same names</returns>
+        public override bool Equals(object obj)
+        {
+            var other = obj as Episode;
+            return other != null && other.Name == Name;
+        }
+
+        /// <summary>
+        /// Gets hash code of the Episode
+        /// </summary>
+        /// <returns>Hash code of the Episode</returns>
+        public override int GetHashCode() => Name.GetHashCode();
     }
 }
