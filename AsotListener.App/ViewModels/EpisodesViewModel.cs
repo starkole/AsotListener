@@ -9,7 +9,9 @@
     using Models.Enums;
     using Services.Contracts;
     using Windows.ApplicationModel.Background;
+    using Windows.ApplicationModel.Core;
     using Windows.Foundation.Diagnostics;
+    using Windows.UI.Core;
     using Windows.UI.Xaml;
 
     /// <summary>
@@ -180,8 +182,11 @@
 
         private async void backgroundUpdaterCompletionHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
-            await applicationSettingsHelper.LoadEpisodeList();
-            await downloadManager.RetrieveActiveDownloads();
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                await applicationSettingsHelper.LoadEpisodeList();
+                await downloadManager.RetrieveActiveDownloads();
+            });
         }
 
         private void unregisterUpdaterCompletionHandler()
