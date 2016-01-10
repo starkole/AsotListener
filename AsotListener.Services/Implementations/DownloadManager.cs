@@ -109,10 +109,10 @@
         }
 
         /// <summary>
-        /// Schedules given episode to be downloaded
+        /// Schedules given <see cref="Episode"/> to be downloaded
         /// </summary>
-        /// <param name="episode">Episode to download</param>
-        /// <returns>Task, which completes when episode download has been scheduled</returns>
+        /// <param name="episode"><see cref="Episode"/> to download</param>
+        /// <returns>Task, which completes when <see cref="Episode"/> download has been scheduled</returns>
         public async Task DownloadEpisode(Episode episode)
         {
             logger.LogMessage("EpisodesViewModel: Downloading episode...");
@@ -122,24 +122,37 @@
                 return;
             }
 
-            using (ILoader loader = loaderFactory.GetLoader())
+            foreach (var download in await prepareDownloadAsync(episode))
             {
-                string episodePage = await loader.FetchEpisodePageAsync(episode);
-                episode.DownloadLinks = parser.ExtractDownloadLinks(episodePage);
+                handleDownloadAsync(download, episode, DownloadState.NotStarted);
             }
 
-            episode.Status = Downloading;
-            for (var i = 0; i < episode.DownloadLinks.Length; i++)
-            {
-                await scheduleDownloadAsync(episode, i);
-            }
             logger.LogMessage($"EpisodesViewModel: All downloads for episode {episode.Name} have been scheduled successfully.");
         }
 
         /// <summary>
-        /// Cancels downloading of given episode
+        /// Schedules <see cref="Episode"/> download
         /// </summary>
-        /// <param name="episode">Episode to cancel download of</param>
+        /// <param name="episode"><see cref="Episode"/> to be downloaded</param>
+        public async void ScheduleDownload(Episode episode)
+        {
+            foreach (var download in await prepareDownloadAsync(episode))
+            {
+                try
+                {
+                    await download.StartAsync().AsTask().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogMessage($"Exception while starting download. {ex.Message}");
+                }
+            }           
+        }
+
+        /// <summary>
+        /// Cancels downloading of given <see cref="Episode"/>
+        /// </summary>
+        /// <param name="episode"><see cref="Episode"/> to cancel download of</param>
         public void CancelDownload(Episode episode)
         {
             logger.LogMessage("EpisodesViewModel: Cancelling download...");
@@ -187,29 +200,42 @@
 
         #region Private Methods
 
-        private async Task scheduleDownloadAsync(Episode episode, int partNumber)
+        private async Task<IList<DownloadOperation>> prepareDownloadAsync(Episode episode)
         {
-            logger.LogMessage($"EpisodesViewModel: Scheduling download part {partNumber + 1} of {episode.DownloadLinks.Length}.");
-            var downloader = new BackgroundDownloader();
-            var uri = new Uri(episode.DownloadLinks[partNumber]);
-            var file = await fileUtils.CreateEpisodePartFile(episode.Name, partNumber);
-            if (file == null)
+            var result = new List<DownloadOperation>();
+
+            logger.LogMessage("EpisodesViewModel: Downloading episode...");
+            if (episode == null)
             {
-                string message = "Cannot create file to save episode.";
-                logger.LogMessage(message, LoggingLevel.Error);
-                CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-                await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-                {
-                    MessageDialog MDialog = new MessageDialog(message, "Error in ASOT Listener");
-                    await MDialog.ShowAsync();
-                });
-                return;
+                logger.LogMessage("EpisodesViewModel: Invalid episode specified for download.", LoggingLevel.Warning);
+                return result;
             }
 
-            var download = downloader.CreateDownload(uri, file);
-            download.CostPolicy = BackgroundTransferCostPolicy.UnrestrictedOnly;
-            handleDownloadAsync(download, episode, DownloadState.NotStarted);
-            logger.LogMessage($"EpisodesViewModel: Successfully scheduled download from {episode.DownloadLinks[partNumber]} to {file.Name}.");
+            using (ILoader loader = loaderFactory.GetLoader())
+            {
+                string episodePage = await loader.FetchEpisodePageAsync(episode);
+                episode.DownloadLinks = parser.ExtractDownloadLinks(episodePage);
+            }
+
+            episode.Status = Downloading;
+            for (var i = 0; i < episode.DownloadLinks.Length; i++)
+            {
+                logger.LogMessage($"EpisodesViewModel: Scheduling download part {i + 1} of {episode.DownloadLinks.Length}.");                
+                var file = await fileUtils.CreateEpisodePartFile(episode.Name, i);
+                if (file == null)
+                {
+                    logger.LogMessage("Cannot create file to save episode.", LoggingLevel.Error);
+                    continue;
+                }
+                var downloader = new BackgroundDownloader();
+                var uri = new Uri(episode.DownloadLinks[i]);
+                var download = downloader.CreateDownload(uri, file);
+                download.CostPolicy = BackgroundTransferCostPolicy.UnrestrictedOnly;
+                logger.LogMessage($"EpisodesViewModel: Successfully created download from {episode.DownloadLinks[i]} to {file.Name}.");
+                result.Add(download);
+            }
+
+            return result;
         }
 
         private async void handleDownloadAsync(DownloadOperation download, Episode episode, DownloadState downloadState)
@@ -232,9 +258,9 @@
                 download.CostPolicy = BackgroundTransferCostPolicy.Always;
 #endif
                 if (downloadState == DownloadState.NotStarted)
-                {
+                {                    
                     logger.LogMessage($"EpisodesViewModel: Download hasn't been started yet. Starting it.");
-                    await download.StartAsync().AsTask(progressCallback);
+                    await download.StartAsync().AsTask(progressCallback).ConfigureAwait(false);
                 }
                 if (downloadState == DownloadState.AlreadyRunning)
                 {

@@ -4,6 +4,7 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Common;
     using HockeyApp;
     using Ioc;
     using Models.Enums;
@@ -47,6 +48,10 @@
 
         #region Overrides
 
+        /// <summary>
+        /// Invoked when application is activated by system, for example via voice command
+        /// </summary>
+        /// <param name="args">Activation arguments</param>
         protected override async void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
@@ -154,10 +159,9 @@
 
         private async Task RegisterBackgroundUpdaterTask()
         {
-            const string taskName = "AsotListener.BackgroundUpdater";
             const int taskIntervalHours = 25;
 
-            if (BackgroundTaskRegistration.AllTasks.Any(t => t.Value.Name == taskName))
+            if (BackgroundTaskRegistration.AllTasks.Any(t => t.Value.Name == Constants.BackgroundUpdaterTaskName))
             {
                 // Task already registered
                 return;
@@ -166,14 +170,14 @@
             var accessStatus = await BackgroundExecutionManager.RequestAccessAsync();
             if (accessStatus != BackgroundAccessStatus.AllowedMayUseActiveRealTimeConnectivity)
             {
-                logger.LogMessage($"Attempted to register {taskName} task, but system hasn't allowed it.", LoggingLevel.Warning);
+                logger.LogMessage($"Attempted to register {Constants.BackgroundUpdaterTaskName} task, but system hasn't allowed it.", LoggingLevel.Warning);
                 return;
             }
 
             var builder = new BackgroundTaskBuilder
             {
-                Name = taskName,
-                TaskEntryPoint = taskName + ".BackgroundUpdaterTask"
+                Name = Constants.BackgroundUpdaterTaskName,
+                TaskEntryPoint = Constants.BackgroundUpdaterTaskName + ".BackgroundUpdaterTask"
             };
 
             TimeTrigger trigger = new TimeTrigger(60 * taskIntervalHours, false);
@@ -185,10 +189,10 @@
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"Error registering {taskName} task. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"Error registering {Constants.BackgroundUpdaterTaskName} task. {ex.Message}", LoggingLevel.Error);
             }
 
-            logger.LogMessage($"Registered {taskName} task to run every {taskIntervalHours} hours.", LoggingLevel.Information);
+            logger.LogMessage($"Registered {Constants.BackgroundUpdaterTaskName} task to run every {taskIntervalHours} hours.", LoggingLevel.Information);
         }
 
         #endregion
