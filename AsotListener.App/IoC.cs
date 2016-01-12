@@ -8,19 +8,24 @@
     /// </summary>
     public static class IoC
     {
+        private static bool isRegistered = false;
+
         /// <summary>
         /// Registers current library in IoC container
         /// </summary>
         public static void Register()
         {
-            IContainer container = Container.Instance;
+            if (!isRegistered)
+            {
+                isRegistered = true;
+                Services.IoC.Register();
+                IContainer container = Container.Instance;
 
-            Services.IoC.Register();
-
-            // TODO: Define interfaces for view models
-            container.RegisterType<PlayerViewModel>();
-            container.RegisterType<EpisodesViewModel>();
-            container.RegisterType<MainPageViewModel>();
+                // TODO: Define interfaces for view models
+                container.RegisterType<PlayerViewModel>();
+                container.RegisterType<EpisodesViewModel>();
+                container.RegisterType<MainPageViewModel>();
+            }
         }
     }
 }

@@ -24,6 +24,7 @@
     {
         #region Declarations
 
+        private static bool isHockeyConfigured = false;
         private readonly ILogger logger;
         private IContainer container => Container.Instance;
 
@@ -39,6 +40,7 @@
         {
             IoC.Register();
             InitializeComponent();
+            UnhandledException -= onUnhandledException;
             UnhandledException += onUnhandledException;
             logger = container.Resolve<ILogger>();
             logger.LogMessage("Application initialized.");
@@ -55,6 +57,7 @@
         protected override async void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
+            logger.LogMessage("Application activated.", LoggingLevel.Information);
             if (args.Kind == ActivationKind.VoiceCommand)
             {
                 var voiceCommandsHandler = container.Resolve<IVoiceCommandsHandler>();
@@ -77,6 +80,7 @@
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
+            base.OnLaunched(args);
             logger.LogMessage("Application launched.", LoggingLevel.Information);
 #if DEBUG            
             DebugSettings.BindingFailed += (o, a) => logger.LogMessage($"BindingFailed. {a.Message}", LoggingLevel.Error);
@@ -87,7 +91,8 @@
             Window.Current.Activate();
             await setupVoiceCommandsAsync();
             await RegisterBackgroundUpdaterTask();
-            if (await setupHockeyAppAsync())
+            await setupHockeyAppAsync();
+            if (isHockeyConfigured)
             {
                 await HockeyClient.Current.SendCrashesAsync(true);
                 await HockeyClient.Current.CheckForAppUpdateAsync();
@@ -108,8 +113,13 @@
 
         #region Helpers
 
-        private async Task<bool> setupHockeyAppAsync()
+        private async Task setupHockeyAppAsync()
         {
+            if (isHockeyConfigured)
+            {
+                return;
+            }
+
             string appId = null;
             try
             {
@@ -123,12 +133,12 @@
 
             if (string.IsNullOrWhiteSpace(appId))
             {
-                return false;
+                return;
             }
 
             HockeyClient.Current.Configure(appId);
             logger.LogMessage("Hockey configured.", LoggingLevel.Information);
-            return true;
+            isHockeyConfigured = true;
         }
 
         private async Task setupVoiceCommandsAsync()

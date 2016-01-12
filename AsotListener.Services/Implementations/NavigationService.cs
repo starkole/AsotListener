@@ -80,6 +80,7 @@
                 }
 
                 frame.ContentTransitions = null;
+                frame.Navigated -= onRootFrameFirstNavigated;
                 frame.Navigated += onRootFrameFirstNavigated;
             }
 

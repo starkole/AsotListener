@@ -59,12 +59,11 @@
                     applicationSettingsHelper,
                     SystemMediaTransportControls.GetForCurrentView());
 
-                BackgroundMediaPlayer.MessageReceivedFromForeground += BackgroundMediaPlayer_MessageReceivedFromForeground;
+                BackgroundMediaPlayer.MessageReceivedFromForeground -= onMessageReceivedFromForeground;
+                BackgroundMediaPlayer.MessageReceivedFromForeground += onMessageReceivedFromForeground;
 
                 applicationSettingsHelper.SaveSettingsValue(Keys.IsBackgroundTaskRunning, true);
-
-                ValueSet message = new ValueSet { { Keys.IsBackgroundTaskRunning, true } };
-                BackgroundMediaPlayer.SendMessageToForeground(message);
+                BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.IsBackgroundTaskRunning, null } });
                 logger.LogMessage($"BackgroundAudioTask initialized.", LoggingLevel.Information);
             }
             catch (Exception ex)
@@ -104,7 +103,7 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void BackgroundMediaPlayer_MessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
+        private async void onMessageReceivedFromForeground(object sender, MediaPlayerDataReceivedEventArgs e)
         {
             int navigationAmount = 0;
             NavigationInterval navigationInterval = NavigationInterval.Unspecified;
@@ -158,15 +157,19 @@
 
         #region IDisposable Support
 
-        private void Dispose(bool disposing)
+        /// <summary>
+        /// Releases used resources
+        /// </summary>
+        public void Dispose()
         {
-            if (isDisposed || !disposing)
+            if (isDisposed)
             {
                 return;
             }
 
             try
             {
+                BackgroundMediaPlayer.MessageReceivedFromForeground -= onMessageReceivedFromForeground;
                 applicationSettingsHelper?.SaveSettingsValue(Keys.IsBackgroundTaskRunning, false);
                 audioManager?.Dispose();
                 logger?.SaveLogsToFile();
@@ -183,14 +186,6 @@
 
             logger?.LogMessage($"BackgroundAudioTask has been shut down correctly.");
             isDisposed = true;
-        }
-
-        /// <summary>
-        /// Releases used resources
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
         }
 
         #endregion
