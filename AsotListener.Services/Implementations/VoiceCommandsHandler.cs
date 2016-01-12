@@ -12,8 +12,13 @@
     using Windows.Media.Playback;
     using Windows.Media.SpeechRecognition;
 
+    /// <summary>
+    /// Contains logic for processing voice commands
+    /// </summary>
     public sealed class VoiceCommandsHandler : IVoiceCommandsHandler
     {
+        #region Private Declarations
+
         private enum Direction
         {
             Forward,
@@ -33,8 +38,27 @@
         private Playlist playlist => Playlist.Instance;
         private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
 
-        // TODO: Update documentation.
-        // TODO: Add logging
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>
+        /// The result of the asynchronous initialization.
+        /// </summary>
+        public Task Initialization { get; }
+
+        #endregion
+
+        #region Ctor
+        
+        /// <summary>
+        /// Creates ne instance of <see cref="VoiceCommandsHandler"/>
+        /// </summary>
+        /// <param name="logger">Instance of <see cref="ILogger"/></param>
+        /// <param name="applicationSettingsHelper">Instance of <see cref="IApplicationSettingsHelper"/></param>
+        /// <param name="episodeListManager">Instance of <see cref="IEpisodeListManager"/></param>
+        /// <param name="playbackManager">Instance of <see cref="IPlaybackManager"/></param>
+        /// <param name="textSpeaker">Instance of <see cref="ITextSpeaker"/></param>
         public VoiceCommandsHandler(
             ILogger logger,
             IApplicationSettingsHelper applicationSettingsHelper,
@@ -49,13 +73,22 @@
             this.logger = logger;
 
             Initialization = initializeAsync();
+            logger.LogMessage("Voice commands handler initialized.", LoggingLevel.Information);
         }
 
-        public Task Initialization { get; }
+        #endregion
 
+        #region Piblic Methods
+
+        /// <summary>
+        /// Handles voice command defined by given voice command arguments
+        /// </summary>
+        /// <param name="args">Arguments that define voice command</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task HandleVoiceCommnadAsync(VoiceCommandActivatedEventArgs args)
         {
             string commandName = args?.Result.RulePath.FirstOrDefault();
+            logger.LogMessage($"Voice commands handler: Processing {commandName} command...");
             switch (commandName)
             {
                 case "playTheLastEpisode":
@@ -86,7 +119,6 @@
                         {
                             // TODO: Speak error
                             logger.LogMessage("VoiceCommandHandler: Cannot play episode by number. The number is out of range.", LoggingLevel.Error);
-
                             return;
                         }
 
@@ -132,7 +164,7 @@
                     int oldEpisodesCount = episodeList.Count;
                     await episodeListManager.LoadEpisodeListFromServer();
                     int delta = episodeList.Count - oldEpisodesCount;
-                    string message = "Update complete! ";
+                    string message = "Update complete. ";
                     if (delta == 1)
                     {
                         message += "There is one new episode.";
@@ -151,6 +183,10 @@
             }
         }
 
+        #endregion
+
+        #region Private Methods
+
         private async Task initializeAsync()
         {
             await applicationSettingsHelper.Initialization;
@@ -161,6 +197,7 @@
 
         private void changePosition(IReadOnlyDictionary<string, IReadOnlyList<string>> properties, Direction direction)
         {
+            logger.LogMessage("Voice commands handler: Changing current position...");
             if (properties == null || !properties.ContainsKey(intervalKey) || !properties.ContainsKey(numberKey))
             {
                 // TODO: Speak error
@@ -215,6 +252,8 @@
             }
 
             return NavigationInterval.Unspecified;
-        }
+        } 
+
+        #endregion
     }
 }
