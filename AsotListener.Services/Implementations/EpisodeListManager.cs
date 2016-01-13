@@ -9,7 +9,9 @@
 
     using static Models.Enums.EpisodeStatus;
 
-    // TODO: Documentation
+    /// <summary>
+    /// Contains logic for managing episode list
+    /// </summary>
     public sealed class EpisodeListManager : IEpisodeListManager
     {
         #region Fields
@@ -26,12 +28,22 @@
         private EpisodeList episodeList => EpisodeList.Instance;
         private Playlist playlist => Playlist.Instance;
 
+        /// <summary>
+        /// Information about current instance initialization
+        /// </summary>
         public Task Initialization { get; }
 
         #endregion
 
         #region Ctor
 
+        /// <summary>
+        /// Creates new instance of <see cref="EpisodeListManager"/>
+        /// </summary>
+        /// <param name="logger">Instance of <see cref="ILogger"/></param>
+        /// <param name="fileUtils">Instance of <see cref="IFileUtils"/></param>
+        /// <param name="applicationSettingsHelper">Instance of <see cref="IApplicationSettingsHelper"/></param>
+        /// <param name="loaderFactory">Instance of <see cref="ILoaderFactory"/></param>
         public EpisodeListManager(
            ILogger logger,
            IFileUtils fileUtils,
@@ -54,6 +66,11 @@
 
         #region Public Methods
 
+        /// <summary>
+        /// Adds episode to playlist
+        /// </summary>
+        /// <param name="episode">Episode to add</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task AddEpisodeToPLaylist(Episode episode)
         {
             logger.LogMessage("EpisodeListManager: Executing add to playlist command...");
@@ -75,6 +92,11 @@
             logger.LogMessage("EpisodeListManager: Add to playlist command executed.");
         }
 
+        /// <summary>
+        /// Deletes all episode data from local storage
+        /// </summary>
+        /// <param name="episode">Episode whose data will be deleted</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task DeleteEpisodeData(Episode episode)
         {
             logger.LogMessage($"EpisodeListManager: Deleting episode...");
@@ -96,6 +118,11 @@
             logger.LogMessage($"EpisodeListManager: Episode has been deleted.");
         }
 
+        /// <summary>
+        /// Adds episode to playlist, if it hadn't been added, and starts playing it
+        /// </summary>
+        /// <param name="episode">Episode to play</param>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task PlayEpisode(Episode episode)
         {
             logger.LogMessage("EpisodeListManager: Scheduling episode playback episode...");
@@ -118,6 +145,10 @@
             logger.LogMessage("EpisodeListManager: Episode scheduled to play.");
         }
 
+        /// <summary>
+        /// Updates statuses of episodes in episode list
+        /// </summary>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task UpdateEpisodeStates()
         {
             logger.LogMessage("EpisodeListManager: Updating episode states...");
@@ -150,6 +181,10 @@
             logger.LogMessage("EpisodeListManager: Episode states has been updated successfully.");
         }
 
+        /// <summary>
+        /// Loads fresh copy of episode list from server
+        /// </summary>
+        /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task LoadEpisodeListFromServer()
         {
             logger.LogMessage("EpisodeListManager: Loading episode list from server...");
