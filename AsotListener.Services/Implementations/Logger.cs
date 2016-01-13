@@ -42,7 +42,10 @@
         /// <param name="loggingLevel">Message logging level</param>
         public void LogMessage(string message, LoggingLevel loggingLevel)
         {
-            loggingChannel.LogMessage(message, loggingLevel);
+            if (loggingLevel >= LoggingLevel.Warning)
+            {
+                loggingChannel.LogMessage(message, loggingLevel);
+            }
 #if DEBUG
             Debug.WriteLine($"{loggingLevel}: {message}");
 #endif
