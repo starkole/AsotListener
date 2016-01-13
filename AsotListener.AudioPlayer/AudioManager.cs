@@ -27,8 +27,10 @@
         private bool isDisposed = false;
         private readonly ILogger logger;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
-        private MediaPlayer MediaPlayer => BackgroundMediaPlayer.Current;
         private SystemMediaTransportControls smtc;
+        private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
+        private Playlist playlist => Playlist.Instance;
+        private double correctedTotalDuration => mediaPlayer.NaturalDuration.TotalSeconds - 1;
 
         #endregion
 
@@ -49,10 +51,10 @@
             this.applicationSettingsHelper = applicationSettingsHelper;
             logger.LogMessage("Initializing Background Audio Manager...");
 
-            MediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
-            MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
-            MediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
-            MediaPlayer.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
+            mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+            mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
+            mediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
+            mediaPlayer.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
 
             this.smtc = smtc;
             smtc.ButtonPressed += Smtc_ButtonPressed;
@@ -79,7 +81,7 @@
                 if (CanUpdatePlayerPosition())
                 {
                     // Start position must be set after payback has already been started
-                    sender.Position = Playlist.Instance.CurrentTrack?.StartPosition ?? TimeSpan.Zero;
+                    sender.Position = playlist.CurrentTrack?.StartPosition ?? TimeSpan.Zero;
                 }
 
                 if (isPauseScheduled)
@@ -99,15 +101,15 @@
                 if (sender.Position != TimeSpan.Zero)
                 {
                     logger.LogMessage("BackgroundAudio: Saving track position.");
-                    await SaveCurrentState();
+                    await SaveCurrentStateAsync();
                 }
             }
         }
 
         private bool CanUpdatePlayerPosition() =>
-            Playlist.Instance.CurrentTrack != null &&
-            Playlist.Instance.CurrentTrack.StartPosition > TimeSpan.Zero &&
-            Playlist.Instance.CurrentTrack.StartPosition < TimeSpan.FromSeconds(MediaPlayer.NaturalDuration.TotalSeconds - 1);
+            playlist.CurrentTrack != null &&
+            playlist.CurrentTrack.StartPosition > TimeSpan.Zero &&
+            playlist.CurrentTrack.StartPosition < TimeSpan.FromSeconds(correctedTotalDuration);
 
         private async void MediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
@@ -121,7 +123,7 @@
             sender.Play();
             smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
-            smtc.DisplayUpdater.MusicProperties.Title = Playlist.Instance.CurrentTrack?.Name ?? string.Empty;
+            smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack?.Name ?? string.Empty;
             smtc.DisplayUpdater.Update();
         }
 
@@ -140,7 +142,7 @@
             if (sender.SoundLevel == SoundLevel.Muted)
             {
                 logger.LogMessage("BackgroundAudio: Sounds muted - pausing playback.");
-                MediaPlayer.Pause();
+                mediaPlayer.Pause();
             }
         }
 
@@ -150,11 +152,11 @@
             {
                 case SystemMediaTransportControlsButton.Play:
                     logger.LogMessage("BackgroundAudio: UVC play button pressed");
-                    await StartPlayback();
+                    await StartPlaybackAsync();
                     break;
                 case SystemMediaTransportControlsButton.Pause:
                     logger.LogMessage("BackgroundAudio: UVC pause button pressed");
-                    MediaPlayer.Pause();
+                    mediaPlayer.Pause();
                     break;
                 case SystemMediaTransportControlsButton.Next:
                     logger.LogMessage("BackgroundAudio: UVC next button pressed");
@@ -178,15 +180,15 @@
         public async void StartTrackAt(int index)
         {
             logger.LogMessage($"BackgroundAudio: Preparing to play the track #{index}.");
-            if (MediaPlayer.CurrentState == Playing)
+            if (mediaPlayer.CurrentState == Playing)
             {
-                await SaveCurrentState();
+                await SaveCurrentStateAsync();
             }
-            Playlist.Instance.CurrentTrackIndex = index;
+            playlist.CurrentTrackIndex = index;
 
             BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentTrack, index } });
-            BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentPositionSeconds, Playlist.Instance.CurrentTrack.StartPosition.TotalSeconds } });
-            await StartPlayback();
+            BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentPositionSeconds, playlist.CurrentTrack.StartPosition.TotalSeconds } });
+            await StartPlaybackAsync();
         }
 
         /// <summary>
@@ -196,7 +198,7 @@
         {
             logger.LogMessage("BackgroundAudio: Advancing to the next track.");
             smtc.PlaybackStatus = MediaPlaybackStatus.Changing;
-            StartTrackAt(Playlist.Instance.CurrentTrackIndex + 1);
+            StartTrackAt(playlist.CurrentTrackIndex + 1);
         }
 
         /// <summary>
@@ -206,7 +208,7 @@
         {
             logger.LogMessage("BackgroundAudio: Returning to previous track.");
             smtc.PlaybackStatus = MediaPlaybackStatus.Changing;
-            StartTrackAt(Playlist.Instance.CurrentTrackIndex - 1);
+            StartTrackAt(playlist.CurrentTrackIndex - 1);
         }
 
         /// <summary>
@@ -223,10 +225,10 @@
         /// </summary>
         public void PausePlayback()
         {
-            if (MediaPlayer.CurrentState == Playing)
+            if (mediaPlayer.CurrentState == Playing)
             {
                 logger.LogMessage("BackgroundAudio: Pausing playback manually.");
-                MediaPlayer.Pause();
+                mediaPlayer.Pause();
             }
         }
 
@@ -235,7 +237,7 @@
         /// </summary>
         public void SchedulePause()
         {
-            if (MediaPlayer.CurrentState != Playing)
+            if (mediaPlayer.CurrentState != Playing)
             {
                 isPauseScheduled = true;
                 logger.LogMessage("BackgroundAudio: Scheduling pause.");
@@ -243,25 +245,25 @@
             }
 
             logger.LogMessage("BackgroundAudio: No need to schedule pause. Pausing playback now.");
-            MediaPlayer.Pause();
+            mediaPlayer.Pause();
             return;
         }
 
         /// <summary>
         /// Starts playback
         /// </summary>
-        public async Task StartPlayback()
+        public async Task StartPlaybackAsync()
         {
             logger.LogMessage("BackgroundAudio: Trying to start playback.");
-            if (Playlist.Instance.CurrentTrack == null)
+            if (playlist.CurrentTrack == null)
             {
                 //If the task was cancelled we would have saved the current track and its position. We will try playback from there
                 await applicationSettingsHelper.LoadPlaylist();
-                if (Playlist.Instance.CurrentTrack == null)
+                if (playlist.CurrentTrack == null)
                 {
-                    if (Playlist.Instance.Any())
+                    if (playlist.Any())
                     {
-                        Playlist.Instance.CurrentTrack = Playlist.Instance[0];
+                        playlist.CurrentTrack = playlist[0];
                     }
                     else
                     {
@@ -274,9 +276,9 @@
             try
             {
                 // Set AutoPlay to false because we set MediaPlayer_MediaOpened event handler to start playback
-                MediaPlayer.AutoPlay = false;
-                var file = await StorageFile.GetFileFromPathAsync(Playlist.Instance.CurrentTrack.Uri);
-                MediaPlayer.SetFileSource(file);
+                mediaPlayer.AutoPlay = false;
+                var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
+                mediaPlayer.SetFileSource(file);
                 logger.LogMessage($"BackgroundAudio: Set file source to {file.Name} ({file.Path}).", LoggingLevel.Information);
             }
             catch (Exception ex)
@@ -289,12 +291,12 @@
         /// Saves current player position to disk
         /// </summary>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task SaveCurrentState()
+        public async Task SaveCurrentStateAsync()
         {
             logger.LogMessage("BackgroundAudio: Saving current state.");
-            if (Playlist.Instance.CurrentTrack != null)
+            if (playlist.CurrentTrack != null)
             {
-                Playlist.Instance.CurrentTrack.StartPosition = MediaPlayer.Position;
+                playlist.CurrentTrack.StartPosition = mediaPlayer.Position;
             }
 
             await applicationSettingsHelper.SavePlaylist();
@@ -305,13 +307,17 @@
         /// Restores player state from disk
         /// </summary>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task LoadState()
+        public async Task LoadPlaylistAsync()
         {
             logger.LogMessage("BackgroundAudio: Loading playlist from local storage.");
-            TimeSpan currentTrackPosition = Playlist.Instance.CurrentTrack.StartPosition; //TODO: Add integrity checks here
+            TimeSpan currentTrackPosition = playlist.CurrentTrack.StartPosition;
+            string currentTrackName = playlist.CurrentTrack.Name;
             await applicationSettingsHelper.LoadPlaylist();
-            Playlist.Instance.CurrentTrack.StartPosition = currentTrackPosition;
-            logger.LogMessage("BackgroundAudio: Current state loaded.");
+            if (playlist.CurrentTrack.Name == currentTrackName)
+            {
+                playlist.CurrentTrack.StartPosition = currentTrackPosition;
+            }
+            logger.LogMessage("BackgroundAudio: Playlist loaded.");
         }
 
         /// <summary>
@@ -332,30 +338,30 @@
 
         private void updatePosition(int seconds)
         {
-            if (!(MediaPlayer.CurrentState == Playing || MediaPlayer.CurrentState == Paused) || seconds == 0)
+            if (!(mediaPlayer.CurrentState == Playing || mediaPlayer.CurrentState == Paused) || seconds == 0)
             {
                 return;
             }
 
-            double newPositionSeconds = Playlist.Instance.CurrentTrack.StartPosition.TotalSeconds + seconds;
+            double newPositionSeconds = playlist.CurrentTrack.StartPosition.TotalSeconds + seconds;
             if (newPositionSeconds < 0)
             {
                 newPositionSeconds = 0;
             }
-            else if (newPositionSeconds >= MediaPlayer.NaturalDuration.TotalSeconds)
+            else if (newPositionSeconds >= mediaPlayer.NaturalDuration.TotalSeconds)
             {
-                newPositionSeconds = MediaPlayer.NaturalDuration.TotalSeconds - 1;
+                newPositionSeconds = correctedTotalDuration;
             }
 
             var newPosition = TimeSpan.FromSeconds(newPositionSeconds);
-            Playlist.Instance.CurrentTrack.StartPosition = newPosition;
-            MediaPlayer.Position = newPosition;
+            playlist.CurrentTrack.StartPosition = newPosition;
+            mediaPlayer.Position = newPosition;
             BackgroundMediaPlayer.SendMessageToForeground(new ValueSet { { Keys.CurrentPositionSeconds, newPositionSeconds } });
         }
 
         public void Navigate(int howMany, NavigationInterval interval)
         {
-            if (!(MediaPlayer.CurrentState == Playing || MediaPlayer.CurrentState == Paused))
+            if (!(mediaPlayer.CurrentState == Playing || mediaPlayer.CurrentState == Paused))
             {
                 return;
             }
@@ -373,7 +379,7 @@
                     break;
                 case NavigationInterval.Track:
                 case NavigationInterval.Episode:
-                    StartTrackAt(Playlist.Instance.CurrentTrackIndex + howMany);
+                    StartTrackAt(playlist.CurrentTrackIndex + howMany);
                     break;
             }
         }
@@ -382,33 +388,21 @@
 
         #region IDisposable Support
 
-        private void Dispose(bool disposing)
-        {
-            if (!isDisposed)
-            {
-                if (disposing)
-                {
-                    MediaPlayer.Pause();
-
-                    MediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
-                    MediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
-                    MediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
-                    MediaPlayer.CurrentStateChanged -= MediaPlayer_CurrentStateChanged;
-
-                    smtc.ButtonPressed -= Smtc_ButtonPressed;
-                    smtc.PropertyChanged -= Smtc_PropertyChanged;
-                }
-
-                isDisposed = true;
-            }
-        }
-
         /// <summary>
         /// Unsubscribes event handlers
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
+            if (!isDisposed)
+            {
+                mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
+                mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
+                mediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
+                mediaPlayer.CurrentStateChanged -= MediaPlayer_CurrentStateChanged;
+                smtc.ButtonPressed -= Smtc_ButtonPressed;
+                smtc.PropertyChanged -= Smtc_PropertyChanged;
+                isDisposed = true;
+            }
         }
 
         #endregion

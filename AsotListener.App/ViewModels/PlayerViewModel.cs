@@ -236,8 +236,7 @@
             }
 
             CurrentTrackName = playlist.CurrentTrack.Name;
-            // TODO: How do I know if it is my track playing now?
-            PlayButtonIcon = mediaPlayer.CurrentState == Playing ? pauseIcon : playIcon;
+            PlayButtonIcon = pauseIcon;
             IsNextButtonEnabled = true;
             IsPlayButtonEnabled = true;
             IsPreviousButtonEnabled = true;
@@ -249,6 +248,7 @@
                 if (mediaPlayer.CurrentState == Playing ||
                     mediaPlayer.CurrentState == Paused)
                 {
+                    PlayButtonIcon = playIcon;
                     startProgressUpdateTimer();
                 }
             }

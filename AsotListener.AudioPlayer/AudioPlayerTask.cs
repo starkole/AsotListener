@@ -114,7 +114,7 @@
                 {
                     case Keys.StartPlayback:
                         logger.LogMessage("BackgroundAudioTask: Starting Playback");
-                        await audioManager.StartPlayback();
+                        await audioManager.StartPlaybackAsync();
                         break;
                     case Keys.SkipToNext:
                         logger.LogMessage("BackgroundAudioTask: Skipping to next");
@@ -134,7 +134,7 @@
                         break;
                     case Keys.PlaylistUpdated:
                         logger.LogMessage("BackgroundAudioTask: Playlist updated");
-                        await audioManager.LoadState();
+                        await audioManager.LoadPlaylistAsync();
                         break;
                     case Keys.NavigationAmount:
                         navigationAmount = (int)e.Data[Keys.NavigationAmount];
