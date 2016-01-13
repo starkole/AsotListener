@@ -71,7 +71,7 @@
         /// </summary>
         /// <param name="episode">Episode to add</param>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task AddEpisodeToPLaylist(Episode episode)
+        public async Task AddEpisodeToPLaylistAsync(Episode episode)
         {
             logger.LogMessage("EpisodeListManager: Executing add to playlist command...");
             if (episode == null)
@@ -97,7 +97,7 @@
         /// </summary>
         /// <param name="episode">Episode whose data will be deleted</param>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task DeleteEpisodeData(Episode episode)
+        public async Task DeleteEpisodeDataAsync(Episode episode)
         {
             logger.LogMessage($"EpisodeListManager: Deleting episode...");
             if (canEpisodeBeDeleted(episode))
@@ -123,7 +123,7 @@
         /// </summary>
         /// <param name="episode">Episode to play</param>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task PlayEpisode(Episode episode)
+        public async Task PlayEpisodeAsync(Episode episode)
         {
             logger.LogMessage("EpisodeListManager: Scheduling episode playback episode...");
             if (episode == null)
@@ -149,7 +149,7 @@
         /// Updates statuses of episodes in episode list
         /// </summary>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task UpdateEpisodeStates()
+        public async Task UpdateEpisodeStatesAsync()
         {
             logger.LogMessage("EpisodeListManager: Updating episode states...");
             if (episodeList == null || !episodeList.Any())
@@ -185,7 +185,7 @@
         /// Loads fresh copy of episode list from server
         /// </summary>
         /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task LoadEpisodeListFromServer()
+        public async Task LoadEpisodeListFromServerAsync()
         {
             logger.LogMessage("EpisodeListManager: Loading episode list from server...");
             using (ILoader loader = loaderFactory.GetLoader())
@@ -193,7 +193,7 @@
                 await loader.FetchEpisodeListAsync();
             }
             await applicationSettingsHelper.SaveEpisodeList();
-            await UpdateEpisodeStates();
+            await UpdateEpisodeStatesAsync();
             logger.LogMessage("EpisodeListManager: Episode list loaded.", LoggingLevel.Information);
         }
 

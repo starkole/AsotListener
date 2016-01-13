@@ -102,9 +102,9 @@
                     }
 
                     playlist.Clear();
-                    await episodeListManager.PlayEpisode(ep);
+                    await episodeListManager.PlayEpisodeAsync(ep);
                     playbackManager.Play();
-                    await episodeListManager.UpdateEpisodeStates();
+                    await episodeListManager.UpdateEpisodeStatesAsync();
                     break;
                 case "playEpisodeByNumber":
                     if (isVoiceCommand(args.Result))
@@ -132,9 +132,9 @@
                         }
 
                         playlist.Clear();
-                        await episodeListManager.PlayEpisode(episodeToPlay);
+                        await episodeListManager.PlayEpisodeAsync(episodeToPlay);
                         playbackManager.Play();
-                        await episodeListManager.UpdateEpisodeStates();
+                        await episodeListManager.UpdateEpisodeStatesAsync();
                     }
                     break;
                 case "startPlayback":
@@ -162,7 +162,7 @@
                     break;
                 case "checkForUpdates":
                     int oldEpisodesCount = episodeList.Count;
-                    await episodeListManager.LoadEpisodeListFromServer();
+                    await episodeListManager.LoadEpisodeListFromServerAsync();
                     int delta = episodeList.Count - oldEpisodesCount;
                     string message = "Update complete. ";
                     if (delta == 1)

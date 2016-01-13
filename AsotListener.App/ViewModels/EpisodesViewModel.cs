@@ -128,12 +128,12 @@
             if (EpisodeList == null || !EpisodeList.Any())
             {
                 logger.LogMessage("EpisodesViewModel: Saved list hasn't been found. Loading list from server.");
-                await episodeListManager.LoadEpisodeListFromServer();
+                await episodeListManager.LoadEpisodeListFromServerAsync();
             }
             else
             {
                 logger.LogMessage("EpisodesViewModel: Loaded saved list from local storage. Updating episode states.");
-                await episodeListManager.UpdateEpisodeStates();
+                await episodeListManager.UpdateEpisodeStatesAsync();
             }
 
             await downloadManager.Initialization;
@@ -145,15 +145,15 @@
 
         #region Commands
 
-        private async Task loadEpisodeListFromServer() => await episodeListManager.LoadEpisodeListFromServer();
+        private async Task loadEpisodeListFromServer() => await episodeListManager.LoadEpisodeListFromServerAsync();
         private async Task downloadEpisode(object boxedEpisode) => await downloadManager.DownloadEpisode(boxedEpisode as Episode);
         private void cancelDownload(object boxedEpisode) => downloadManager.CancelDownload(boxedEpisode as Episode);
-        private async void deleteEpisodeFromStorage(object boxedEpisode) => await episodeListManager.DeleteEpisodeData(boxedEpisode as Episode);
-        private async void addToPlaylistCommand(object boxedEpisode) => await episodeListManager.AddEpisodeToPLaylist(boxedEpisode as Episode);
+        private async void deleteEpisodeFromStorage(object boxedEpisode) => await episodeListManager.DeleteEpisodeDataAsync(boxedEpisode as Episode);
+        private async void addToPlaylistCommand(object boxedEpisode) => await episodeListManager.AddEpisodeToPLaylistAsync(boxedEpisode as Episode);
 
         private async void playEpisode(object boxedEpisode)
         {
-            await episodeListManager.PlayEpisode(boxedEpisode as Episode);
+            await episodeListManager.PlayEpisodeAsync(boxedEpisode as Episode);
             navigationService.Navigate(NavigationParameter.StartPlayback);
         }
 
@@ -162,7 +162,7 @@
             logger.LogMessage("EpisodesViewModel: Executing ClearPlaylist command...");
             Playlist.Instance.Clear();
             await applicationSettingsHelper.SavePlaylistWithNotification();
-            await episodeListManager.UpdateEpisodeStates();
+            await episodeListManager.UpdateEpisodeStatesAsync();
             logger.LogMessage("EpisodesViewModel: ClearPlaylist command executed.");
         }
 
@@ -174,7 +174,7 @@
         {
             logger.LogMessage("EpisodesViewModel: Application is resuming. Restoring state...");
             await applicationSettingsHelper.LoadPlaylist();
-            await episodeListManager.UpdateEpisodeStates();
+            await episodeListManager.UpdateEpisodeStatesAsync();
             await downloadManager.RetrieveActiveDownloads();
             registerUpdaterCompletionHandler();
             logger.LogMessage("EpisodesViewModel: State restored after application resuming.", LoggingLevel.Information);

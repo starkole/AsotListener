@@ -26,7 +26,7 @@
             var episodeListManager = container.Resolve<IEpisodeListManager>();
             await episodeListManager.Initialization;
             var oldEpisodeList = EpisodeList.Instance.ToList();
-            await episodeListManager.LoadEpisodeListFromServer();
+            await episodeListManager.LoadEpisodeListFromServerAsync();
             var diff = EpisodeList.Instance.Except(oldEpisodeList).ToList();
             if (diff.Any())
             {

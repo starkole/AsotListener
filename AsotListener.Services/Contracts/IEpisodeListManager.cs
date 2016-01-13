@@ -6,10 +6,10 @@
 
     public interface IEpisodeListManager: IAsyncInitialization
     {
-        Task DeleteEpisodeData(Episode episode);
-        Task PlayEpisode(Episode episode);
-        Task AddEpisodeToPLaylist(Episode episode);
-        Task UpdateEpisodeStates();
-        Task LoadEpisodeListFromServer();
+        Task DeleteEpisodeDataAsync(Episode episode);
+        Task PlayEpisodeAsync(Episode episode);
+        Task AddEpisodeToPLaylistAsync(Episode episode);
+        Task UpdateEpisodeStatesAsync();
+        Task LoadEpisodeListFromServerAsync();
     }
 }
