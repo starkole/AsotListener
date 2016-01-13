@@ -10,6 +10,8 @@
         Task PlayEpisodeAsync(Episode episode);
         Task AddEpisodeToPLaylistAsync(Episode episode);
         Task UpdateEpisodeStatesAsync();
-        Task LoadEpisodeListFromServerAsync();
+        Task<int> LoadEpisodeListFromServerAsync();
+        Episode GetEpisodeByNumber(int number);
+        Task PlayLastDownloadedEpisodeAsync();
     }
 }

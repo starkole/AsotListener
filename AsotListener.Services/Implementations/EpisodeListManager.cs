@@ -184,10 +184,11 @@
         /// <summary>
         /// Loads fresh copy of episode list from server
         /// </summary>
-        /// <returns>Awaitable <see cref="Task"/></returns>
-        public async Task LoadEpisodeListFromServerAsync()
+        /// <returns>Number of new episodes</returns>
+        public async Task<int> LoadEpisodeListFromServerAsync()
         {
             logger.LogMessage("EpisodeListManager: Loading episode list from server...");
+            var oldEpisodesCount = episodeList.Count;
             using (ILoader loader = loaderFactory.GetLoader())
             {
                 await loader.FetchEpisodeListAsync();
@@ -195,16 +196,48 @@
             await applicationSettingsHelper.SaveEpisodeList();
             await UpdateEpisodeStatesAsync();
             logger.LogMessage("EpisodeListManager: Episode list loaded.", LoggingLevel.Information);
+            return episodeList.Count - oldEpisodesCount;
+        }
+
+        /// <summary>
+        /// Returns episode by given number, or null if there is no such episode
+        /// </summary>
+        /// <param name="number">Episode number</param>
+        /// <returns><see cref="Episode"/> with given number or null</returns>
+        public Episode GetEpisodeByNumber(int number)
+        {
+            var match = " " + number.ToString() + " ";
+            var result = episodeList.FirstOrDefault(e => e.Name.Contains(match));
+            return result;
+        }
+
+        /// <summary>
+        /// Plays the last downloaded episode
+        /// </summary>
+        /// <returns>Awaitable <see cref="Task"/></returns>
+        public async Task PlayLastDownloadedEpisodeAsync()
+        {
+            logger.LogMessage("EpisodeListManager: Playing the last downloaded episode...");
+            var ep = episodeList.FirstOrDefault(e => e.CanBePlayed);
+            if (ep == null)
+            {
+                logger.LogMessage("EpisodeListManager: Cannot play the last downloaded episode. No such found.", LoggingLevel.Warning);
+                return;
+            }
+
+            playlist.Clear();
+            await PlayEpisodeAsync(ep);
+            await UpdateEpisodeStatesAsync();
         }
 
         #endregion
-        
+
         #region Private Methods
 
         private static bool canEpisodeBeDeleted(Episode episode) =>
             episode != null &&
             (episode.Status == Loaded ||
-            episode.Status == InPlaylist); 
+            episode.Status == InPlaylist);
 
         #endregion
     }

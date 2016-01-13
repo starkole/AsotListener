@@ -34,9 +34,7 @@
         private readonly IPlaybackManager playbackManager;
         private readonly ITextSpeaker textSpeaker;
 
-        private EpisodeList episodeList => EpisodeList.Instance;
         private Playlist playlist => Playlist.Instance;
-        private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
 
         #endregion
 
@@ -92,19 +90,8 @@
             switch (commandName)
             {
                 case "playTheLastEpisode":
-                    // TODO: Move the latter logic to episode list manager
-                    var ep = episodeList.FirstOrDefault(e => e.CanBePlayed);
-                    if (ep == null)
-                    {
-                        // TODO: Speak error
-                        logger.LogMessage("VoiceCommandHandler: Cannot play the last downloaded episode. No episodes found.", LoggingLevel.Error);
-                        return;
-                    }
-
-                    playlist.Clear();
-                    await episodeListManager.PlayEpisodeAsync(ep);
+                    await episodeListManager.PlayLastDownloadedEpisodeAsync();
                     playbackManager.Play();
-                    await episodeListManager.UpdateEpisodeStatesAsync();
                     break;
                 case "playEpisodeByNumber":
                     if (isVoiceCommand(args.Result))
@@ -112,22 +99,18 @@
                         int episodeNumber = -1;
                         var spokenNumber = args.Result.SemanticInterpretation.Properties["number"].FirstOrDefault();
                         int.TryParse(spokenNumber, out episodeNumber);
-
-                        // TODO: Move the latter logic to episode list manager
-                        // TODO: Use constants here
-                        if (episodeNumber < 1 || episodeNumber > 745)
-                        {
-                            // TODO: Speak error
-                            logger.LogMessage("VoiceCommandHandler: Cannot play episode by number. The number is out of range.", LoggingLevel.Error);
-                            return;
-                        }
-
-                        // TODO: Use better search algorithm here
-                        var episodeToPlay = episodeList.FirstOrDefault(e => e.Name.Contains(episodeNumber.ToString()) && e.CanBePlayed);
+                        var episodeToPlay = episodeListManager.GetEpisodeByNumber(episodeNumber);
                         if (episodeToPlay == null)
                         {
                             // TODO: Speak error
-                            logger.LogMessage($"VoiceCommandHandler: Cannot play episode with number {episodeNumber}.", LoggingLevel.Error);
+                            logger.LogMessage($"VoiceCommandHandler: Cannot play episode with number {episodeNumber}.", LoggingLevel.Warning);
+                            return;
+                        }
+
+                        if (!episodeToPlay.CanBePlayed)
+                        {
+                            // TODO: Speak error
+                            logger.LogMessage($"VoiceCommandHandler: Found episode with number {episodeNumber}, but cannot play it", LoggingLevel.Warning);
                             return;
                         }
 
@@ -161,17 +144,15 @@
                     playbackManager.GoToPreviousTrack();
                     break;
                 case "checkForUpdates":
-                    int oldEpisodesCount = episodeList.Count;
-                    await episodeListManager.LoadEpisodeListFromServerAsync();
-                    int delta = episodeList.Count - oldEpisodesCount;
+                    int newEpisodesCount = await episodeListManager.LoadEpisodeListFromServerAsync();
                     string message = "Update complete. ";
-                    if (delta == 1)
+                    if (newEpisodesCount == 1)
                     {
                         message += "There is one new episode.";
                     }
-                    else if (delta > 1)
+                    else if (newEpisodesCount > 1)
                     {
-                        message += $"There are {delta} new episodes.";
+                        message += $"There are {newEpisodesCount} new episodes.";
                     }
                     else
                     {
