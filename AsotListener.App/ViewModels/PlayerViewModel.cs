@@ -236,7 +236,7 @@
             }
 
             CurrentTrackName = playlist.CurrentTrack.Name;
-            PlayButtonIcon = pauseIcon;
+            PlayButtonIcon = playIcon;
             IsNextButtonEnabled = true;
             IsPlayButtonEnabled = true;
             IsPreviousButtonEnabled = true;
@@ -248,7 +248,7 @@
                 if (mediaPlayer.CurrentState == Playing ||
                     mediaPlayer.CurrentState == Paused)
                 {
-                    PlayButtonIcon = playIcon;
+                    PlayButtonIcon = pauseIcon;
                     startProgressUpdateTimer();
                 }
             }
