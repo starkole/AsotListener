@@ -2,16 +2,18 @@
 {
     using System;
     using System.Runtime.Serialization;
+    using Common;
 
     /// <summary>
     /// Audio track model
     /// </summary>
     [DataContract]
-    public class AudioTrack: BaseModel
+    public class AudioTrack : BaseModel
     {
         private string name;
         private string uri;
-        private TimeSpan startPosition = TimeSpan.FromSeconds(0);
+        private TimeSpan startPosition = TimeSpan.Zero;
+        private TimeSpan duration = Constants.UnknownDuration;
 
         /// <summary>
         /// Creates new instance of <see cref="AudioTrack"/>
@@ -61,6 +63,16 @@
         {
             get { return startPosition; }
             set { SetField(ref startPosition, value, nameof(StartPosition)); }
+        }
+
+        /// <summary>
+        /// Audio track duration
+        /// </summary>
+        [DataMember]
+        public TimeSpan Duration
+        {
+            get { return duration; }
+            set { SetField(ref duration, value, nameof(Duration)); }
         }
 
         /// <summary>

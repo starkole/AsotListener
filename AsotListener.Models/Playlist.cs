@@ -157,15 +157,16 @@
         /// Adds all files belonging to certain episode to playlist
         /// </summary>
         /// <param name="episodeName">Episode name</param>
-        /// <param name="episodeFiles">The list of episode files</param>
+        /// <param name="episodeFilesWithDurations">The list of episode files</param>
         /// <returns>The first <see cref="AudioTrack"/> added to playlist</returns>
-        public AudioTrack AddEpisodeFiles(string episodeName, IList<StorageFile> episodeFiles)
+        public AudioTrack AddEpisodeFiles(string episodeName, IDictionary<StorageFile, TimeSpan> episodeFilesWithDurations)
         {
-            var tracks = episodeFiles
-                .Select(f => new AudioTrack(episodeName)
+            var tracks = episodeFilesWithDurations
+                .Select((f, i) => new AudioTrack(episodeName)
                 {
-                    Name = GetAudioTrackName(episodeName, episodeFiles.IndexOf(f)),
-                    Uri = f.Path
+                    Name = GetAudioTrackName(episodeName, i),
+                    Uri = f.Key.Path,
+                    Duration = f.Value
                 })
                 .ToList();
             AddRange(tracks);

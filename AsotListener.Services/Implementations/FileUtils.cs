@@ -11,7 +11,7 @@
     using System.Runtime.Serialization;
     using Windows.Foundation.Diagnostics;
     using Windows.Storage.Streams;
-
+    using Common;
     /// <summary>
     /// Contains helper methods to work with files in local folder
     /// </summary>
@@ -78,7 +78,7 @@
         /// <summary>
         /// Searches for downloaded audio files in application local folder
         /// </summary>
-        /// <returns>The distinct list of audio file names wthout extension and part number</returns>
+        /// <returns>The distinct list of audio file names without extension and part number</returns>
         public async Task<IList<string>> GetDownloadedFileNamesList()
         {
             logger.LogMessage("FileUtils: Obtaining list of downloaded files...");
@@ -104,23 +104,41 @@
         /// Searches for downloaded audio files in application local folder for given episode
         /// </summary>
         /// <param name="episodeName">Episode name</param>
-        /// <returns>List of files for given episode</returns>
-        public async Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName)
+        /// <returns>Files for given episode with their corresponding durations</returns>
+        public async Task<IDictionary<StorageFile, TimeSpan>> GetFilesWithDurationsForEpisode(string episodeName)
         {
             logger.LogMessage($"FileUtils: Obtaining file list for episode {episodeName}...");
-            var result = new List<StorageFile>();
+            var result = new Dictionary<StorageFile, TimeSpan>();
             try
             {
-                IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
-                result = files?
-                    .Where(f => f.FileType == audioFileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture))
-                    .ToList() ?? result;
-                logger.LogMessage($"FileUtils: Found {result.Count} files.");
+                foreach (var file in await getFilesForEpisode(episodeName))
+                {
+                    var musicProperties = await file.Properties.GetMusicPropertiesAsync();
+                    result.Add(file, musicProperties?.Duration ?? Constants.UnknownDuration);
+                }
+                logger.LogMessage($"FileUtils: Obtained durations for {result.Keys.Count} files.");
             }
             catch (Exception ex)
             {
-                logger.LogMessage($"FileUtils: Exception while getting episode file list. {ex.Message}", LoggingLevel.Error);
+                logger.LogMessage($"FileUtils: Exception while getting episode file durations. {ex.Message}", LoggingLevel.Error);
             }
+
+            return result;
+        }
+
+        private async Task<IEnumerable<StorageFile>> getFilesForEpisode(string episodeName)
+        {
+            IEnumerable<StorageFile> result = Enumerable.Empty<StorageFile>();
+            try
+            {
+                IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+                result = files.Where(f => f.FileType == audioFileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture)).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.LogMessage($"FileUtils: Exception while loading file list from local folder. {ex.Message}", LoggingLevel.Error);
+            }
+
             return result;
         }
 
@@ -131,14 +149,7 @@
         /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task DeleteEpisode(string episodeName)
         {
-            var files = await GetFilesListForEpisode(episodeName);
-            if (files == null)
-            {
-                logger.LogMessage($"FileUtils: No files found to delete for episode {episodeName}.", LoggingLevel.Warning);
-                return;
-            }
-
-            foreach (var file in files)
+            foreach (var file in await getFilesForEpisode(episodeName))
             {
                 try
                 {

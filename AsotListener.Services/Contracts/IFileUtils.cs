@@ -1,5 +1,6 @@
 ﻿namespace AsotListener.Services.Contracts
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Windows.Storage;
@@ -10,7 +11,7 @@
         string ExtractEpisodeNameFromFilename(string filenameWithExtension);
         Task<IStorageFile> CreateEpisodePartFile(string name, int partNumber);
         Task<IList<string>> GetDownloadedFileNamesList();
-        Task<IList<StorageFile>> GetFilesListForEpisode(string episodeName);
+        Task<IDictionary<StorageFile, TimeSpan>> GetFilesWithDurationsForEpisode(string episodeName);
         Task<T> ReadFromXmlFile<T>(string filename) where T : class;
         Task SaveToXmlFile<T>(T objectToSave, string filename) where T : class;
         Task DeleteEpisode(string episodeName);

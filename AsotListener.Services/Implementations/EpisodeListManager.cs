@@ -86,7 +86,7 @@
                 return;
             }
 
-            playlist.AddEpisodeFiles(episode.Name, await fileUtils.GetFilesListForEpisode(episode.Name));
+            playlist.AddEpisodeFiles(episode.Name, await fileUtils.GetFilesWithDurationsForEpisode(episode.Name));
             await applicationSettingsHelper.SavePlaylistWithNotification();
             episode.Status = InPlaylist;
             logger.LogMessage("EpisodeListManager: Add to playlist command executed.");
@@ -138,7 +138,7 @@
                 return;
             }
 
-            playlist.CurrentTrack = playlist.AddEpisodeFiles(episode.Name, await fileUtils.GetFilesListForEpisode(episode.Name));
+            playlist.CurrentTrack = playlist.AddEpisodeFiles(episode.Name, await fileUtils.GetFilesWithDurationsForEpisode(episode.Name));
             await applicationSettingsHelper.SavePlaylistWithNotification();
 
             episode.Status = InPlaylist;
