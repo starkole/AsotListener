@@ -15,6 +15,7 @@
     using Windows.Foundation.Diagnostics;
     using Windows.Media.SpeechRecognition;
     using Windows.Storage;
+    using Windows.UI.Core;
     using Windows.UI.Xaml;
 
     /// <summary>
@@ -43,8 +44,8 @@
             UnhandledException -= onUnhandledException;
             UnhandledException += onUnhandledException;
             logger = container.Resolve<ILogger>();
-            logger.LogMessage("Application initialized.");
-        }
+            logger.LogMessage("Application initialized.");            
+        }        
 
         #endregion
 
@@ -57,6 +58,7 @@
         protected override async void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
+
             logger.LogMessage("Application activated.", LoggingLevel.Information);
             if (args.Kind == ActivationKind.VoiceCommand)
             {
@@ -81,6 +83,13 @@
         protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             base.OnLaunched(args);
+
+            var coreWindow = CoreWindow.GetForCurrentThread();
+            coreWindow.Activated -= onCoreWindowAppActivated;
+            coreWindow.Activated += onCoreWindowAppActivated;
+            coreWindow.Closed -= onCoreWindowAppClosed;
+            coreWindow.Closed += onCoreWindowAppClosed;
+
             logger.LogMessage("Application launched.", LoggingLevel.Information);
 #if DEBUG            
             DebugSettings.BindingFailed += (o, a) => logger.LogMessage($"BindingFailed. {a.Message}", LoggingLevel.Error);
@@ -107,6 +116,16 @@
         {
             logger.LogMessage($"Unhandled exception occurred. {e.Message}", LoggingLevel.Critical);
             logger.SaveLogsToFile();
+        }
+
+        private void onCoreWindowAppClosed(CoreWindow sender, CoreWindowEventArgs args)
+        {
+            logger.LogMessage($"Core Window closed");
+        }
+
+        private void onCoreWindowAppActivated(CoreWindow sender, WindowActivatedEventArgs args)
+        {
+            logger.LogMessage($"Core window activated with state {args.WindowActivationState}");
         }
 
         #endregion
