@@ -27,7 +27,7 @@
         private bool isDisposed = false;
         private readonly ILogger logger;
         private readonly IApplicationSettingsHelper applicationSettingsHelper;
-        private SystemMediaTransportControls smtc;
+        private readonly SystemMediaTransportControls smtc;
         private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
         private Playlist playlist => Playlist.Instance;
         private double correctedTotalDuration => mediaPlayer.NaturalDuration.TotalSeconds - 1;

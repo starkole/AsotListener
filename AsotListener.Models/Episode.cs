@@ -2,41 +2,78 @@
 {
     using Windows.UI.Xaml;
     using Enums;
+    using System.Runtime.Serialization;
     using static Enums.EpisodeStatus;
 
     /// <summary>
     /// Episode model
     /// </summary>
+    [DataContract]
     public class Episode : BaseModel
     {
-        private string name;
-        private string url;
-        private EpisodeStatus status = EpisodeStatus.CanBeLoaded;
+        #region Fields
+
+        private EpisodeStatus status = CanBeLoaded;
         private double overallDownloadSize = double.MaxValue;
         private double downloadedAmount = 0;
         private Visibility downloadProgressbarVisibility = Visibility.Collapsed;
 
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Creates instance of <see cref="Episode"/>
+        /// </summary>
+        /// <param name="name">Unique episode name</param>
+        /// <param name="episodeNumber">Episode number</param>
+        public Episode(string name, int episodeNumber = -1)
+        {
+            Name = name;
+            EpisodeNumber = episodeNumber;
+        }
+
+        #endregion
+
+        #region Non-bindable Properties
+
         /// <summary>
         /// Episode name
         /// </summary>
-        public string Name
-        {
-            get { return name; }
-            set { SetField(ref name, value, nameof(Name)); }
-        }
+        [DataMember]
+        public string Name { get; set; }
 
         /// <summary>
         /// Relative url of episode description page
         /// </summary>
-        public string Url
-        {
-            get { return url; }
-            set { SetField(ref url, value, nameof(Url)); }
-        }
+        [DataMember]
+        public string Url { get; set; }
+
+        /// <summary>
+        /// Links for downloading episode audio files
+        /// </summary>
+        [DataMember]
+        public string[] DownloadLinks { get; set; }
+
+        /// <summary>
+        /// Determines if episode can be played
+        /// </summary>
+        public bool CanBePlayed => Status == InPlaylist || Status == Loaded;
+
+        /// <summary>
+        /// Episode number
+        /// </summary>
+        [DataMember]
+        public int EpisodeNumber { get; set; }
+
+        #endregion
+
+        #region Bindable Properties
 
         /// <summary>
         /// Current episode status
         /// </summary>
+        [DataMember]
         public EpisodeStatus Status
         {
             get { return status; }
@@ -48,11 +85,6 @@
                 SetField(ref status, value, nameof(Status));
             }
         }
-
-        /// <summary>
-        /// Determines if episode can be played
-        /// </summary>
-        public bool CanBePlayed => Status == InPlaylist || Status == Loaded;
 
         /// <summary>
         /// Overall amount of bytes to download
@@ -81,10 +113,9 @@
             set { SetField(ref downloadProgressbarVisibility, value, nameof(DownloadProgressbarVisibility)); }
         }
 
-        /// <summary>
-        /// Links for downloading episode audio files
-        /// </summary>
-        public string[] DownloadLinks { get; set; }
+        #endregion
+
+        #region Overrided Methods
 
         /// <summary>
         /// Returns string representation of <see cref="Episode"/>
@@ -108,5 +139,7 @@
         /// </summary>
         /// <returns>Hash code of the Episode</returns>
         public override int GetHashCode() => Name.GetHashCode();
+
+        #endregion
     }
 }

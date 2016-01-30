@@ -14,7 +14,8 @@
         private const string EPISODE_REGEX = @"(/episode/\?p=\d+)"">(.*)<";
         private const string DOWNLOAD_LINK_REGEX = @"http://\S*\.mp3";
         private const string EPISODE_NAME_START = @"A State Of Trance: ";
-        private ILogger logger;
+        private const string EPISODE_NUMBER_REGEX = @"(Episode )(\d+)";
+        private readonly ILogger logger;
 
         /// <summary>
         /// Creates new instance of <see cref="Parser"/>
@@ -43,9 +44,10 @@
                 // and episode name into the second one
                 if (matches[i].Groups.Count == 3)
                 {
-                    result.Add(new Episode
+                    var episodeName = normalizeEpisodeName(matches[i].Groups[2].Value);
+                    int episodeNumber = extractEpisodeNumber(episodeName);
+                    result.Add(new Episode(episodeName, episodeNumber)
                     {
-                        Name = normalizeEpisodeName(matches[i].Groups[2].Value),
                         Url = matches[i].Groups[1].Value
                     });
                 }
@@ -87,6 +89,19 @@
             string nameWithStrippedStart = episodeNameStart.Replace(rawName, string.Empty);
             Regex containsABadCharacter = new Regex("[" + Regex.Escape(new string(System.IO.Path.GetInvalidPathChars())) + "]");
             return containsABadCharacter.Replace(nameWithStrippedStart, string.Empty);
+        }
+
+        private int extractEpisodeNumber(string normalizedEpisodeName)
+        {
+            int result = -1;
+            Regex regex = new Regex(EPISODE_NUMBER_REGEX);
+            var matches = regex.Matches(normalizedEpisodeName);
+            if (matches.Count == 1 && matches[0].Groups.Count == 3)
+            {
+                int.TryParse(matches[0].Groups[2].Value, out result);
+            }
+
+            return result;
         }
     }
 }
