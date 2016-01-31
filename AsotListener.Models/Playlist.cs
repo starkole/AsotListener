@@ -18,6 +18,7 @@
         private static Lazy<Playlist> lazy = new Lazy<Playlist>(() => new Playlist());
 
         private const string trackNamePart = " Part ";
+        private const string namePrefix = "ASOT: ";
         private int currentTrackIndex = -1;
 
         #endregion
@@ -117,9 +118,12 @@
         /// </summary>
         /// <param name="episodeName">Episode name</param>
         /// <param name="partNumber">The part number of current track</param>
+        /// <param name="totalPartsCount">Total number of tracks in the episode</param>
         /// <returns>The name of audio track</returns>
-        public static string GetAudioTrackName(string episodeName, int partNumber) =>
-            episodeName + trackNamePart + partNumber.ToString();
+        public static string GetAudioTrackName(string episodeName, int partNumber, int totalPartsCount) =>
+            totalPartsCount == 1 ?
+            namePrefix + episodeName : 
+            namePrefix + episodeName + trackNamePart + partNumber.ToString();
 
         /// <summary>
         /// Adds several items to <see cref="Playlist"/>
@@ -161,7 +165,7 @@
             var tracks = episodeFilesWithDurations
                 .Select((f, i) => new AudioTrack(episodeName)
                 {
-                    Name = GetAudioTrackName(episodeName, i),
+                    Name = GetAudioTrackName(episodeName, i, episodeFilesWithDurations.Count),
                     Uri = f.Key.Path,
                     Duration = f.Value
                 })

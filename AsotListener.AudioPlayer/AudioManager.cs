@@ -31,6 +31,7 @@
         private MediaPlayer mediaPlayer => BackgroundMediaPlayer.Current;
         private Playlist playlist => Playlist.Instance;
         private double correctedTotalDuration => mediaPlayer.NaturalDuration.TotalSeconds - 1;
+        private TaskCompletionSource<bool> playlistLoading;
 
         #endregion
 
@@ -49,23 +50,38 @@
         {
             this.logger = logger;
             this.applicationSettingsHelper = applicationSettingsHelper;
-            logger.LogMessage("Initializing Background Audio Manager...");
-
-            mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
-            mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
-            mediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
-            mediaPlayer.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
-
             this.smtc = smtc;
+            logger.LogMessage("Initializing Background Audio Manager...");
+            setupSmtc();
+            subscribeToMediaEvents();
+            playlistLoading = new TaskCompletionSource<bool>();
+            playlistLoading.SetResult(true);
+            logger.LogMessage("BackgroundAudio: Background Audio Manager has been initialized.", LoggingLevel.Information);
+        }
+
+        private void subscribeToMediaEvents()
+        {
+            mediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
+            mediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+            mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
+            mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
+            mediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
+            mediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
+            mediaPlayer.CurrentStateChanged -= MediaPlayer_CurrentStateChanged;
+            mediaPlayer.CurrentStateChanged += MediaPlayer_CurrentStateChanged;
+            smtc.ButtonPressed -= Smtc_ButtonPressed;
             smtc.ButtonPressed += Smtc_ButtonPressed;
+            smtc.PropertyChanged -= Smtc_PropertyChanged;
             smtc.PropertyChanged += Smtc_PropertyChanged;
+        }
+
+        private void setupSmtc()
+        {
             smtc.IsEnabled = true;
             smtc.IsPauseEnabled = true;
             smtc.IsPlayEnabled = true;
             smtc.IsNextEnabled = true;
             smtc.IsPreviousEnabled = true;
-
-            logger.LogMessage("BackgroundAudio: Background Audio Manager has been initialized.", LoggingLevel.Information);
         }
 
         #endregion
@@ -124,6 +140,8 @@
             smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
             smtc.DisplayUpdater.MusicProperties.Title = playlist.CurrentTrack?.Name ?? string.Empty;
+            smtc.DisplayUpdater.MusicProperties.Artist = playlist.CurrentTrack?.Artist ?? string.Empty;
+            smtc.DisplayUpdater.MusicProperties.AlbumArtist = playlist.CurrentTrack?.AlbumArtist ?? string.Empty;
             smtc.DisplayUpdater.Update();
         }
 
@@ -139,7 +157,7 @@
 
         private void Smtc_PropertyChanged(SystemMediaTransportControls sender, SystemMediaTransportControlsPropertyChangedEventArgs args)
         {
-            if (sender.SoundLevel == SoundLevel.Muted)
+            if (sender.SoundLevel == SoundLevel.Muted && mediaPlayer.CurrentState == Playing)
             {
                 logger.LogMessage("BackgroundAudio: Sounds muted - pausing playback.");
                 mediaPlayer.Pause();
@@ -255,9 +273,11 @@
         public async Task StartPlaybackAsync()
         {
             logger.LogMessage("BackgroundAudio: Trying to start playback.");
+
+            await playlistLoading.Task;
             if (playlist.CurrentTrack == null)
             {
-                //If the task was cancelled we would have saved the current track and its position. We will try playback from there
+                // If the task was cancelled we would have saved the current track and its position. We will try playback from there
                 await applicationSettingsHelper.LoadPlaylist();
                 if (playlist.CurrentTrack == null)
                 {
@@ -309,14 +329,21 @@
         /// <returns>Awaitable <see cref="Task"/></returns>
         public async Task LoadPlaylistAsync()
         {
+            var oldLoadingTask = playlistLoading.Task;
+            playlistLoading = new TaskCompletionSource<bool>();
+            await oldLoadingTask;
+
             logger.LogMessage("BackgroundAudio: Loading playlist from local storage.");
-            TimeSpan currentTrackPosition = playlist.CurrentTrack.StartPosition;
-            string currentTrackName = playlist.CurrentTrack.Name;
+            TimeSpan currentTrackPosition = playlist?.CurrentTrack?.StartPosition ?? TimeSpan.Zero;
+            string currentTrackName = playlist?.CurrentTrack?.Name;
             await applicationSettingsHelper.LoadPlaylist();
-            if (playlist.CurrentTrack.Name == currentTrackName)
+            if (currentTrackName != null &&
+                playlist.CurrentTrack != null &&
+                playlist.CurrentTrack.Name == currentTrackName)
             {
                 playlist.CurrentTrack.StartPosition = currentTrackPosition;
             }
+            playlistLoading.SetResult(true);
             logger.LogMessage("BackgroundAudio: Playlist loaded.");
         }
 

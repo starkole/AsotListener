@@ -10,11 +10,18 @@
     [DataContract]
     public class AudioTrack : BaseModel
     {
+        #region Fields
+
         private string name;
-        private string uri;
+        private string artist = Constants.DefaultArtist;
+        private string albumArtist = Constants.DefaultAlbumArtist;
         private TimeSpan startPosition = TimeSpan.Zero;
         private TimeSpan duration = Constants.UnknownDuration;
 
+        #endregion
+
+        #region Ctor
+        
         /// <summary>
         /// Creates new instance of <see cref="AudioTrack"/>
         /// </summary>
@@ -29,6 +36,8 @@
             EpisodeName = episodeName;
         }
 
+        #endregion
+        
         /// <summary>
         /// Episode name this audio track belongs to
         /// </summary>
@@ -49,11 +58,7 @@
         /// Audio track URI in local file system
         /// </summary>
         [DataMember]
-        public string Uri
-        {
-            get { return uri; }
-            set { SetField(ref uri, value, nameof(Uri)); }
-        }
+        public string Uri { get; set; }
 
         /// <summary>
         /// Audio track start position
@@ -76,9 +81,33 @@
         }
 
         /// <summary>
+        /// Audio track artist
+        /// </summary>
+        [DataMember]
+        public string Artist
+        {
+            get { return artist; }
+            set { SetField(ref artist, value, nameof(Artist)); }
+        }
+
+        /// <summary>
+        /// Audio track album artist
+        /// </summary>
+        [DataMember]
+        public string AlbumArtist
+        {
+            get { return albumArtist; }
+            set { SetField(ref albumArtist, value, nameof(AlbumArtist)); }
+        }
+
+        #region Overrides
+
+        /// <summary>
         /// Returns string representation of current audio track
         /// </summary>
         /// <returns>String representation of current audio track</returns>
-        public override string ToString() => Name;
+        public override string ToString() => Name; 
+        
+        #endregion
     }
 }

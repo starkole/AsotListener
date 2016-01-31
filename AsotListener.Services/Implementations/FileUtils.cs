@@ -17,9 +17,9 @@
     /// </summary>
     public sealed class FileUtils : IFileUtils
     {
-        #region Fields
+        #region Definitions
 
-        private static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+        private static StorageFolder LocalFolder => ApplicationData.Current.LocalFolder;
 
         private const string audioFileExtension = ".mp3";
         private const string partNumberDelimiter = "_";
@@ -57,7 +57,7 @@
             {
                 logger.LogMessage($"FileUtils: getting file #{partNumber} for episode {name}");
                 var filename = GetEpisodePartFilename(name, partNumber);
-                return await localFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+                return await LocalFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
             }
             catch (Exception ex)
             {
@@ -85,7 +85,7 @@
             var result = new List<string>();
             try
             {
-                IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+                IReadOnlyList<StorageFile> files = await LocalFolder.GetFilesAsync();
                 result = files?
                     .Where(f => f.FileType == audioFileExtension)
                     .Select(f => stripEndNumberFromFilename(f.DisplayName))
@@ -131,7 +131,7 @@
             IEnumerable<StorageFile> result = Enumerable.Empty<StorageFile>();
             try
             {
-                IReadOnlyList<StorageFile> files = await localFolder.GetFilesAsync();
+                IReadOnlyList<StorageFile> files = await LocalFolder.GetFilesAsync();
                 result = files.Where(f => f.FileType == audioFileExtension && f.Name.StartsWith(episodeName, StringComparison.CurrentCulture)).ToList();
             }
             catch (Exception ex)
@@ -185,7 +185,7 @@
                 MemoryStream listData = new MemoryStream();
                 DataContractSerializer serializer = new DataContractSerializer(typeof(T));
                 serializer.WriteObject(listData, objectToSave);
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+                StorageFile file = await LocalFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
                 using (Stream fileStream = await file.OpenStreamForWriteAsync())
                 {
                     listData.Seek(0, SeekOrigin.Begin);
@@ -213,11 +213,11 @@
             {
                 logger.LogMessage("FileUtils: File name was not specified.", LoggingLevel.Error);
                 return null;
-            }
+            }            
 
             try
             {
-                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(filename);
+                StorageFile file = await LocalFolder.GetFileAsync(filename);
                 using (IInputStream inStream = await file.OpenSequentialReadAsync())
                 {
                     DataContractSerializer serializer = new DataContractSerializer(typeof(T));
@@ -243,7 +243,7 @@
             logger.LogMessage($"FileUtils: Trying to delete file from {filename}...");
             try
             {
-                var file = await localFolder.GetFileAsync(filename);
+                var file = await LocalFolder.GetFileAsync(filename);
                 if (file == null)
                 {
                     logger.LogMessage("FileUtils: File not found.");
