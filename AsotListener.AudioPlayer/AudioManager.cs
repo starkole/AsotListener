@@ -295,6 +295,16 @@
 
             try
             {
+                if (smtc.PlaybackStatus == MediaPlaybackStatus.Paused &&
+                    smtc.DisplayUpdater.MusicProperties.Title == playlist.CurrentTrack.Name &&
+                    mediaPlayer.CurrentState == Paused)
+                {
+                    logger.LogMessage($"BackgroundAudio: No need to reset file source. Resuming playback.");
+                    mediaPlayer.Play();
+                    smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                    return;
+                }
+
                 // Set AutoPlay to false because we set MediaPlayer_MediaOpened event handler to start playback
                 mediaPlayer.AutoPlay = false;
                 var file = await StorageFile.GetFileFromPathAsync(playlist.CurrentTrack.Uri);
