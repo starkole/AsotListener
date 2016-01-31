@@ -33,6 +33,8 @@
 
         #region Properties
 
+        private int MaxIndex => Count - 1;
+
         /// <summary>
         /// Returns playlist instance
         /// </summary>
@@ -43,7 +45,7 @@
         /// </summary>
         public AudioTrack CurrentTrack
         {
-            get { return Count == 0 || currentTrackIndex == -1 ? null : this[currentTrackIndex]; }
+            get { return CurrentTrackIndex == -1 ? null : this[currentTrackIndex]; }
             set
             {
                 if (value == null)
@@ -54,23 +56,19 @@
                         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTrack)));
                         return;
                     }
+
+                    return;
                 }
 
                 var existingTrack = this.FirstOrDefault(t => t.Name == value.Name);
                 if (existingTrack == null)
                 {
                     Add(value);
-                    currentTrackIndex = IndexOf(value);
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTrack)));
+                    CurrentTrackIndex = IndexOf(value);
                     return;
                 }
 
-                int index = IndexOf(existingTrack);
-                if (currentTrackIndex != index)
-                {
-                    currentTrackIndex = index;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTrack)));
-                }
+                CurrentTrackIndex = IndexOf(existingTrack);
             }
         }
 
@@ -85,24 +83,21 @@
             }
             set
             {
-                var count = Count - 1;
                 int newIndex;
-                if (Count == 0)
+                if (MaxIndex <= 0)
                 {
-                    newIndex = -1;
-                }
-                else if (count == 0)
-                {
-                    newIndex = 0;
+                    newIndex = MaxIndex;
                 }
                 else
                 {
-                    newIndex = value < 0 ? (count - value) % count : value % count;
+                    var adjustedValue = Math.Abs(value) > MaxIndex ? value % MaxIndex : value;
+                    newIndex = value < 0 ? MaxIndex + value : value;
                 }
 
                 if (newIndex != currentTrackIndex)
                 {
                     currentTrackIndex = newIndex;
+                    // Updating "Current track" property here, because the index merely points to current track
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTrack)));
                 }
             }
@@ -138,18 +133,20 @@
             }
 
             bool playlistChanged = false;
+            var addedItems = new List<AudioTrack>();
             foreach (var item in newItems)
             {
                 if (!Contains(item))
                 {
                     Items.Add(item);
+                    addedItems.Add(item);
                     playlistChanged = true;
                 }
             }
 
             if (playlistChanged)
             {
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems.ToList()));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, addedItems));
             }
         }
 
@@ -195,6 +192,6 @@
         /// </returns>
         public bool Contains(Episode episode) => this.Any(t => t.EpisodeName == episode?.Name);
 
-        #endregion
+        #endregion        
     }
 }
