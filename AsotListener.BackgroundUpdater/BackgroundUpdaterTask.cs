@@ -34,7 +34,7 @@
                 await downloadManager.Initialization;
                 foreach (var episode in diff)
                 {
-                    downloadManager.ScheduleDownload(episode);
+                    await downloadManager.DownloadEpisode(episode);
                 }
             }
 
